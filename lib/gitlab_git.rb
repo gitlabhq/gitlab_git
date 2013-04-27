@@ -1,7 +1,11 @@
+# Libraries
 require 'ostruct'
 require 'fileutils'
 require 'grit'
 require 'linguist'
+require 'active_support/core_ext/hash/keys'
+
+# Gitlab::Git
 require "gitlab_git/popen"
 require "gitlab_git/blame"
 require "gitlab_git/blob"
