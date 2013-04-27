@@ -12,6 +12,15 @@ require 'gitlab_git'
 require File.join(File.dirname(__FILE__), '../support/valid_commit')
 require 'pry'
 
+RSpec::Matchers.define :be_valid_commit do
+  match do |actual|
+    actual != nil
+    actual.id == ValidCommit::ID
+    actual.message == ValidCommit::MESSAGE
+    actual.author_name == ValidCommit::AUTHOR_FULL_NAME
+  end
+end
+
 RSpec.configure do |config|
   config.treat_symbols_as_metadata_keys_with_true_values = true
   config.run_all_when_everything_filtered = true

@@ -18,7 +18,7 @@ describe Gitlab::Git::Stats do
   describe :graph do
     let(:graph) { @stats.graph }
 
-    it { graph.labels.should include Date.today.stamp('Aug 23') }
+    it { graph.labels.should include Date.today.strftime('%b %d') }
     it { graph.commits.should be_kind_of(Array) }
     it { graph.weeks.should == 4 }
   end

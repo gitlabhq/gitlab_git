@@ -1,3 +1,13 @@
+GIT
+  remote: https://github.com/gitlabhq/grit.git
+  revision: 42297cdcee16284d2e4eff23d41377f52fc28b9d
+  ref: 42297cdcee16284d2e4eff23d41377f52fc28b9d
+  specs:
+    grit (2.5.0)
+      diff-lcs (~> 1.1)
+      mime-types (~> 1.15)
+      posix-spawn (~> 0.3.6)
+
 PATH
   remote: .
   specs:
@@ -28,10 +38,6 @@ GEM
       escape_utils (~> 0.2.3)
       mime-types (~> 1.19)
       pygments.rb (>= 0.2.13)
-    grit (2.5.0)
-      diff-lcs (~> 1.1)
-      mime-types (~> 1.15)
-      posix-spawn (~> 0.3.6)
     guard (1.8.0)
       formatador (>= 0.2.4)
       listen (>= 1.0.0)
@@ -89,6 +95,7 @@ PLATFORMS
 DEPENDENCIES
   coveralls
   gitlab_git!
+  grit (~> 2.5.0)!
   guard
   guard-rspec
   pry
