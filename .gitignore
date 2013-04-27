@@ -1,2 +1,2 @@
 *.gem
-support/gitlabhq
+support/gitlabhq*
