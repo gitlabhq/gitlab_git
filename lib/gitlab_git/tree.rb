@@ -18,7 +18,7 @@ module Gitlab
       end
 
       def empty?
-        !data || data == ''
+        trees.empty? && blobs.empty?
       end
 
       def trees
