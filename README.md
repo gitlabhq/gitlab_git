@@ -1,5 +1,7 @@
 ### GitLab Git
 
+GitLab wrapper around git objects. Use Grit as main library for parsing git objects
+
 #### Code status
 
 * [![Build Status](https://travis-ci.org/gitlabhq/gitlab_git.png?branch=master)](https://travis-ci.org/gitlabhq/gitlab_git)
