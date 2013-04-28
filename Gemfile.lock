@@ -15,6 +15,7 @@ PATH
       activesupport (~> 3.2.13)
       github-linguist (~> 2.3.4)
       grit (~> 2.5.0)
+      grit_ext (~> 0.8.1)
 
 GEM
   remote: http://rubygems.org/
@@ -42,6 +43,8 @@ GEM
       escape_utils (~> 0.2.3)
       mime-types (~> 1.19)
       pygments.rb (>= 0.2.13)
+    grit_ext (0.8.1)
+      charlock_holmes (~> 0.6.9)
     guard (1.8.0)
       formatador (>= 0.2.4)
       listen (>= 1.0.0)
