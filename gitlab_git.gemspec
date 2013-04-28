@@ -1,12 +1,12 @@
 Gem::Specification.new do |s|
   s.name        = 'gitlab_git'
-  s.version     = '1.0.1'
+  s.version     = '1.0.2'
   s.date        = '2013-04-28'
   s.summary     = "Gitlab::Git library"
   s.description = "GitLab wrapper around git objects"
   s.authors     = ["Dmitriy Zaporozhets"]
   s.email       = 'dmitriy.zaporozhets@gmail.com'
-  s.files       = ["lib/gitlab_git.rb"]
+  s.files       = `git ls-files lib/`.split("\n")
   s.homepage    =
     'http://rubygems.org/gems/gitlab_git'
 
