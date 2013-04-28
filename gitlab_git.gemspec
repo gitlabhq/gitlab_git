@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'gitlab_git'
-  s.version     = '1.0.0'
-  s.date        = '2013-04-27'
+  s.version     = '1.0.1'
+  s.date        = '2013-04-28'
   s.summary     = "Gitlab::Git library"
   s.description = "GitLab wrapper around git objects"
   s.authors     = ["Dmitriy Zaporozhets"]
