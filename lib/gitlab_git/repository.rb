@@ -165,14 +165,13 @@ module Gitlab
       # Already packed repo archives stored at
       # app_root/tmp/repositories/project_name/project_name-commit-id.tag.gz
       #
-      def archive_repo(ref)
+      def archive_repo(ref, storage_path)
         ref = ref || self.root_ref
         commit = self.commit(ref)
         return nil unless commit
 
         # Build file path
         file_name = self.path_with_namespace.gsub("/","_") + "-" + commit.id.to_s + ".tar.gz"
-        storage_path = Rails.root.join("tmp", "repositories")
         file_path = File.join(storage_path, self.path_with_namespace, file_name)
 
         # Put files into a directory before archiving
