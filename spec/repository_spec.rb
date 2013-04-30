@@ -150,4 +150,48 @@ describe Gitlab::Git::Repository do
       its(:diff) { should include 'Vagrantfile' }
     end
   end
+
+  describe :has_commits? do
+    it { repository.has_commits?.should be_true }
+  end
+
+  describe :empty? do
+    it { repository.empty?.should be_false }
+  end
+
+  describe :heads do
+    let(:heads) { repository.heads }
+    subject { heads }
+
+    it { should be_kind_of Array }
+    its(:size) { should eq(32) }
+
+    context :head do
+      subject { heads.first }
+
+      its(:name) { should == 'deploy_keys' }
+
+      context :commit do
+        subject { heads.first.commit }
+
+        its(:id) { should == 'dda6b0ab63eb8080e34b4273cfb6aadb7a29c028' }
+      end
+    end
+  end
+
+  describe :ref_names do
+    let(:ref_names) { repository.ref_names }
+    subject { ref_names }
+
+    it { should be_kind_of Array }
+    its(:first) { should == '2_3_notes_fix' }
+  end
+
+  describe :tag_names do
+    let(:tag_names) { repository.tag_names }
+    subject { tag_names }
+
+    it { should be_kind_of Array }
+    its(:first) { should == 'v2.2.0pre' }
+  end
 end
