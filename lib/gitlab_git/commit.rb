@@ -63,7 +63,7 @@ module Gitlab
           lines.shift
         end
         lines.pop if lines.last =~ /^[\d.]+$/ # Git version
-          lines.pop if lines.last == "-- "      # end of diff
+        lines.pop if lines.last == "-- "      # end of diff
         lines.join("\n")
       end
 

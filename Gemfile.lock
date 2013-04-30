@@ -108,4 +108,5 @@ DEPENDENCIES
   guard-rspec
   pry
   rspec
+  simplecov
   webmock

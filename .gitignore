@@ -1,3 +1,4 @@
 *.gem
 support/gitlabhq*
 tmp/*
+coverage/*

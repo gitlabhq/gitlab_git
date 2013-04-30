@@ -12,7 +12,6 @@ describe Gitlab::Git::Repository do
     it { should respond_to(:tags) }
     it { should respond_to(:commit) }
     it { should respond_to(:commits) }
-    it { should respond_to(:commits_between) }
     it { should respond_to(:commits_with_refs) }
   end
 
@@ -193,5 +192,26 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     its(:first) { should == 'v2.2.0pre' }
+  end
+
+
+  describe :last_commit_for do
+    context 'no path' do
+      subject { repository.last_commit_for('master') }
+
+      its(:id) { should == 'bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a' }
+    end
+
+    context 'path' do
+      subject { repository.last_commit_for('master', 'db') }
+
+      its(:id) { should == '621bfdb4aa6c5ef2b031f7c4fb7753eb80d7a5b5' }
+    end
+
+    context 'ref + path' do
+      subject { repository.last_commit_for(ValidCommit::ID, 'config') }
+
+      its(:id) { should == '215a01f63ccdc085f75a48f6f7ab6f2b15b5852c' }
+    end
   end
 end
