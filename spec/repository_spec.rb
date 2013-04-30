@@ -168,12 +168,12 @@ describe Gitlab::Git::Repository do
     context :head do
       subject { heads.first }
 
-      its(:name) { should == 'deploy_keys' }
+      its(:name) { should == '2_3_notes_fix' }
 
       context :commit do
         subject { heads.first.commit }
 
-        its(:id) { should == 'dda6b0ab63eb8080e34b4273cfb6aadb7a29c028' }
+        its(:id) { should == '8470d70da67355c9c009e4401746b1d5410af2e3' }
       end
     end
   end
