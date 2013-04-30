@@ -93,7 +93,7 @@ describe Gitlab::Git::Repository do
     it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
   end
 
-  describe "commits_between" do
+  describe :commits_between do
     subject do
       commits = repository.commits_between("3a4b4fb4cde7809f033822a171b9feae19d41fff",
                                         "8470d70da67355c9c009e4401746b1d5410af2e3")
@@ -105,7 +105,7 @@ describe Gitlab::Git::Repository do
     it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
   end
 
-  describe "branch names" do
+  describe :branch_names do
     subject { repository.branch_names }
 
     it { should have(32).elements }
@@ -113,11 +113,41 @@ describe Gitlab::Git::Repository do
     it { should_not include("branch-from-space") }
   end
 
-  describe "tag names" do
+  describe :tag_names do
     subject { repository.tag_names }
 
     it { should have(16).elements }
     it { should include("v1.2.0") }
     it { should_not include("v5.0.0") }
+  end
+
+  describe :archive do
+    let(:archive) { repository.archive_repo('master', repository.repos_path) }
+    after { FileUtils.rm_r(archive) }
+
+    it { archive.should match(/support\/gitlabhq\/gitlabhq-bcf03b5/) }
+    it { File.exists?(archive).should be_true }
+  end
+
+  describe :size do
+    subject { repository.size }
+
+    it { should == 43.19 }
+  end
+
+  describe :diffs_between do
+    let(:diffs) { repository.diffs_between('master', 'stable') }
+    subject { diffs }
+
+    it { should be_kind_of Array }
+    its(:size) { should eq(73) }
+
+    context :diff do
+      subject { diffs.first }
+
+      it { should be_kind_of Gitlab::Git::Diff }
+      its(:new_path) { should == '.gitignore' }
+      its(:diff) { should include 'Vagrantfile' }
+    end
   end
 end

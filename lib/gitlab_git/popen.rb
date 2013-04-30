@@ -1,3 +1,5 @@
+require 'open3'
+
 module Gitlab
   module Git
     module Popen
