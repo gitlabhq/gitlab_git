@@ -6,6 +6,7 @@ Gem::Specification.new do |s|
   s.description = "GitLab wrapper around git objects"
   s.authors     = ["Dmitriy Zaporozhets"]
   s.email       = 'dmitriy.zaporozhets@gmail.com'
+  s.license     = 'MIT'
   s.files       = `git ls-files lib/`.split("\n")
   s.homepage    =
     'http://rubygems.org/gems/gitlab_git'
