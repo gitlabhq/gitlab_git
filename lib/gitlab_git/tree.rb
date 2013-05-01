@@ -29,6 +29,10 @@ module Gitlab
         entries.select { |t| t.is_a?(Grit::Blob) }
       end
 
+      def submodules
+        entries.select { |t| t.is_a?(Grit::Submodule) }
+      end
+
       def is_blob?
         raw_tree.is_a?(Grit::Blob)
       end
