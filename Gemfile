@@ -3,7 +3,7 @@ source "http://rubygems.org"
 gemspec
 
 group :development do
-  gem "grit", '~> 2.5.0', git: 'https://github.com/gitlabhq/grit.git', ref: '42297cdcee16284d2e4eff23d41377f52fc28b9d'
+  gem "grit", '~> 2.5.0', git: 'https://github.com/gitlabhq/grit.git', ref: 'e873bb84ac3c4f8249311490d6a7c6ac9127625f'
 
   gem 'coveralls', require: false
   gem 'rspec'

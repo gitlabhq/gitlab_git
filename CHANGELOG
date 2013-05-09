@@ -1,2 +1,6 @@
+v 1.1.0
+  - new method Repository#search_files added
+  - new class BlobSnippet added (for search results)
+
 v 1.0.6
   - new method Tree#submodules added

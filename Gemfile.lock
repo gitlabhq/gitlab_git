@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/gitlabhq/grit.git
-  revision: 42297cdcee16284d2e4eff23d41377f52fc28b9d
-  ref: 42297cdcee16284d2e4eff23d41377f52fc28b9d
+  revision: e873bb84ac3c4f8249311490d6a7c6ac9127625f
+  ref: e873bb84ac3c4f8249311490d6a7c6ac9127625f
   specs:
     grit (2.5.0)
       diff-lcs (~> 1.1)
@@ -11,7 +11,7 @@ GIT
 PATH
   remote: .
   specs:
-    gitlab_git (1.0.5)
+    gitlab_git (1.0.6)
       activesupport (~> 3.2.13)
       github-linguist (~> 2.3.4)
       grit (~> 2.5.0)

@@ -214,4 +214,21 @@ describe Gitlab::Git::Repository do
       its(:id) { should == '215a01f63ccdc085f75a48f6f7ab6f2b15b5852c' }
     end
   end
+
+  describe :search_files do
+    let(:results) { repository.search_files('rails', 'master') }
+    subject { results }
+
+    it { should be_kind_of Array }
+    its(:first) { should be_kind_of Gitlab::Git::BlobSnippet }
+
+    context 'blob result' do
+      subject { results.first }
+
+      its(:ref) { should == 'master' }
+      its(:filename) { should == '.travis.yml' }
+      its(:startline) { should == 6 }
+      its(:data) { should include "bundle exec rake db:seed_fu RAILS_ENV=test" }
+    end
+  end
 end

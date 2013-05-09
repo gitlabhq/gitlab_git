@@ -1,6 +1,6 @@
 ### GitLab Git
 
-GitLab wrapper around git objects. Use Grit as main library for parsing git objects
+GitLab wrapper around git objects. Use patched Grit as main library for parsing git objects
 
 #### Code status
 

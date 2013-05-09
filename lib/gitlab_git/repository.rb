@@ -203,6 +203,18 @@ module Gitlab
         [Gitlab::Git::Diff::BROKEN_DIFF]
       end
 
+      def search_files(query, ref = nil)
+        if ref.nil? || ref == ""
+          ref = root_ref
+        end
+
+        greps = repo.grep(query, 3, ref)
+
+        greps.map do |grep|
+          Gitlab::Git::BlobSnippet.new(ref, grep.content, grep.startline, grep.filename)
+        end
+      end
+
       protected
 
       def decorate_commit(commit, ref = nil)
