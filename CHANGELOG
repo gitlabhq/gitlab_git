@@ -1,3 +1,7 @@
+v 1.2.0
+  - Use gitlab-grit instead of grit
+  - removed grit_ext dependency also
+
 v 1.1.0
   - new method Repository#search_files added
   - new class BlobSnippet added (for search results)
