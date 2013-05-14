@@ -16,13 +16,18 @@ describe Gitlab::Git::Commit do
         name: 'John Smith'
       )
 
+      @tree = double
+
+      @parents = [ double(id: "8716fc78f3c65bbf7bcf7b574febd583bc5d2812") ]
+
       @raw_commit = double(
         id: "bcf03b5de6abcf03b5de6c",
         author: @author,
         committer: @committer,
         committed_date: Date.today.prev_day,
         authored_date: Date.today.prev_day,
-        parents: [],
+        tree: @tree,
+        parents: @parents,
         message: 'Refactoring specs'
       )
 
@@ -30,13 +35,20 @@ describe Gitlab::Git::Commit do
     end
 
     it { @commit.short_id.should == "bcf03b5de6a" }
+    it { @commit.id.should == @raw_commit.id }
+    it { @commit.sha.should == @raw_commit.id }
     it { @commit.safe_message.should == @raw_commit.message }
     it { @commit.created_at.should == @raw_commit.committed_date }
+    it { @commit.date.should == @raw_commit.committed_date }
     it { @commit.author_email.should == @author.email }
     it { @commit.author_name.should == @author.name }
     it { @commit.committer_name.should == @committer.name }
     it { @commit.committer_email.should == @committer.email }
     it { @commit.different_committer?.should be_true }
+    it { @commit.parents.should == @parents }
+    it { @commit.parent_id.should == @parents.first.id }
+    it { @commit.no_commit_message.should == "--no commit message" }
+    it { @commit.tree.should == @tree }
   end
 
   describe :init_from_hash do
@@ -61,6 +73,10 @@ describe Gitlab::Git::Commit do
     it { should include 'diff --git a/app/assets/stylesheets/tree.scss b/app/assets/stylesheets/tree.scss'}
   end
 
+  describe :has_zero_stats? do
+    it { commit.has_zero_stats?.should == false }
+  end
+
   describe :to_patch do
     subject { commit.to_patch }
 
@@ -74,6 +90,14 @@ describe Gitlab::Git::Commit do
 
     it { should be_kind_of Hash }
     its(:keys) { should =~ sample_commit_hash.keys }
+  end
+
+  describe :diffs do
+    subject { commit.diffs }
+
+    it { should be_kind_of Array }
+    its(:size) { should eq(2) }
+    its(:first) { should be_kind_of Gitlab::Git::Diff }
   end
 
   def sample_commit_hash
