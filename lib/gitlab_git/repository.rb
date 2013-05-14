@@ -121,7 +121,7 @@ module Gitlab
 
       # Returns an Array of branch and tag names
       def ref_names
-        [branch_names + tag_names].flatten
+        branch_names + tag_names
       end
 
       def heads
