@@ -4,10 +4,14 @@
 module Gitlab
   module Git
     class Commit
-      attr_accessor :raw_commit, :head, :refs,
-        :id, :authored_date, :committed_date, :message,
-        :author_name, :author_email, :parent_ids,
-        :committer_name, :committer_email
+      attr_accessor :raw_commit, :head, :refs
+
+      SERIALIZE_KEYS = [
+        :id, :message, :parent_ids,
+        :authored_date, :author_name, :author_email,
+        :committed_date, :committer_name, :committer_email
+      ]
+      attr_accessor *SERIALIZE_KEYS
 
       def initialize(raw_commit, head = nil)
         raise "Nil as raw commit passed" unless raw_commit
@@ -19,10 +23,6 @@ module Gitlab
         end
 
         @head = head
-      end
-
-      def serialize_keys
-        @serialize_keys ||= %w(id authored_date committed_date author_name author_email committer_name committer_email message parent_ids).map(&:to_sym)
       end
 
       def sha
@@ -78,15 +78,9 @@ module Gitlab
       end
 
       def to_hash
-        hash = {}
-
-        keys = serialize_keys
-
-        keys.each do |key|
+        serialize_keys.map.with_object({}) do |key, hash|
           hash[key] = send(key)
         end
-
-        hash
       end
 
       def date
@@ -132,8 +126,12 @@ module Gitlab
         raw_commit = hash.symbolize_keys
 
         serialize_keys.each do |key|
-          send(:"#{key}=", raw_commit[key.to_sym])
+          send("#{key}=", raw_commit[key])
         end
+      end
+
+      def serialize_keys
+        SERIALIZE_KEYS
       end
     end
   end
