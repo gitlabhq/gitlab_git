@@ -106,7 +106,7 @@ module Gitlab
       end
 
       def stats
-        raw_commit.tree
+        raw_commit.stats
       end
 
       def to_patch

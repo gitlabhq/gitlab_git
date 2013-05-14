@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gitlab_git (1.1.0)
+    gitlab_git (1.2.0)
       activesupport (~> 3.2.13)
       github-linguist (~> 2.3.4)
       gitlab-grit (~> 2.5.1)

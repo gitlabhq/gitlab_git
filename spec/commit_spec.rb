@@ -47,6 +47,13 @@ describe Gitlab::Git::Commit do
     its(:message) { should == sample_commit_hash[:message]}
   end
 
+  describe :stats do
+    subject { commit.stats }
+
+    its(:additions) { should eq(2) }
+    its(:deletions) { should eq(1) }
+  end
+
   describe :to_diff do
     subject { commit.to_diff }
 

@@ -1,3 +1,6 @@
+v 1.2.1
+  - fixed commit stats
+
 v 1.2.0
   - Use gitlab-grit instead of grit
   - removed grit_ext dependency also
