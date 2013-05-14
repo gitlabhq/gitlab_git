@@ -111,7 +111,7 @@ module Gitlab
 
       # Returns an Array of tag names
       def tag_names
-        repo.tags.collect(&:name).sort.reverse
+        tags.map(&:name)
       end
 
       # Returns an Array of Tags
@@ -121,7 +121,7 @@ module Gitlab
 
       # Returns an Array of branch and tag names
       def ref_names
-        [branch_names + tag_names].flatten
+        branch_names + tag_names
       end
 
       def heads
