@@ -186,6 +186,7 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     its(:first) { should == '2_3_notes_fix' }
+    its(:last) { should == 'v0.9.4' }
   end
 
   describe :last_commit_for do
