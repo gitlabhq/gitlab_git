@@ -115,7 +115,9 @@ describe Gitlab::Git::Repository do
   describe :tag_names do
     subject { repository.tag_names }
 
+    it { should be_kind_of Array }
     it { should have(16).elements }
+    its(:first) { should == "v2.2.0pre" }
     it { should include("v1.2.0") }
     it { should_not include("v5.0.0") }
   end
@@ -185,15 +187,6 @@ describe Gitlab::Git::Repository do
     it { should be_kind_of Array }
     its(:first) { should == '2_3_notes_fix' }
   end
-
-  describe :tag_names do
-    let(:tag_names) { repository.tag_names }
-    subject { tag_names }
-
-    it { should be_kind_of Array }
-    its(:first) { should == 'v2.2.0pre' }
-  end
-
 
   describe :last_commit_for do
     context 'no path' do
