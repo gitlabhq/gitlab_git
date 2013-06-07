@@ -13,7 +13,7 @@ module Gitlab
       end
 
       def data
-        if raw_blob
+        if raw_blob and raw_blob.respond_to?('data')
           raw_blob.data
         else
           nil
