@@ -10,9 +10,6 @@ describe Gitlab::Git::Repository do
     it { should respond_to(:tree) }
     it { should respond_to(:root_ref) }
     it { should respond_to(:tags) }
-    it { should respond_to(:commit) }
-    it { should respond_to(:commits) }
-    it { should respond_to(:commits_with_refs) }
   end
 
 
@@ -42,23 +39,9 @@ describe Gitlab::Git::Repository do
     end
   end
 
-  describe :commit do
-    it "should return first head commit if without params" do
-      repository.commit.id.should == repository.repo.commits.first.id
-    end
-
-    it "should return valid commit" do
-      repository.commit(ValidCommit::ID).should be_valid_commit
-    end
-
-    it "should return nil" do
-      repository.commit("+123_4532530XYZ").should be_nil
-    end
-  end
-
   describe :tree do
     before do
-      @commit = repository.commit(ValidCommit::ID)
+      @commit = Gitlab::Git::Commit.find(repository, ValidCommit::ID)
     end
 
     it "should raise error w/o arguments" do
@@ -79,17 +62,6 @@ describe Gitlab::Git::Repository do
     it "should return root tree for commit with incorrect path" do
       repository.tree(@commit, "invalid_path").should be_nil
     end
-  end
-
-  describe "commits" do
-    subject do
-      commits = repository.commits('master', 'app', 3, 1)
-      commits.map { |c| c.id }
-    end
-
-    it { should have(3).elements }
-    it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-    it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
   end
 
   describe :commits_between do
@@ -187,26 +159,6 @@ describe Gitlab::Git::Repository do
     it { should be_kind_of Array }
     its(:first) { should == '2_3_notes_fix' }
     its(:last) { should == 'v0.9.4' }
-  end
-
-  describe :last_commit_for do
-    context 'no path' do
-      subject { repository.last_commit_for('master') }
-
-      its(:id) { should == 'bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a' }
-    end
-
-    context 'path' do
-      subject { repository.last_commit_for('master', 'db') }
-
-      its(:id) { should == '621bfdb4aa6c5ef2b031f7c4fb7753eb80d7a5b5' }
-    end
-
-    context 'ref + path' do
-      subject { repository.last_commit_for(ValidCommit::ID, 'config') }
-
-      its(:id) { should == '215a01f63ccdc085f75a48f6f7ab6f2b15b5852c' }
-    end
   end
 
   describe :search_files do

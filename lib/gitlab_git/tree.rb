@@ -9,7 +9,7 @@ module Gitlab
         @path = nil if !@path || @path == ''
 
         # Load tree from repository
-        @commit = @repository.commit(@sha)
+        @commit = Gitlab::Git::Commit.find(@repository, @sha)
         @raw_tree = @repository.tree(@commit, @path)
       end
 

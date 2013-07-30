@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Gitlab::Git::Commit do
   let(:repository) { Gitlab::Git::Repository.new('gitlabhq', 'master') }
-  let(:commit) { repository.commit }
+  let(:commit) { Gitlab::Git::Commit.recent(repository) }
 
   describe "Commit info" do
     before do
@@ -49,6 +49,61 @@ describe Gitlab::Git::Commit do
     it { @commit.parent_id.should == @parents.first.id }
     it { @commit.no_commit_message.should == "--no commit message" }
     it { @commit.tree.should == @tree }
+  end
+
+  context 'Class methods' do
+    describe :find do
+      it "should return first head commit if without params" do
+        Gitlab::Git::Commit.recent(repository).id.should == repository.repo.commits.first.id
+      end
+
+      it "should return valid commit" do
+        Gitlab::Git::Commit.find(repository, ValidCommit::ID).should be_valid_commit
+      end
+
+      it "should return nil" do
+        Gitlab::Git::Commit.find(repository, "+123_4532530XYZ").should be_nil
+      end
+    end
+
+    describe :find_for_path do
+      context 'no path' do
+        subject { Gitlab::Git::Commit.find_for_path(repository, 'master') }
+
+        its(:id) { should == 'bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a' }
+      end
+
+      context 'path' do
+        subject { Gitlab::Git::Commit.find_for_path(repository, 'master', 'db') }
+
+        its(:id) { should == '621bfdb4aa6c5ef2b031f7c4fb7753eb80d7a5b5' }
+      end
+
+      context 'ref + path' do
+        subject { Gitlab::Git::Commit.find_for_path(repository, ValidCommit::ID, 'config') }
+
+        its(:id) { should == '215a01f63ccdc085f75a48f6f7ab6f2b15b5852c' }
+      end
+    end
+
+
+    describe "where" do
+      subject do
+        commits = Gitlab::Git::Commit.where(
+          repo: repository,
+          ref: 'master',
+          path: 'app',
+          limit: 3,
+          offset: 1
+        )
+
+        commits.map { |c| c.id }
+      end
+
+      it { should have(3).elements }
+      it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
+      it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+    end
   end
 
   describe :init_from_hash do

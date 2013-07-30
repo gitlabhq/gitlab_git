@@ -51,53 +51,6 @@ module Gitlab
         raise NoRepository.new('no repository for such path')
       end
 
-      def commit(commit_id = nil)
-        commit = if commit_id
-                   # Find repo.refs first,
-                   # because if commit_id is "tag name",
-                   # repo.commit(commit_id) returns wrong commit sha
-                   # that is git tag object sha.
-                   ref = repo.refs.find {|r| r.name == commit_id}
-                   if ref
-                     ref.commit
-                   else
-                     repo.commit(commit_id)
-                   end
-                 else
-                   repo.commits(root_ref).first
-                 end
-
-        decorate_commit(commit) if commit
-      end
-
-      def commits_with_refs(n = 20)
-        commits = repo.branches.map { |ref| decorate_commit(ref.commit, ref) }
-
-        commits.sort! do |x, y|
-          y.committed_date <=> x.committed_date
-        end
-
-        commits[0..n]
-      end
-
-      def commits(ref, path = nil, limit = nil, offset = nil)
-        if path && path != ''
-          repo.log(ref, path, max_count: limit, skip: offset, follow: true)
-        elsif limit && offset
-          repo.commits(ref, limit.to_i, offset.to_i)
-        else
-          repo.commits(ref)
-        end.map{ |c| decorate_commit(c) }
-      end
-
-      def commits_between(from, to)
-        repo.commits_between(from, to).map { |c| decorate_commit(c) }
-      end
-
-      def last_commit_for(ref, path = nil)
-        commits(ref, path, 1).first
-      end
-
       # Returns an Array of branch names
       # sorted by name ASC
       def branch_names
@@ -135,7 +88,7 @@ module Gitlab
       end
 
       def has_commits?
-        !!commit
+        !!Gitlab::Git::Commit.recent(self)
       rescue Grit::NoSuchPathError
         false
       end
@@ -167,7 +120,7 @@ module Gitlab
       #
       def archive_repo(ref, storage_path)
         ref = ref || self.root_ref
-        commit = self.commit(ref)
+        commit = Gitlab::Git::Commit.find(self, ref)
         return nil unless commit
 
         # Build file path
@@ -215,10 +168,40 @@ module Gitlab
         end
       end
 
-      protected
+      # Delegate log to Grit method
+      #
+      # Usage.
+      #   repo.log(
+      #     ref: 'master',
+      #     path: 'app/models',
+      #     limit: 10,
+      #     offset: 5,
+      #   )
+      #
+      def log(options)
+        default_options = {
+          limit: 10,
+          offset: 0,
+          path: nil,
+          ref: root_ref,
+          follow: false
+        }
 
-      def decorate_commit(commit, ref = nil)
-        Gitlab::Git::Commit.new(commit, ref)
+        options = default_options.merge(options)
+
+        repo.log(
+          options[:ref] || root_ref,
+          options[:path],
+          max_count: options[:limit].to_i,
+          skip: options[:offset].to_i,
+          follow: options[:follow]
+        )
+      end
+
+      # Delegate commits_between to Grit method
+      #
+      def commits_between(from, to)
+        repo.commits_between(from, to)
       end
     end
   end

@@ -13,6 +13,89 @@ module Gitlab
       ]
       attr_accessor *SERIALIZE_KEYS
 
+      class << self
+        # Get commits collection
+        #
+        # Ex.
+        #   Commit.where(
+        #     repo: repo,
+        #     ref: 'master',
+        #     path: 'app/models',
+        #     limit: 10,
+        #     offset: 5,
+        #   )
+        #
+        def where(options)
+          repo = options.delete(:repo)
+          raise 'Gitlab::Git::Repository is required' unless repo.respond_to?(:log)
+
+          repo.log(options).map { |c| decorate(c) }
+        end
+
+        # Get single commit
+        #
+        # Ex.
+        #   Commit.find(repo, '29eda46b')
+        #
+        #   Commit.find(repo, 'master')
+        #
+        def find(repo, commit_id = nil)
+          # Find repo.tags first,
+          # because if commit_id is "tag name",
+          # repo.commit(commit_id) returns wrong commit sha
+          # that is git tag object sha.
+          tag = repo.tags.find {|tag| tag.name == commit_id} if commit_id
+
+          commit = if tag
+                     tag.commit
+                   else
+                     repo.log(ref: commit_id).first
+                   end
+
+          decorate(commit) if commit
+        end
+
+        # Get recent commit for HEAD
+        #
+        # Ex.
+        #   Commit.recent(repo)
+        #
+        def recent(repo)
+          find(repo, nil)
+        end
+
+        # Get single commit for specified path
+        #
+        # Ex.
+        #   Commit.find_for_path(repo, '29eda46b', 'app/models')
+        #
+        #   Commit.find_for_path(repo, 'master', 'Gemfile')
+        #
+        def find_for_path(repo, ref, path = nil)
+          where(
+            repo: repo,
+            ref: ref,
+            path: path,
+            limit: 1
+          ).first
+        end
+
+        # Get commits between two refs
+        #
+        # Ex.
+        #   Commit.between('29eda46b', 'master')
+        #
+        def between(repo, from, to)
+          repo.commits_between(from, to).map do |commit|
+            decorate(commit)
+          end
+        end
+
+        def decorate(commit, ref = nil)
+          Gitlab::Git::Commit.new(commit, ref)
+        end
+      end
+
       def initialize(raw_commit, head = nil)
         raise "Nil as raw commit passed" unless raw_commit
 
