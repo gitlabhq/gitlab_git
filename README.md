@@ -66,3 +66,36 @@ Set repositories storage:
     repo.search_files('rspec', 'master')
     # [ <Gitlab::Git::BlobSnippet:0x000..>, <Gitlab::Git::BlobSnippet:0x000..>]
    
+
+#### Tree
+
+    # Tree object for root dir
+    tree = Gitlab::Git::Tree.new(repo, '893ade32')
+
+    # Tree object for sub dir
+    tree = Gitlab::Git::Tree.new(repo, '893ade32', 'master', 'app/models/')
+
+    # Get readme for this directory if exists
+    tree.readme
+
+    # Get directories  
+    tree.trees
+    # [ <Gitlab::Git::Tree:0x000>, ...]
+
+    # Get blobs  
+    tree.blobs
+    # [ <Gitlab::Git::Blob:0x000>, ...]
+
+    # Get submodules
+    tree.submodules
+    # [ <Grit::Submodule:0x000>, ...]
+
+    # Check if subdir   
+    tree.up_dir?
+
+#### Commit
+
+     # Get commit items from Gitlab::Git::Repository
+     # 
+     commit = repo.commit('master')
+
