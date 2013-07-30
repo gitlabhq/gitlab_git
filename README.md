@@ -19,6 +19,14 @@ Set repositories storage:
 
 #### Repository
 
+    # Init repo with relative path according to repos_path. 
+    # Example: 
+    #  if 
+    #    repos path is '/home/git/repos'
+    #    full path is '/home/git/repos/namespace/project.git'
+    #  then: 
+    #    Gitlab::Git::Repository.new('namespace/project.git') 
+    # 
     repo = Gitlab::Git::Repository.new('gitlab/gitlab-ci')
 
     repo.path_to_repo
@@ -99,3 +107,32 @@ Set repositories storage:
      # 
      commit = repo.commit('master')
 
+     commit.id
+     commit.sha
+     # ba8812a2de5e5ea191da6930a8ee1965873286e3
+
+     commit.short_id
+     # ba8812a2de
+
+     commit.message
+     commit.safe_message
+     # Fix bug 891
+
+     commit.parent_id
+     # ba8812a2de5e5ea191da6930a8ee1965873286e3
+
+     commit.diffs
+     # [ <Gitlab::Git::Diff:0x000..>, <Gitlab::Git::Diff:0x000..>]
+     
+     commit.created_at 
+     commit.authored_date
+     commit.committed_date
+     # 2013-07-03 22:11:26 +0300
+
+     commit.committer_name
+     commit.author_name
+     # John Smith
+     
+     commit.committer_email
+     commit.author_email
+     # jsmith@sample.com
