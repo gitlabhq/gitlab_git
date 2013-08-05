@@ -110,6 +110,7 @@ Set repositories storage:
 
 ##### Commit object
 
+     # Commit id
      commit.id
      commit.sha
      # ba8812a2de5e5ea191da6930a8ee1965873286e3
@@ -151,3 +152,11 @@ Set repositories storage:
      Gitlab::Git::Diff.between(repo, 'dev', 'master')
      # [ <Gitlab::Git::Diff:0x000..>, <Gitlab::Git::Diff:0x000..>]
 
+#### Git blame
+
+     # Git blame for file
+     blame = Gitlab::Git::Blame.new(repo, 'master, 'app/models/project.rb')
+     blame.each do |commit, lines|
+       commit # <Gitlab::Git::Commit:0x000..>
+       lines # ['class Project', 'def initialize']
+     end

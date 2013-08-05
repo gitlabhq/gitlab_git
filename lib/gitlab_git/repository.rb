@@ -1,4 +1,4 @@
-# Gitlab::Git::Gitlab::Git::Commit is a wrapper around native Grit::Repository object
+# Gitlab::Git::Commit is a wrapper around native Grit::Repository object
 # We dont want to use grit objects inside app/
 # It helps us easily migrate to rugged in future
 module Gitlab

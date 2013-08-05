@@ -1,7 +1,6 @@
 module Gitlab
   module Git
     class Blame
-
       attr_accessor :repository, :sha, :path
 
       def initialize(repository, sha, path)
