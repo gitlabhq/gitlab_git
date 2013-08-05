@@ -32,21 +32,6 @@ Set repositories storage:
     repo.path_to_repo
     # "/home/git/repositories/gitlab/gitlab-ci.git"
 
-    repo.commit
-    # #<Gitlab::Git::Commit:0x00000009e0fde0>
-
-    repo.commit("23adsa43")
-    # #<Gitlab::Git::Commit:0x00000004a0fda3>
-
-    # Get 10 recent commits for `master` branch for `app` directory
-    repo.commits("master", 'app/', 10)
-
-    # Get 10..15 recent commits for `master` branch
-    repo.commits("master", nil, 10, 5)
-
-    # Get 30..40 recent commits until `23dae49a`
-    repo.commits("23dae49a", nil, 10, 5)
-
     # Get branches and tags
     repo.branches
     repo.tags
@@ -61,10 +46,6 @@ Set repositories storage:
     # Bare repo size in MB.
     repo.size
     # 10.43
-    
-    # Commits between branches
-    repo.commits_between('dev', 'master')
-    # [ <Gitlab::Git::Commit:0x000..>, <Gitlab::Git::Commit:0x000..>]
     
     # Diff between branches
     repo.diffs_between('dev', 'master')
@@ -106,7 +87,7 @@ Set repositories storage:
 ##### Picking
 
      # Get commits collection with pagination
-     Commit.where(
+     Gitlab::Git::Commit.where(
        repo: repo,
        ref: 'master',
        path: 'app/models',
@@ -115,14 +96,19 @@ Set repositories storage:
      )
 
      # Find single commit
-     Commit.find(repo, '29eda46b')
-     Commit.find(repo, 'v2.4.6')
+     Gitlab::Git::Commit.find(repo, '29eda46b')
+     Gitlab::Git::Commit.find(repo, 'v2.4.6')
 
      # Get last commit for HEAD
      commit = Gitlab::Git::Commit.last(repo)
      
      # Get last commit for specified file/directory
-     Commit.find_for_path(repo, '29eda46b', 'app/models')
+     Gitlab::Git::Commit.find_for_path(repo, '29eda46b', 'app/models')
+    
+     # Commits between branches
+     Gitlab::Git::Commit.between(repo, 'dev', 'master')
+     # [ <Gitlab::Git::Commit:0x000..>, <Gitlab::Git::Commit:0x000..>]
+    
 
 ##### Commit object
 
