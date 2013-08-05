@@ -1,6 +1,8 @@
 require "spec_helper"
 
 describe Gitlab::Git::Diff do
+  let(:repository) { Gitlab::Git::Repository.new('gitlabhq', 'master') }
+
   before do
     @raw_diff_hash = {
       diff: 'Hello world',
@@ -16,19 +18,37 @@ describe Gitlab::Git::Diff do
     @grit_diff = double('Grit::Diff', @raw_diff_hash)
   end
 
-  context 'init from grit' do
-    before do
-      @diff = Gitlab::Git::Diff.new(@raw_diff_hash)
+  describe :new do
+    context 'init from grit' do
+      before do
+        @diff = Gitlab::Git::Diff.new(@raw_diff_hash)
+      end
+
+      it { @diff.to_hash.should == @raw_diff_hash }
     end
 
-    it { @diff.to_hash.should == @raw_diff_hash }
+    context 'init from hash' do
+      before do
+        @diff = Gitlab::Git::Diff.new(@grit_diff)
+      end
+
+      it { @diff.to_hash.should == @raw_diff_hash }
+    end
   end
 
-  context 'init from hash' do
-    before do
-      @diff = Gitlab::Git::Diff.new(@grit_diff)
-    end
+  describe :between do
+    let(:diffs) { Gitlab::Git::Diff.between(repository, 'master', 'stable') }
+    subject { diffs }
 
-    it { @diff.to_hash.should == @raw_diff_hash }
+    it { should be_kind_of Array }
+    its(:size) { should eq(73) }
+
+    context :diff do
+      subject { diffs.first }
+
+      it { should be_kind_of Gitlab::Git::Diff }
+      its(:new_path) { should == '.gitignore' }
+      its(:diff) { should include 'Vagrantfile' }
+    end
   end
 end

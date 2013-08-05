@@ -6,7 +6,7 @@ describe Gitlab::Git::Repository do
   describe "Respond to" do
     subject { repository }
 
-    it { should respond_to(:repo) }
+    it { should respond_to(:raw) }
     it { should respond_to(:tree) }
     it { should respond_to(:root_ref) }
     it { should respond_to(:tags) }
@@ -64,18 +64,6 @@ describe Gitlab::Git::Repository do
     end
   end
 
-  describe :commits_between do
-    subject do
-      commits = repository.commits_between("3a4b4fb4cde7809f033822a171b9feae19d41fff",
-                                        "8470d70da67355c9c009e4401746b1d5410af2e3")
-      commits.map { |c| c.id }
-    end
-
-    it { should have(3).elements }
-    it { should include("f0f14c8eaba69ebddd766498a9d0b0e79becd633") }
-    it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
-  end
-
   describe :branch_names do
     subject { repository.branch_names }
 
@@ -106,22 +94,6 @@ describe Gitlab::Git::Repository do
     subject { repository.size }
 
     it { should == 43.19 }
-  end
-
-  describe :diffs_between do
-    let(:diffs) { repository.diffs_between('master', 'stable') }
-    subject { diffs }
-
-    it { should be_kind_of Array }
-    its(:size) { should eq(73) }
-
-    context :diff do
-      subject { diffs.first }
-
-      it { should be_kind_of Gitlab::Git::Diff }
-      its(:new_path) { should == '.gitignore' }
-      its(:diff) { should include 'Vagrantfile' }
-    end
   end
 
   describe :has_commits? do

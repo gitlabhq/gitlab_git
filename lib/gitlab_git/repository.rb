@@ -19,22 +19,18 @@ module Gitlab
       #
       attr_accessor :path_with_namespace
 
-      # Grit repo object
-      attr_accessor :repo
-
       # Default branch in the repository
       attr_accessor :root_ref
+
+      # Grit repo object
+      attr_reader :raw
 
       def initialize(path_with_namespace, root_ref = 'master')
         @root_ref = root_ref || "master"
         @path_with_namespace = path_with_namespace
 
         # Init grit repo object
-        repo
-      end
-
-      def raw
-        repo
+        raw
       end
 
       def path_to_repo
@@ -45,8 +41,8 @@ module Gitlab
         self.class.repos_path
       end
 
-      def repo
-        @repo ||= Grit::Repo.new(path_to_repo)
+      def raw
+        @raw ||= Grit::Repo.new(path_to_repo)
       rescue Grit::NoSuchPathError
         raise NoRepository.new('no repository for such path')
       end
@@ -59,7 +55,7 @@ module Gitlab
 
       # Returns an Array of Branches
       def branches
-        repo.branches.sort_by(&:name)
+        raw.branches.sort_by(&:name)
       end
 
       # Returns an Array of tag names
@@ -69,7 +65,7 @@ module Gitlab
 
       # Returns an Array of Tags
       def tags
-        repo.tags.sort_by(&:name).reverse
+        raw.tags.sort_by(&:name).reverse
       end
 
       # Returns an Array of branch and tag names
@@ -78,7 +74,7 @@ module Gitlab
       end
 
       def heads
-        @heads ||= repo.heads.sort_by(&:name)
+        @heads ||= raw.heads.sort_by(&:name)
       end
 
       def tree(fcommit, path = nil)
@@ -133,7 +129,7 @@ module Gitlab
         # Create file if not exists
         unless File.exists?(file_path)
           FileUtils.mkdir_p File.dirname(file_path)
-          file = self.repo.archive_to_file(ref, prefix,  file_path)
+          file = self.raw.archive_to_file(ref, prefix,  file_path)
         end
 
         file_path
@@ -145,23 +141,12 @@ module Gitlab
         (size.to_f / 1024).round(2)
       end
 
-      def diffs_between(source_branch, target_branch)
-        # Only show what is new in the source branch compared to the target branch, not the other way around.
-        # The linex below with merge_base is equivalent to diff with three dots (git diff branch1...branch2)
-        # From the git documentation: "git diff A...B" is equivalent to "git diff $(git-merge-base A B) B"
-        common_commit = repo.git.native(:merge_base, {}, [target_branch, source_branch]).strip
-        repo.diff(common_commit, source_branch).map { |diff| Gitlab::Git::Diff.new(diff) }
-
-      rescue Grit::Git::GitTimeout
-        [Gitlab::Git::Diff::BROKEN_DIFF]
-      end
-
       def search_files(query, ref = nil)
         if ref.nil? || ref == ""
           ref = root_ref
         end
 
-        greps = repo.grep(query, 3, ref)
+        greps = raw.grep(query, 3, ref)
 
         greps.map do |grep|
           Gitlab::Git::BlobSnippet.new(ref, grep.content, grep.startline, grep.filename)
@@ -189,7 +174,7 @@ module Gitlab
 
         options = default_options.merge(options)
 
-        repo.log(
+        raw.log(
           options[:ref] || root_ref,
           options[:path],
           max_count: options[:limit].to_i,
@@ -201,7 +186,15 @@ module Gitlab
       # Delegate commits_between to Grit method
       #
       def commits_between(from, to)
-        repo.commits_between(from, to)
+        raw.commits_between(from, to)
+      end
+
+      def merge_base_commit(from, to)
+        raw.git.native(:merge_base, {}, [to, from]).strip
+      end
+
+      def diff(from, to)
+        raw.diff(from, to)
       end
     end
   end

@@ -54,7 +54,7 @@ describe Gitlab::Git::Commit do
   context 'Class methods' do
     describe :find do
       it "should return first head commit if without params" do
-        Gitlab::Git::Commit.last(repository).id.should == repository.repo.commits.first.id
+        Gitlab::Git::Commit.last(repository).id.should == repository.raw.commits.first.id
       end
 
       it "should return valid commit" do
@@ -102,6 +102,19 @@ describe Gitlab::Git::Commit do
 
       it { should have(3).elements }
       it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
+      it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+    end
+
+    describe :between do
+      subject do
+        commits = Gitlab::Git::Commit.between(repository,
+                                              "3a4b4fb4cde7809f033822a171b9feae19d41fff",
+                                              "8470d70da67355c9c009e4401746b1d5410af2e3")
+        commits.map { |c| c.id }
+      end
+
+      it { should have(3).elements }
+      it { should include("f0f14c8eaba69ebddd766498a9d0b0e79becd633") }
       it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
     end
   end

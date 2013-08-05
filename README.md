@@ -47,14 +47,12 @@ Set repositories storage:
     repo.size
     # 10.43
     
-    # Diff between branches
-    repo.diffs_between('dev', 'master')
-    # [ <Gitlab::Git::Diff:0x000..>, <Gitlab::Git::Diff:0x000..>]
-
     # Search for code
     repo.search_files('rspec', 'master')
     # [ <Gitlab::Git::BlobSnippet:0x000..>, <Gitlab::Git::BlobSnippet:0x000..>]
-   
+ 
+    # Access to grit repo object 
+    repo.raw  
 
 #### Tree
 
@@ -141,3 +139,15 @@ Set repositories storage:
      commit.committer_email
      commit.author_email
      # jsmith@sample.com
+
+
+#### Diff object
+
+     # From commit
+     commit.diffs
+     # [ <Gitlab::Git::Diff:0x000..>, <Gitlab::Git::Diff:0x000..>]
+
+     # Diff between several commits
+     Gitlab::Git::Diff.between(repo, 'dev', 'master')
+     # [ <Gitlab::Git::Diff:0x000..>, <Gitlab::Git::Diff:0x000..>]
+
