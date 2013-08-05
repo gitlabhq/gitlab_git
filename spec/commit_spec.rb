@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Gitlab::Git::Commit do
   let(:repository) { Gitlab::Git::Repository.new('gitlabhq', 'master') }
-  let(:commit) { Gitlab::Git::Commit.recent(repository) }
+  let(:commit) { Gitlab::Git::Commit.last(repository) }
 
   describe "Commit info" do
     before do
@@ -54,7 +54,7 @@ describe Gitlab::Git::Commit do
   context 'Class methods' do
     describe :find do
       it "should return first head commit if without params" do
-        Gitlab::Git::Commit.recent(repository).id.should == repository.repo.commits.first.id
+        Gitlab::Git::Commit.last(repository).id.should == repository.repo.commits.first.id
       end
 
       it "should return valid commit" do
@@ -66,21 +66,21 @@ describe Gitlab::Git::Commit do
       end
     end
 
-    describe :find_for_path do
+    describe :last_for_path do
       context 'no path' do
-        subject { Gitlab::Git::Commit.find_for_path(repository, 'master') }
+        subject { Gitlab::Git::Commit.last_for_path(repository, 'master') }
 
         its(:id) { should == 'bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a' }
       end
 
       context 'path' do
-        subject { Gitlab::Git::Commit.find_for_path(repository, 'master', 'db') }
+        subject { Gitlab::Git::Commit.last_for_path(repository, 'master', 'db') }
 
         its(:id) { should == '621bfdb4aa6c5ef2b031f7c4fb7753eb80d7a5b5' }
       end
 
       context 'ref + path' do
-        subject { Gitlab::Git::Commit.find_for_path(repository, ValidCommit::ID, 'config') }
+        subject { Gitlab::Git::Commit.last_for_path(repository, ValidCommit::ID, 'config') }
 
         its(:id) { should == '215a01f63ccdc085f75a48f6f7ab6f2b15b5852c' }
       end

@@ -55,23 +55,23 @@ module Gitlab
           decorate(commit) if commit
         end
 
-        # Get recent commit for HEAD
+        # Get last commit for HEAD
         #
         # Ex.
-        #   Commit.recent(repo)
+        #   Commit.last(repo)
         #
-        def recent(repo)
+        def last(repo)
           find(repo, nil)
         end
 
-        # Get single commit for specified path
+        # Get last commit for specified path and ref
         #
         # Ex.
-        #   Commit.find_for_path(repo, '29eda46b', 'app/models')
+        #   Commit.last_for_path(repo, '29eda46b', 'app/models')
         #
-        #   Commit.find_for_path(repo, 'master', 'Gemfile')
+        #   Commit.last_for_path(repo, 'master', 'Gemfile')
         #
-        def find_for_path(repo, ref, path = nil)
+        def last_for_path(repo, ref, path = nil)
           where(
             repo: repo,
             ref: ref,

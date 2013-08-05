@@ -88,7 +88,7 @@ module Gitlab
       end
 
       def has_commits?
-        !!Gitlab::Git::Commit.recent(self)
+        !!Gitlab::Git::Commit.last(self)
       rescue Grit::NoSuchPathError
         false
       end

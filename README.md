@@ -103,9 +103,28 @@ Set repositories storage:
 
 #### Commit
 
-     # Get commit items from Gitlab::Git::Repository
-     # 
-     commit = repo.commit('master')
+##### Picking
+
+     # Get commits collection with pagination
+     Commit.where(
+       repo: repo,
+       ref: 'master',
+       path: 'app/models',
+       limit: 10,
+       offset: 5,
+     )
+
+     # Find single commit
+     Commit.find(repo, '29eda46b')
+     Commit.find(repo, 'v2.4.6')
+
+     # Get last commit for HEAD
+     commit = Gitlab::Git::Commit.last(repo)
+     
+     # Get last commit for specified file/directory
+     Commit.find_for_path(repo, '29eda46b', 'app/models')
+
+##### Commit object
 
      commit.id
      commit.sha
