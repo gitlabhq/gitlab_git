@@ -14,9 +14,11 @@ module Gitlab
           entry[:author_email] = slice[1]
           entry[:date] = slice[2]
 
-          changes = slice[4].split(",")
-          entry[:additions] = changes[1].to_i unless changes[1].nil?
-          entry[:deletions] = changes[2].to_i unless changes[2].nil?
+          if slice[4]
+            changes = slice[4].split(",")
+            entry[:additions] = changes[1].to_i unless changes[1].nil?
+            entry[:deletions] = changes[2].to_i unless changes[2].nil?
+          end
 
           collection.push(entry)
         end
