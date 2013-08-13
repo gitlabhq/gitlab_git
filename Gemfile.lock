@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gitlab_git (1.4.1)
+    gitlab_git (2.0.0.pre)
       activesupport (~> 3.2.13)
       github-linguist (~> 2.3.4)
       gitlab-grit (~> 2.6.0)
@@ -9,8 +9,8 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
-    activesupport (3.2.13)
-      i18n (= 0.6.1)
+    activesupport (3.2.14)
+      i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.4)
     charlock_holmes (0.6.9.4)
@@ -46,7 +46,7 @@ GEM
     guard-rspec (2.5.4)
       guard (>= 1.1)
       rspec (~> 2.11)
-    i18n (0.6.1)
+    i18n (0.6.4)
     listen (1.0.2)
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
@@ -60,7 +60,7 @@ GEM
       coderay (~> 1.0.5)
       method_source (~> 0.8)
       slop (~> 3.4)
-    pygments.rb (0.5.1)
+    pygments.rb (0.5.2)
       posix-spawn (~> 0.3.6)
       yajl-ruby (~> 1.1.0)
     rb-fsevent (0.9.3)
