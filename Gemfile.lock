@@ -1,9 +1,9 @@
 PATH
   remote: .
   specs:
-    gitlab_git (2.0.0)
+    gitlab_git (2.0.1)
       activesupport (~> 3.2.13)
-      github-linguist (~> 2.3.4)
+      github-linguist (~> 2.9.4)
       gitlab-grit (~> 2.6.0)
 
 GEM
@@ -24,14 +24,14 @@ GEM
       thor
     crack (0.3.2)
     diff-lcs (1.2.4)
-    escape_utils (0.2.4)
+    escape_utils (0.3.2)
     ffi (1.8.1)
     formatador (0.2.4)
-    github-linguist (2.3.4)
+    github-linguist (2.9.4)
       charlock_holmes (~> 0.6.6)
-      escape_utils (~> 0.2.3)
+      escape_utils (~> 0.3.1)
       mime-types (~> 1.19)
-      pygments.rb (>= 0.2.13)
+      pygments.rb (~> 0.5.2)
     gitlab-grit (2.6.0)
       charlock_holmes (~> 0.6.9)
       diff-lcs (~> 1.1)
@@ -46,7 +46,7 @@ GEM
     guard-rspec (2.5.4)
       guard (>= 1.1)
       rspec (~> 2.11)
-    i18n (0.6.4)
+    i18n (0.6.5)
     listen (1.0.2)
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
