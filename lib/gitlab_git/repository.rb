@@ -199,6 +199,96 @@ module Gitlab
       def diff(from, to)
         raw.diff(from, to)
       end
+
+      # Returns commits collection
+      #
+      # Ex.
+      #   repo.find_commits(
+      #     ref: 'master',
+      #     max_count: 10,
+      #     skip: 5,
+      #     order: :date
+      #   )
+      #
+      #   +options+ is a Hash of optional arguments to git
+      #     :ref is the ref from which to begin (SHA1 or name)
+      #     :contains is the commit contained by the refs from which to begin (SHA1 or name)
+      #     :max_count is the maximum number of commits to fetch
+      #     :skip is the number of commits to skip
+      #     :order is the commits order and allowed value is :date(default) or :topo
+      #
+      def find_commits(options = {})
+        actual_options = options.dup
+
+        allowed_options = [:ref, :max_count, :skip, :contains, :order]
+
+        actual_options.keep_if do |key, value|
+          allowed_options.include?(key)
+        end
+
+        default_options = {pretty: 'raw', order: :date}
+
+        actual_options = default_options.merge(actual_options)
+
+        order = actual_options.delete(:order)
+
+        case order
+        when :date
+          actual_options[:date_order] = true
+        when :topo
+          actual_options[:topo_order] = true
+        end
+
+        ref = actual_options.delete(:ref)
+
+        containing_commit = actual_options.delete(:contains)
+
+        args = []
+
+        if ref
+          args.push(ref)
+        elsif containing_commit
+          args.push(*branch_names_contains(containing_commit))
+        else
+          actual_options[:all] = true
+        end
+
+        output = raw.git.native(:rev_list, actual_options, *args)
+
+        Grit::Commit.list_from_string(raw, output).map do |commit|
+          Gitlab::Git::Commit.decorate(commit)
+        end
+      rescue Grit::GitRuby::Repository::NoSuchShaFound
+        []
+      end
+
+      # Returns branch names collection that contains the special commit(SHA1 or name)
+      #
+      # Ex.
+      #   repo.branch_names_contains('master')
+      #
+      def branch_names_contains(commit)
+        output = raw.git.native(:branch, {contains: true}, commit)
+        # The output is expected as follow
+        #   fix-aaa
+        #   fix-bbb
+        # * master
+        output.scan(/[^* \n]+/)
+      end
+
+      # Get refs hash which key is SHA1 and value is ref object(Grit::Head or Grit::Remote or Grit::Tag)
+      def refs_hash
+        # Initialize only when first call
+        if @refs_hash.nil?
+          @refs_hash = Hash.new { |h, k| h[k] = [] }
+
+          @raw.refs.each do |r|
+            @refs_hash[r.commit.id] << r
+          end
+        end
+
+        @refs_hash
+      end
     end
   end
 end
