@@ -117,6 +117,76 @@ describe Gitlab::Git::Commit do
       it { should include("f0f14c8eaba69ebddd766498a9d0b0e79becd633") }
       it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
     end
+
+    describe :find_all do
+      context 'max_count' do
+        subject do
+          commits = Gitlab::Git::Commit.find_all(
+            repository,
+            max_count: 50
+          )
+
+          commits.map { |c| c.id }
+        end
+
+        it { should have(50).elements }
+        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
+        it { should include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+        it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
+      end
+
+      context 'ref + max_count + skip' do
+        subject do
+          commits = Gitlab::Git::Commit.find_all(
+            repository,
+            ref: 'master',
+            max_count: 50,
+            skip: 1
+          )
+
+          commits.map { |c| c.id }
+        end
+
+        it { should have(50).elements }
+        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
+        it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+        it { should_not include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
+      end
+
+      context 'contains master_bk_2 + max_count' do
+        subject do
+          commits = Gitlab::Git::Commit.find_all(
+            repository,
+            contains: 'master_bk_2',
+            max_count: 50
+          )
+
+          commits.map { |c| c.id }
+        end
+
+        it { should have(50).elements }
+        it { should_not include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
+        it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+        it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
+      end
+
+      context 'contains master_bk_2^ + max_count' do
+        subject do
+          commits = Gitlab::Git::Commit.find_all(
+            repository,
+            contains: 'master_bk_2^',
+            max_count: 50
+          )
+
+          commits.map { |c| c.id }
+        end
+
+        it { should have(50).elements }
+        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
+        it { should include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+        it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
+      end
+    end
   end
 
   describe :init_from_hash do
@@ -166,6 +236,15 @@ describe Gitlab::Git::Commit do
     it { should be_kind_of Array }
     its(:size) { should eq(2) }
     its(:first) { should be_kind_of Gitlab::Git::Diff }
+  end
+
+  describe :ref_names do
+    let(:commit) { Gitlab::Git::Commit.find(repository, 'master') }
+    subject { commit.ref_names(repository) }
+
+    it { should have(3).elements }
+    it { should include("master") }
+    it { should_not include("master_bk_2") }
   end
 
   def sample_commit_hash

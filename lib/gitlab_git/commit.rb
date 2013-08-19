@@ -91,6 +91,11 @@ module Gitlab
           end
         end
 
+        # Delegate Repository#find_commits
+        def find_all(repo, options = {})
+          repo.find_commits(options)
+        end
+
         def decorate(commit, ref = nil)
           Gitlab::Git::Commit.new(commit, ref)
         end
@@ -188,6 +193,24 @@ module Gitlab
 
       def to_patch
         raw_commit.to_patch
+      end
+
+      # Get refs collection(Grit::Head or Grit::Remote or Grit::Tag)
+      #
+      # Ex.
+      #   commit.ref(repo)
+      #
+      def refs(repo)
+        repo.refs_hash[id]
+      end
+
+      # Get ref names collection
+      #
+      # Ex.
+      #   commit.ref_names(repo)
+      #
+      def ref_names(repo)
+        refs(repo).map(&:name)
       end
 
       private
