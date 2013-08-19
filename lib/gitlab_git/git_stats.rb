@@ -11,9 +11,9 @@ module Gitlab
 
       def log
         log = nil
-        Grit::Git.with_timeout(15) do
-          # Limit log to 8k commits to avoid timeout for huge projects
-          args = ['-8000', '--format=%aN%x0a%aE%x0a%cd', '--date=short', '--shortstat', '--no-merges']
+        Grit::Git.with_timeout(30) do
+          # Limit log to 6k commits to avoid timeout for huge projects
+          args = ['-6000', '--format=%aN%x0a%aE%x0a%cd', '--date=short', '--shortstat', '--no-merges']
           log = repo.git.run(nil, 'log', nil, {}, args)
         end
 
