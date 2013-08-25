@@ -15,9 +15,10 @@ module Gitlab
           entry[:date] = slice[2]
 
           if slice[4]
-            changes = slice[4].split(",")
-            entry[:additions] = changes[1].to_i unless changes[1].nil?
-            entry[:deletions] = changes[2].to_i unless changes[2].nil?
+            changes = slice[4]
+
+            entry[:additions] = $1.to_i if changes =~ /(\d+) insertion/
+            entry[:deletions] = $1.to_i if changes =~ /(\d+) deletion/
           end
 
           collection.push(entry)

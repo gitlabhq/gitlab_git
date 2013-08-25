@@ -24,14 +24,20 @@ Dmitriy Zaporozhets
 m@example.com
 2013-05-08
 
- 3 files changed, 29 insertions(+), 3 deletions(-)";
+ 3 files changed, 29 insertions(+), 3 deletions(-)
+Dmitriy Zaporozhets
+m@example.com
+2013-05-08
+
+ 3 files changed, 3 deletions(-)";
 
         lp = Gitlab::Git::LogParser.parse_log(fake_log)
         lp.should eq([
           {author_email: 'm@example.com', author_name: "Karlo Soriano", date: "2013-05-09", additions: 471},
           {author_email: 'm@example.com', author_name: "Dmitriy Zaporozhets", date: "2013-05-08", additions: 6, deletions: 1},
           {author_email: 'm@example.com', author_name: "Dmitriy Zaporozhets", date: "2013-05-08", additions: 19, deletions: 3},
-          {author_email: 'm@example.com', author_name: "Dmitriy Zaporozhets", date: "2013-05-08", additions: 29, deletions: 3}])
+          {author_email: 'm@example.com', author_name: "Dmitriy Zaporozhets", date: "2013-05-08", additions: 29, deletions: 3},
+          {author_email: 'm@example.com', author_name: "Dmitriy Zaporozhets", date: "2013-05-08", deletions: 3}])
       end
     end
   end
