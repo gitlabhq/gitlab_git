@@ -10,8 +10,8 @@ module Gitlab
 
         log.each_slice(5) do |slice|
           entry = {}
-          entry[:author_name] = slice[0]
-          entry[:author_email] = slice[1]
+          entry[:author_name] = slice[0].force_encoding('UTF-8')
+          entry[:author_email] = slice[1].force_encoding('UTF-8')
           entry[:date] = slice[2]
 
           if slice[4]
