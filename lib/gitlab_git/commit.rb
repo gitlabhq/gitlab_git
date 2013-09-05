@@ -179,6 +179,10 @@ module Gitlab
         raw_commit.diffs.map { |diff| Gitlab::Git::Diff.new(diff) }
       end
 
+      def quick_diffs
+        raw_commit.quick_diffs.map { |diff| Gitlab::Git::Diff.new(diff) }
+      end
+
       def parents
         raw_commit.parents
       end
