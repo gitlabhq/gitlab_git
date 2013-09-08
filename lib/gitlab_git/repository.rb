@@ -28,8 +28,8 @@ module Gitlab
       # compatibility
       alias_method :repo, :raw
 
-      def initialize(path_with_namespace, root_ref = 'master')
-        @root_ref = root_ref || "master"
+      def initialize(path_with_namespace, root_ref)
+        @root_ref = root_ref || raw.head.name
         @path_with_namespace = path_with_namespace
 
         # Init grit repo object
