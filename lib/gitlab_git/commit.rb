@@ -85,8 +85,8 @@ module Gitlab
         # Ex.
         #   Commit.between('29eda46b', 'master')
         #
-        def between(repo, from, to)
-          repo.commits_between(from, to).map do |commit|
+        def between(repo, base, head)
+          repo.commits_between(base, head).map do |commit|
             decorate(commit)
           end
         end

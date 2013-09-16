@@ -3,30 +3,29 @@ module Gitlab
     class Compare
       attr_accessor :commits, :commit, :diffs, :same
 
-      def initialize(repository, from, to)
+      def initialize(repository, from, to, limit = 100)
         @commits, @diffs = [], []
         @commit = nil
         @same = false
 
         return unless from && to
 
-        first = repository.commit(to.try(:strip))
-        last = repository.commit(from.try(:strip))
+        base = Gitlab::Git::Commit.find(repository, from.try(:strip))
+        head = Gitlab::Git::Commit.find(repository, to.try(:strip))
 
-        return unless first && last
+        return unless base && head
 
-        if first.id == last.id
+        if base.id == head.id
           @same = true
           return
         end
 
-        @commit = first
-        @commits = repository.commits_between(last.id, first.id)
-
-        @diffs = if @commits.size > 100
+        @commit = head
+        @commits = Gitlab::Git::Commit.between(repository, base.id, head.id)
+        @diffs = if @commits.size > limit
                    []
                  else
-                   repository.repo.diff(last.id, first.id) rescue []
+                   Gitlab::Git::Diff.between(repository, head.id, base.id) rescue []
                  end
       end
     end
