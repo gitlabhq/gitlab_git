@@ -1,3 +1,6 @@
+v 2.2.0
+ - Fixed Compare showing wrong diff 
+
 v 1.4.0
   - Update gitlab_grit dependency to 2.6.0
 
