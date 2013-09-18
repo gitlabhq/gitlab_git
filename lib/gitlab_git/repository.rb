@@ -29,8 +29,8 @@ module Gitlab
       alias_method :repo, :raw
 
       def initialize(path_with_namespace, root_ref)
-        @root_ref = root_ref || raw.head.name
         @path_with_namespace = path_with_namespace
+        @root_ref = root_ref || raw.head.name
 
         # Init grit repo object
         raw
