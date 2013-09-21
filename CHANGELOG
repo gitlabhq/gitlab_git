@@ -1,3 +1,7 @@
+v 2.3.0
+  - Better ref detection
+  - Fixed empty repo bug
+
 v 2.2.0
  - Fixed Compare showing wrong diff 
 
