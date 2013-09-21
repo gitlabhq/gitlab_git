@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.homepage    =
     'http://rubygems.org/gems/gitlab_git'
 
-  s.add_dependency("github-linguist", "~> 2.9.4")
+  s.add_dependency("github-linguist", "~> 2.3.4")
   s.add_dependency("gitlab-grit", "~> 2.6.0")
   s.add_dependency("activesupport", "~> 3.2.13")
 end
