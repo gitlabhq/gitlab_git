@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Gitlab::Git::Commit do
-  let(:repository) { Gitlab::Git::Repository.new('gitlabhq', 'master') }
+  let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
   let(:commit) { Gitlab::Git::Commit.last(repository) }
 
   describe "Commit info" do

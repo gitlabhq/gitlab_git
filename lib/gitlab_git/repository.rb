@@ -8,44 +8,29 @@ module Gitlab
 
       class NoRepository < StandardError; end
 
-      class << self
-        attr_accessor :repos_path
-      end
-
-      # Repository directory name with namespace direcotry
-      # Examples:
-      #   gitlab/gitolite
-      #   diaspora
-      #
-      attr_accessor :path_with_namespace
-
       # Default branch in the repository
       attr_accessor :root_ref
 
+      # Full path to repo
+      attr_reader :path
+
+      # Directory name of repo
+      attr_reader :name
+
       # Grit repo object
-      attr_reader :raw
+      attr_reader :grit
 
-      # compatibility
-      alias_method :repo, :raw
+      # Alias to old method for compatibility
+      alias_method :raw, :grit
 
-      def initialize(path_with_namespace, root_ref)
-        @path_with_namespace = path_with_namespace
-        @root_ref = root_ref || raw.head.name
-
-        # Init grit repo object
-        raw
+      def initialize(path)
+        @path = path
+        @name = path.split("/").last
+        @root_ref = discover_default_branch
       end
 
-      def path_to_repo
-        @path_to_repo ||= File.join(repos_path, "#{path_with_namespace}.git")
-      end
-
-      def repos_path
-        self.class.repos_path
-      end
-
-      def raw
-        @raw ||= Grit::Repo.new(path_to_repo)
+      def grit
+        @grit ||= Grit::Repo.new(path)
       rescue Grit::NoSuchPathError
         raise NoRepository.new('no repository for such path')
       end
@@ -58,7 +43,7 @@ module Gitlab
 
       # Returns an Array of Branches
       def branches
-        raw.branches.sort_by(&:name)
+        grit.branches.sort_by(&:name)
       end
 
       # Returns an Array of tag names
@@ -68,7 +53,7 @@ module Gitlab
 
       # Returns an Array of Tags
       def tags
-        raw.tags.sort_by(&:name).reverse
+        grit.tags.sort_by(&:name).reverse
       end
 
       # Returns an Array of branch and tag names
@@ -77,13 +62,7 @@ module Gitlab
       end
 
       def heads
-        @heads ||= raw.heads.sort_by(&:name)
-      end
-
-      def tree(fcommit, path = nil)
-        fcommit = commit if fcommit == :head
-        tree = fcommit.tree
-        path ? (tree / path) : tree
+        @heads ||= grit.heads.sort_by(&:name)
       end
 
       def has_commits?
@@ -100,15 +79,18 @@ module Gitlab
       #
       # - If no branches are present, returns nil
       # - If one branch is present, returns its name
-      # - If two or more branches are present, returns the one that has a name
-      #   matching root_ref (default_branch or 'master' if default_branch is nil)
+      # - If two or more branches are present, returns current HEAD or master or first branch
       def discover_default_branch
         if branch_names.length == 0
           nil
         elsif branch_names.length == 1
           branch_names.first
-        else
-          branch_names.select { |v| v == root_ref }.first
+        elsif grit.head
+          grit.head.name
+        elsif branch_names.include?("master")
+          "master"
+        elsif
+          branch_names.first
         end
       end
 
@@ -123,16 +105,16 @@ module Gitlab
         return nil unless commit
 
         # Build file path
-        file_name = self.path_with_namespace.gsub("/","_") + "-" + commit.id.to_s + ".tar.gz"
-        file_path = File.join(storage_path, self.path_with_namespace, file_name)
+        file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + ".tar.gz"
+        file_path = File.join(storage_path, self.name, file_name)
 
         # Put files into a directory before archiving
-        prefix = File.basename(self.path_with_namespace) + "/"
+        prefix = File.basename(self.name) + "/"
 
         # Create file if not exists
         unless File.exists?(file_path)
           FileUtils.mkdir_p File.dirname(file_path)
-          file = self.raw.archive_to_file(ref, prefix,  file_path)
+          file = self.grit.archive_to_file(ref, prefix,  file_path)
         end
 
         file_path
@@ -140,7 +122,7 @@ module Gitlab
 
       # Return repo size in megabytes
       def size
-        size = popen('du -s', path_to_repo).first.strip.to_i
+        size = popen('du -s', path).first.strip.to_i
         (size.to_f / 1024).round(2)
       end
 
@@ -149,7 +131,7 @@ module Gitlab
           ref = root_ref
         end
 
-        greps = raw.grep(query, 3, ref)
+        greps = grit.grep(query, 3, ref)
 
         greps.map do |grep|
           Gitlab::Git::BlobSnippet.new(ref, grep.content, grep.startline, grep.filename)
@@ -177,7 +159,7 @@ module Gitlab
 
         options = default_options.merge(options)
 
-        raw.log(
+        grit.log(
           options[:ref] || root_ref,
           options[:path],
           max_count: options[:limit].to_i,
@@ -189,15 +171,15 @@ module Gitlab
       # Delegate commits_between to Grit method
       #
       def commits_between(from, to)
-        raw.commits_between(from, to)
+        grit.commits_between(from, to)
       end
 
       def merge_base_commit(from, to)
-        raw.git.native(:merge_base, {}, [to, from]).strip
+        grit.git.native(:merge_base, {}, [to, from]).strip
       end
 
       def diff(from, to)
-        raw.diff(from, to)
+        grit.diff(from, to)
       end
 
       # Returns commits collection
@@ -253,9 +235,9 @@ module Gitlab
           actual_options[:all] = true
         end
 
-        output = raw.git.native(:rev_list, actual_options, *args)
+        output = grit.git.native(:rev_list, actual_options, *args)
 
-        Grit::Commit.list_from_string(raw, output).map do |commit|
+        Grit::Commit.list_from_string(grit, output).map do |commit|
           Gitlab::Git::Commit.decorate(commit)
         end
       rescue Grit::GitRuby::Repository::NoSuchShaFound
@@ -268,7 +250,7 @@ module Gitlab
       #   repo.branch_names_contains('master')
       #
       def branch_names_contains(commit)
-        output = raw.git.native(:branch, {contains: true}, commit)
+        output = grit.git.native(:branch, {contains: true}, commit)
         # The output is expected as follow
         #   fix-aaa
         #   fix-bbb
@@ -276,17 +258,17 @@ module Gitlab
         output.scan(/[^* \n]+/)
       end
 
-      # Get refs hash which key is SHA1 and value is ref object(Grit::Head or Grit::Remote or Grit::Tag)
+      # Get refs hash which key is SHA1
+      # and value is ref object(Grit::Head or Grit::Remote or Grit::Tag)
       def refs_hash
         # Initialize only when first call
         if @refs_hash.nil?
           @refs_hash = Hash.new { |h, k| h[k] = [] }
 
-          @raw.refs.each do |r|
+          grit.refs.each do |r|
             @refs_hash[r.commit.id] << r
           end
         end
-
         @refs_hash
       end
     end

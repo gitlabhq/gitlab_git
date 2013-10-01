@@ -11,26 +11,17 @@ GitLab wrapper around git objects. Use patched Grit as main library for parsing 
 
 ### How to use: 
 
-#### Before
-
-Set repositories storage:
-
-    Gitlab::Git::Repository.repos_path = '/home/git/repositories'
-
 #### Repository
 
     # Init repo with relative path according to repos_path. 
-    # Example: 
-    #  if 
-    #    repos path is '/home/git/repos'
-    #    full path is '/home/git/repos/namespace/project.git'
-    #  then: 
-    #    Gitlab::Git::Repository.new('namespace/project.git') 
     # 
-    repo = Gitlab::Git::Repository.new('gitlab/gitlab-ci')
+    repo = Gitlab::Git::Repository.new('/home/git/repositories/gitlab/gitlab-ci.git')
 
-    repo.path_to_repo
+    repo.path
     # "/home/git/repositories/gitlab/gitlab-ci.git"
+
+    repo.name
+    # "gitlab-ci.git"
 
     # Get branches and tags
     repo.branches
@@ -52,33 +43,52 @@ Set repositories storage:
     # [ <Gitlab::Git::BlobSnippet:0x000..>, <Gitlab::Git::BlobSnippet:0x000..>]
  
     # Access to grit repo object 
-    repo.raw  
+    repo.grit
 
 #### Tree
 
-    # Tree object for root dir
-    tree = Gitlab::Git::Tree.new(repo, '893ade32')
+    # Tree objects for root dir
+    tree = Gitlab::Git::Tree.where(repo, '893ade32')
 
-    # Tree object for sub dir
-    tree = Gitlab::Git::Tree.new(repo, '893ade32', 'master', 'app/models/')
+    # Tree objects for sub dir
+    tree = Gitlab::Git::Tree.where(repo, '893ade32', 'master', 'app/models/')
 
-    # Get readme for this directory if exists
-    tree.readme
+    # [
+    #   #<Gitlab::Git::Tree:0x00000002b2ed80 @id="38f45392ae61f0effa84048f208a81019cc306bb", @name="lib", @path="projects/lib", @type=:tree, @mode="040000", @commit_id="8470d70da67355c9c009e4401746b1d5410af2e3">
+    #   #<Gitlab::Git::Tree:0x00000002b2ed80 @id="32a45392ae61f0effa84048f208a81019cc306bb", @name="sample.rb", @path="projects/sample.rb", @type=:blob, @mode="040000", @commit_id="8470d70da67355c9c009e4401746b1d5410af2e3">
+    # ]
+ 
+    dir = tree.first
+    dir.name # lib
+    dir.type # :tree
+    dir.dir? # true
+    dir.file? # false
+ 
+    file = tree.last
+    file.name # sample.rb
+    file.type # :blob
+    file.dir? # false
+    file.file? # true
 
-    # Get directories  
-    tree.trees
-    # [ <Gitlab::Git::Tree:0x000>, ...]
+    # Select only files for tree
+    tree.select(&:file?)
 
-    # Get blobs  
-    tree.blobs
-    # [ <Gitlab::Git::Blob:0x000>, ...]
+    # Find readme
+    tree.find(&:readme?)
 
-    # Get submodules
-    tree.submodules
-    # [ <Grit::Submodule:0x000>, ...]
+#### Blob
 
-    # Check if subdir   
-    tree.up_dir?
+    # Blob object for Commit sha 893ade32
+    blob = Gitlab::Git::Blob.find(repo, '893ade32', 'Gemfile')
+
+    # Attributes 
+    blob.id
+    blob.name
+    blob.size
+    blob.data
+    blob.mode
+    blob.path
+    blob.commit_id
 
 #### Commit
 

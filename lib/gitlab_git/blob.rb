@@ -3,41 +3,35 @@ module Gitlab
     class Blob
       include Linguist::BlobHelper
 
-      attr_accessor :raw_blob
+      attr_accessor :name, :path, :size, :data, :mode, :id, :commit_id
 
-      def initialize(repository, sha, ref, path)
-        @repository, @sha, @ref = repository, sha, ref
+      class << self
+        def find(repository, sha, path)
+          commit = Commit.find(repository, sha)
+          grit_blob = commit.tree / path
 
-        @commit = @repository.commit(sha)
-        @raw_blob = @repository.tree(@commit, path)
-      end
-
-      def data
-        if raw_blob and raw_blob.respond_to?('data')
-          raw_blob.data
-        else
-          nil
+          if grit_blob.kind_of?(Grit::Blob)
+            Blob.new(
+              id: grit_blob.id,
+              name: grit_blob.name,
+              size: grit_blob.size,
+              data: grit_blob.data,
+              mode: grit_blob.mode,
+              path: path,
+              commit_id: sha,
+            )
+          end
         end
       end
 
-      def name
-        raw_blob.name
-      end
-
-      def exists?
-        raw_blob
+      def initialize(options)
+        %w(id name path size data mode commit_id).each do |key|
+          self.send("#{key}=", options[key.to_sym])
+        end
       end
 
       def empty?
         !data || data == ''
-      end
-
-      def mode
-        raw_blob.mode
-      end
-
-      def size
-        raw_blob.size
       end
     end
   end

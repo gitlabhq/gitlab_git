@@ -1,54 +1,52 @@
 module Gitlab
   module Git
     class Tree
-      attr_accessor :repository, :sha, :path, :ref, :raw_tree, :id
+      attr_accessor :id, :name, :path, :type, :mode, :commit_id
 
-      def initialize(repository, sha, ref = nil, path = nil)
-        @repository, @sha, @ref, @path = repository, sha, ref, path
+      class << self
+        def where(repository, sha, path = '/')
+          commit = Commit.find(repository, sha)
+          grit_tree = commit.tree / path
 
-        @path = nil if !@path || @path == ''
+          if grit_tree && grit_tree.respond_to?(:contents)
+            grit_tree.contents.map do |entry|
+              type = entry.class.to_s.split("::").last.downcase.to_sym
 
-        # Load tree from repository
-        @commit = Gitlab::Git::Commit.find(@repository, @sha)
-        @raw_tree = @repository.tree(@commit, @path)
+              Tree.new(
+                id: entry.id,
+                name: entry.name,
+                type: type,
+                mode: entry.mode,
+                path: path == '/' ? entry.name : File.join(path, entry.name),
+                commit_id: sha,
+              )
+            end
+          else
+            []
+          end
+        end
       end
 
-      def exists?
-        raw_tree
+      def initialize(options)
+        %w(id name path type mode commit_id).each do |key|
+          self.send("#{key}=", options[key.to_sym])
+        end
       end
 
-      def empty?
-        trees.empty? && blobs.empty?
+      def dir?
+        type == :tree
       end
 
-      def trees
-        entries.select { |t| t.is_a?(Grit::Tree) }
+      def file?
+        type == :blob
       end
 
-      def blobs
-        entries.select { |t| t.is_a?(Grit::Blob) }
+      def submodule?
+        type == :submodule
       end
 
-      def submodules
-        entries.select { |t| t.is_a?(Grit::Submodule) }
-      end
-
-      def is_blob?
-        raw_tree.is_a?(Grit::Blob)
-      end
-
-      def up_dir?
-        path && path != ''
-      end
-
-      def readme
-        @readme ||= blobs.find { |c| c.name =~ /^readme/i }
-      end
-
-      protected
-
-      def entries
-        raw_tree.contents
+      def readme?
+        name =~ /^readme/i
       end
     end
   end
