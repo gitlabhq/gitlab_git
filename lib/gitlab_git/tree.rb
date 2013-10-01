@@ -8,7 +8,7 @@ module Gitlab
           commit = Commit.find(repository, sha)
           grit_tree = commit.tree / path
 
-          if grit_tree
+          if grit_tree && grit_tree.respond_to?(:contents)
             grit_tree.contents.map do |entry|
               type = entry.class.to_s.split("::").last.downcase.to_sym
 
