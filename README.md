@@ -71,6 +71,20 @@ GitLab wrapper around git objects. Use patched Grit as main library for parsing 
     # Check if subdir   
     tree.up_dir?
 
+#### Blob
+
+    # Blob object for Commit sha 893ade32
+    blob = Gitlab::Git::Blob.find(repo, '893ade32', 'Gemfile')
+
+    # Attributes 
+    blob.id
+    blob.name
+    blob.size
+    blob.data
+    blob.mode
+    blob.path
+    blob.commit_id
+
 #### Commit
 
 ##### Picking
