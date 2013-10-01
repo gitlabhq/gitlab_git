@@ -65,12 +65,6 @@ module Gitlab
         @heads ||= grit.heads.sort_by(&:name)
       end
 
-      def tree(fcommit, path = nil)
-        fcommit = commit if fcommit == :head
-        tree = fcommit.tree
-        path ? (tree / path) : tree
-      end
-
       def has_commits?
         !!Gitlab::Git::Commit.last(self)
       rescue Grit::NoSuchPathError
