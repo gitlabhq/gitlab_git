@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Gitlab::Git::Diff do
-  let(:repository) { Gitlab::Git::Repository.new('gitlabhq', 'master') }
+  let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
 
   before do
     @raw_diff_hash = {

@@ -1,12 +1,13 @@
 require "spec_helper"
 
 describe Gitlab::Git::Repository do
-  let(:repository) { Gitlab::Git::Repository.new('gitlabhq', 'master') }
+  let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
 
   describe "Respond to" do
     subject { repository }
 
     it { should respond_to(:raw) }
+    it { should respond_to(:grit) }
     it { should respond_to(:tree) }
     it { should respond_to(:root_ref) }
     it { should respond_to(:tags) }
@@ -23,9 +24,10 @@ describe Gitlab::Git::Repository do
     end
 
     it "returns non-master when master exists but default branch is set to something else" do
-      repository.root_ref = 'stable'
+      File.write(File.join(repository.path, '.git', 'HEAD'), 'ref: refs/heads/stable')
       repository.should_receive(:branch_names).at_least(:once).and_return([stable, master])
       repository.discover_default_branch.should == 'stable'
+      File.write(File.join(repository.path, '.git', 'HEAD'), 'ref: refs/heads/master')
     end
 
     it "returns a non-master branch when only one exists" do
@@ -83,10 +85,10 @@ describe Gitlab::Git::Repository do
   end
 
   describe :archive do
-    let(:archive) { repository.archive_repo('master', repository.repos_path) }
+    let(:archive) { repository.archive_repo('master', '/tmp') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/support\/gitlabhq\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
     it { File.exists?(archive).should be_true }
   end
 

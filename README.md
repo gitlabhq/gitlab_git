@@ -11,26 +11,17 @@ GitLab wrapper around git objects. Use patched Grit as main library for parsing 
 
 ### How to use: 
 
-#### Before
-
-Set repositories storage:
-
-    Gitlab::Git::Repository.repos_path = '/home/git/repositories'
-
 #### Repository
 
     # Init repo with relative path according to repos_path. 
-    # Example: 
-    #  if 
-    #    repos path is '/home/git/repos'
-    #    full path is '/home/git/repos/namespace/project.git'
-    #  then: 
-    #    Gitlab::Git::Repository.new('namespace/project.git') 
     # 
-    repo = Gitlab::Git::Repository.new('gitlab/gitlab-ci')
+    repo = Gitlab::Git::Repository.new('/home/git/repositories/gitlab/gitlab-ci.git')
 
-    repo.path_to_repo
+    repo.path
     # "/home/git/repositories/gitlab/gitlab-ci.git"
+
+    repo.name
+    # "gitlab-ci.git"
 
     # Get branches and tags
     repo.branches
@@ -52,7 +43,7 @@ Set repositories storage:
     # [ <Gitlab::Git::BlobSnippet:0x000..>, <Gitlab::Git::BlobSnippet:0x000..>]
  
     # Access to grit repo object 
-    repo.raw  
+    repo.grit
 
 #### Tree
 

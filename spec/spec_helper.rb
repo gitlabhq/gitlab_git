@@ -40,6 +40,6 @@ RSpec.configure do |config|
       `mv gitlabhq gitlabhq.git`
     end
 
-    Gitlab::Git::Repository.repos_path = support_path
+    TEST_REPO_PATH = File.join(support_path, 'gitlabhq.git')
   end
 end

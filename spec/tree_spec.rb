@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Gitlab::Git::Tree do
-  let(:repository) { Gitlab::Git::Repository.new('gitlabhq', 'master') }
+  let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
   let(:tree) { Gitlab::Git::Tree.new(repository, ValidCommit::ID) }
 
   it { tree.exists?.should be_true }
