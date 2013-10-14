@@ -1,7 +1,7 @@
 module Gitlab
   module Git
     class Tree
-      attr_accessor :id, :name, :path, :type, :mode, :commit_id
+      attr_accessor :id, :name, :path, :type, :mode, :commit_id, :submodule_url
 
       class << self
         def where(repository, sha, path = '/')
@@ -19,6 +19,7 @@ module Gitlab
                 mode: entry.mode,
                 path: path == '/' ? entry.name : File.join(path, entry.name),
                 commit_id: sha,
+                submodule_url: (type == :submodule) ? entry.url(sha) : nil
               )
             end
           else
@@ -28,7 +29,7 @@ module Gitlab
       end
 
       def initialize(options)
-        %w(id name path type mode commit_id).each do |key|
+        %w(id name path type mode commit_id submodule_url).each do |key|
           self.send("#{key}=", options[key.to_sym])
         end
       end
