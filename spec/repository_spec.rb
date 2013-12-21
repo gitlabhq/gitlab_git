@@ -63,6 +63,34 @@ describe Gitlab::Git::Repository do
     after { FileUtils.rm_r(archive) }
 
     it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should end_with ".tar.gz" }
+    it { File.exists?(archive).should be_true }
+  end
+
+  describe :archive_zip do
+    let(:archive) { repository.archive_repo('master', '/tmp', 'zip') }
+    after { FileUtils.rm_r(archive) }
+
+    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should end_with ".zip" }
+    it { File.exists?(archive).should be_true }
+  end
+
+  describe :archive_bz2 do
+    let(:archive) { repository.archive_repo('master', '/tmp', 'tbz2') }
+    after { FileUtils.rm_r(archive) }
+
+    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should end_with ".tar.bz2" }
+    it { File.exists?(archive).should be_true }
+  end
+
+  describe :archive_fallback do
+    let(:archive) { repository.archive_repo('master', '/tmp', 'madeup') }
+    after { FileUtils.rm_r(archive) }
+
+    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should end_with ".tar.gz" }
     it { File.exists?(archive).should be_true }
   end
 

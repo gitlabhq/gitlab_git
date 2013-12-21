@@ -99,13 +99,35 @@ module Gitlab
       # Already packed repo archives stored at
       # app_root/tmp/repositories/project_name/project_name-commit-id.tag.gz
       #
-      def archive_repo(ref, storage_path)
+      def archive_repo(ref, storage_path, format = "tar.gz")
         ref = ref || self.root_ref
         commit = Gitlab::Git::Commit.find(self, ref)
         return nil unless commit
+        
+        extension = nil
+        git_archive_format = nil
+        pipe_cmd = nil
+        
+        case format
+        when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
+          extension = ".tar.bz2"
+          pipe_cmd = "bzip"
+        when "tar"
+          extension = ".tar"
+          pipe_cmd = "cat"
+        when "zip"
+          extension = ".zip"
+          git_archive_format = "zip"
+          pipe_cmd = "cat"
+        else
+          # everything else should fall back to tar.gz
+          extension = ".tar.gz"
+          git_archive_format = nil
+          pipe_cmd = "gzip"
+        end
 
         # Build file path
-        file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + ".tar.gz"
+        file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + extension
         file_path = File.join(storage_path, self.name, file_name)
 
         # Put files into a directory before archiving
@@ -114,7 +136,7 @@ module Gitlab
         # Create file if not exists
         unless File.exists?(file_path)
           FileUtils.mkdir_p File.dirname(file_path)
-          file = self.grit.archive_to_file(ref, prefix,  file_path)
+          file = self.grit.archive_to_file(ref, prefix, file_path, git_archive_format, pipe_cmd)
         end
 
         file_path
