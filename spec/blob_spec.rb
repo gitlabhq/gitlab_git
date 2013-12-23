@@ -10,4 +10,9 @@ describe Gitlab::Git::Blob do
   it { blob.commit_id.should == ValidCommit::ID }
   it { blob.data[0..10].should == "require \"gr" }
   it { blob.size.should == 10049  }
+
+  let(:raw_blob) { Gitlab::Git::Blob.raw(repository, "b59dcd80c874a106258b5b1d30050360151fef2d") }
+  it { raw_blob.id.should == "b59dcd80c874a106258b5b1d30050360151fef2d" }
+  it { raw_blob.data[0..10].should == "require \"gr" }
+  it { raw_blob.size.should == 10049  }
 end
