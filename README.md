@@ -89,6 +89,15 @@ GitLab wrapper around git objects. Use patched Grit as main library for parsing 
     blob.path
     blob.commit_id
 
+    # Blob object with sha 8a3f8ddcf3536628c9670d41e67a785383eded1d
+    raw_blob = Gitlab::Git::Blob.raw(repo, '8a3f8ddcf3536628c9670d41e67a785383eded1d')
+
+    # Attributes for raw blobs are more limited
+    raw_blob.id
+    raw_blob.size
+    raw_blob.data
+
+
 #### Commit
 
 ##### Picking

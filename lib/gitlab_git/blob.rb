@@ -22,6 +22,15 @@ module Gitlab
             )
           end
         end
+
+        def raw(repository, sha)
+          grit_blob = repository.grit.blob(sha)
+          Blob.new(
+            id: grit_blob.id,
+            size: grit_blob.size,
+            data: grit_blob.data,
+          )
+        end
       end
 
       def initialize(options)
