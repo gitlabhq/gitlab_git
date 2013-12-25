@@ -13,8 +13,7 @@ GitLab wrapper around git objects. Use patched Grit as main library for parsing 
 
 #### Repository
 
-    # Init repo with relative path according to repos_path. 
-    # 
+    # Init repo with full path
     repo = Gitlab::Git::Repository.new('/home/git/repositories/gitlab/gitlab-ci.git')
 
     repo.path
