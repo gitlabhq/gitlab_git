@@ -200,8 +200,8 @@ module Gitlab
         grit.git.native(:merge_base, {}, [to, from]).strip
       end
 
-      def diff(from, to)
-        grit.diff(from, to)
+      def diff(from, to, *paths)
+        grit.diff(from, to, *paths)
       end
 
       # Returns commits collection
