@@ -1,3 +1,16 @@
+v 4.0.0
+  - use activesupport v4
+  - Add support for raw blob search
+  - Add support for zip archives
+
+v 3.1.0
+  - use gitlab dependencies (linguist, pygments)
+
+v 3.0.0
+  - Refactor Git::Tree
+  - Refactor Git::Blob
+  - Refactored Git::Repository
+
 v 2.3.0
   - Better ref detection
   - Fixed empty repo bug
