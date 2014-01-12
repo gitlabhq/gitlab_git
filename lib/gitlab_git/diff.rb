@@ -15,13 +15,13 @@ module Gitlab
       attr_accessor  :new_file, :renamed_file, :deleted_file
 
       class << self
-        def between(repo, head, base)
+        def between(repo, head, base, *paths)
           # Only show what is new in the source branch compared to the target branch, not the other way around.
           # The linex below with merge_base is equivalent to diff with three dots (git diff branch1...branch2)
           # From the git documentation: "git diff A...B" is equivalent to "git diff $(git-merge-base A B) B"
           common_commit = repo.merge_base_commit(head, base)
 
-          repo.diff(common_commit, head).map do |diff|
+          repo.diff(common_commit, head, *paths).map do |diff|
             Gitlab::Git::Diff.new(diff)
           end
         rescue Grit::Git::GitTimeout
