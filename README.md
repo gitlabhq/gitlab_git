@@ -178,3 +178,17 @@ GitLab wrapper around git objects. Use patched Grit as main library for parsing 
        commit # <Gitlab::Git::Commit:0x000..>
        lines # ['class Project', 'def initialize']
      end
+
+
+#### Compare
+
+Allows you to get difference(commits, diffs) between two sha/branch/tag
+
+
+     compare = Gitlab::Git::Compare.new(repo, 'v4.3.2', 'master')
+     
+     compare.commits 
+     # [ <Gitlab::Git::Commit:0x000..>, <Gitlab::Git::Commit:0x000..>]
+ 
+     compare.diffs
+     # [ <Gitlab::Git::Diff:0x000..>, <Gitlab::Git::Diff:0x000..>]

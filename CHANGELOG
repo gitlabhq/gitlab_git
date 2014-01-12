@@ -1,3 +1,6 @@
+v 4.1.0
+  - Allow to specify diff paths
+
 v 4.0.0
   - use activesupport v4
   - Add support for raw blob search
