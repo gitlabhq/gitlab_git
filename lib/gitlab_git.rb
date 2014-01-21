@@ -4,6 +4,7 @@ require 'fileutils'
 require 'grit'
 require 'linguist'
 require 'active_support/core_ext/hash/keys'
+require 'active_support/core_ext/object/try'
 require 'grit'
 require 'grit_ext'
 
