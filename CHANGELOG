@@ -1,3 +1,6 @@
+v 5.0.0
+  - Use new version of linguist
+
 v 4.1.0
   - Allow to specify diff paths
   - Remove pygments dependency

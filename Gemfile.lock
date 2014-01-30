@@ -4,7 +4,7 @@ PATH
     gitlab_git (4.1.0)
       activesupport (~> 4.0.0)
       gitlab-grit (~> 2.6.1)
-      gitlab-linguist (~> 2.9.5)
+      gitlab-linguist (~> 3.0.0)
 
 GEM
   remote: http://rubygems.org/
@@ -36,14 +36,10 @@ GEM
       diff-lcs (~> 1.1)
       mime-types (~> 1.15)
       posix-spawn (~> 0.3.6)
-    gitlab-linguist (2.9.6)
+    gitlab-linguist (3.0.0)
       charlock_holmes (~> 0.6.6)
       escape_utils (~> 0.2.4)
-      gitlab-pygments.rb (~> 0.5.4)
       mime-types (~> 1.19)
-    gitlab-pygments.rb (0.5.4)
-      posix-spawn (~> 0.3.6)
-      yajl-ruby (~> 1.1.0)
     guard (1.8.0)
       formatador (>= 0.2.4)
       listen (>= 1.0.0)
@@ -95,7 +91,6 @@ GEM
     webmock (1.11.0)
       addressable (>= 2.2.7)
       crack (>= 0.3.2)
-    yajl-ruby (1.1.0)
 
 PLATFORMS
   ruby
