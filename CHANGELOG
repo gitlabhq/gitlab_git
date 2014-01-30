@@ -1,5 +1,6 @@
 v 4.1.0
   - Allow to specify diff paths
+  - Remove pygments dependency
 
 v 4.0.0
   - use activesupport v4

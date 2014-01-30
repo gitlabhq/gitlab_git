@@ -1,11 +1,10 @@
 PATH
   remote: .
   specs:
-    gitlab_git (4.0.0.pre)
+    gitlab_git (4.1.0)
       activesupport (~> 4.0.0)
       gitlab-grit (~> 2.6.1)
       gitlab-linguist (~> 2.9.5)
-      gitlab-pygments.rb (~> 0.5.4)
 
 GEM
   remote: http://rubygems.org/
