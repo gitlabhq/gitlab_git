@@ -53,7 +53,7 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     it { should have(16).elements }
-    its(:first) { should == "v2.2.0pre" }
+    its(:last) { should == "v2.2.0pre" }
     it { should include("v1.2.0") }
     it { should_not include("v5.0.0") }
   end
@@ -134,7 +134,7 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     its(:first) { should == '2_3_notes_fix' }
-    its(:last) { should == 'v0.9.4' }
+    its(:last) { should == 'v2.2.0pre' }
   end
 
   describe :search_files do
