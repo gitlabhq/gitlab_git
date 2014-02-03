@@ -1,3 +1,7 @@
+v 5.1.0
+  - Added rugged dependency
+  - Git::Tag and Git::Branch objects
+
 v 5.0.0
   - Use new version of linguist
 

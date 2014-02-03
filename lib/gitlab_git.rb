@@ -6,6 +6,7 @@ require 'linguist'
 require 'active_support/core_ext/hash/keys'
 require 'grit'
 require 'grit_ext'
+require 'rugged'
 
 Grit::Blob.class_eval do
   include Linguist::BlobHelper
@@ -24,3 +25,6 @@ require_relative "gitlab_git/tree"
 require_relative "gitlab_git/blob_snippet"
 require_relative "gitlab_git/git_stats"
 require_relative "gitlab_git/log_parser"
+require_relative "gitlab_git/ref"
+require_relative "gitlab_git/branch"
+require_relative "gitlab_git/tag"
