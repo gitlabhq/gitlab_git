@@ -20,6 +20,9 @@ module Gitlab
       # Grit repo object
       attr_reader :grit
 
+      # Rugged repo object
+      attr_reader :grit
+
       # Alias to old method for compatibility
       alias_method :raw, :grit
 
@@ -35,6 +38,12 @@ module Gitlab
         raise NoRepository.new('no repository for such path')
       end
 
+      def rugged
+        @rugged ||= Rugged::Repository.new(path)
+      rescue Rugged::RepositoryError
+        raise NoRepository.new('no repository for such path')
+      end
+
       # Returns an Array of branch names
       # sorted by name ASC
       def branch_names
@@ -43,7 +52,11 @@ module Gitlab
 
       # Returns an Array of Branches
       def branches
-        grit.branches.sort_by(&:name)
+        rugged.refs.select do |ref|
+          ref.name =~ /\Arefs\/heads/
+        end.map do |rugged_ref|
+          Branch.new(rugged_ref.name, rugged_ref.target)
+        end.sort_by(&:name)
       end
 
       # Returns an Array of tag names
@@ -53,7 +66,11 @@ module Gitlab
 
       # Returns an Array of Tags
       def tags
-        grit.tags.sort_by(&:name).reverse
+        rugged.refs.select do |ref|
+          ref.name =~ /\Arefs\/tags/
+        end.map do |rugged_ref|
+          Tag.new(rugged_ref.name, rugged_ref.target)
+        end.sort_by(&:name)
       end
 
       # Returns an Array of branch and tag names
@@ -103,11 +120,11 @@ module Gitlab
         ref = ref || self.root_ref
         commit = Gitlab::Git::Commit.find(self, ref)
         return nil unless commit
-        
+
         extension = nil
         git_archive_format = nil
         pipe_cmd = nil
-        
+
         case format
         when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
           extension = ".tar.bz2"
