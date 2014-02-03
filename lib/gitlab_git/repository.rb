@@ -21,7 +21,7 @@ module Gitlab
       attr_reader :grit
 
       # Rugged repo object
-      attr_reader :grit
+      attr_reader :rugged
 
       # Alias to old method for compatibility
       alias_method :raw, :grit
@@ -40,7 +40,7 @@ module Gitlab
 
       def rugged
         @rugged ||= Rugged::Repository.new(path)
-      rescue Rugged::RepositoryError
+      rescue Rugged::RepositoryError, Rugged::OSError
         raise NoRepository.new('no repository for such path')
       end
 
