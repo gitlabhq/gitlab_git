@@ -61,6 +61,10 @@ describe Gitlab::Git::Commit do
         Gitlab::Git::Commit.find(repository, ValidCommit::ID).should be_valid_commit
       end
 
+      it "should return valid commit for tag" do
+        Gitlab::Git::Commit.find(repository, 'v1.0.2').id.should == '3a2b273316fb29d63b489906f85d9b5329377258'
+      end
+
       it "should return nil" do
         Gitlab::Git::Commit.find(repository, "+123_4532530XYZ").should be_nil
       end

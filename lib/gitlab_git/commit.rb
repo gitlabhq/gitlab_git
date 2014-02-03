@@ -47,7 +47,7 @@ module Gitlab
           tag = repo.tags.find {|tag| tag.name == commit_id} if commit_id
 
           commit = if tag
-                     tag.commit
+                     repo.log(ref: tag.target).first
                    else
                      repo.log(ref: commit_id).first
                    end
