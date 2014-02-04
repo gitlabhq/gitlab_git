@@ -5,6 +5,9 @@ module Gitlab
         :mode, :commit_id, :submodule_url
 
       class << self
+        # Get list of tree objects
+        # for repository based on commit sha and path
+        # Uses rugged for raw objects
         def where(repository, sha, path = nil)
           path = nil if path == '' || path == '/'
 
@@ -12,7 +15,7 @@ module Gitlab
           root_tree = commit.tree
 
           tree = if path
-                   id = Tree.find_id_by_path(root_tree, path)
+                   id = Tree.find_id_by_path(repository, root_tree.oid, path)
                    if id
                      repository.rugged.lookup(id)
                    else
@@ -35,7 +38,19 @@ module Gitlab
           end
         end
 
-        def find_id_by_path(root_tree, path)
+        # Recursive search of tree id for path
+        #
+        # Ex.
+        #   blog/            # oid: 1a
+        #     app/           # oid: 2a
+        #       models/      # oid: 3a
+        #       views/       # oid: 4a
+        #
+        #
+        # Tree.find_id_by_path(repo, '1a', 'app/models') # => '3a'
+        #
+        def find_id_by_path(repository, root_id, path)
+          root_tree = repository.rugged.lookup(root_id)
           path_arr = path.split('/')
 
           entry = root_tree.find do |entry|
@@ -46,8 +61,7 @@ module Gitlab
 
           if path_arr.size > 1
             path_arr.shift
-            tree = repository.rugged.lookup(entry[:oid])
-            find_id_by_path(tree, path_arr.join('/'))
+            find_id_by_path(repository, entry[:oid], path_arr.join('/'))
           else
             entry[:oid]
           end

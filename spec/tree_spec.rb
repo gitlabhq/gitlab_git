@@ -28,6 +28,16 @@ describe Gitlab::Git::Tree do
       it { subdir.name.should == 'assets' }
       it { subdir.path.should == 'app/assets' }
     end
+
+    context :deep_subdir do
+      let(:subdir) { Gitlab::Git::Tree.where(repository, ValidCommit::ID, 'app/views/admin/projects').first }
+
+      it { subdir.should be_kind_of Gitlab::Git::Tree }
+      it { subdir.id.should == '4f6bc692b675421f16b023952c049c047c09a502' }
+      it { subdir.commit_id.should == ValidCommit::ID }
+      it { subdir.name.should == '_form.html.haml' }
+      it { subdir.path.should == 'app/views/admin/projects/_form.html.haml' }
+    end
   end
 
   describe :file do
