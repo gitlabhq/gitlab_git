@@ -1,4 +1,6 @@
 *.gem
 support/gitlabhq*
+support/submodules*
 tmp/*
 coverage/*
+.DS_Store

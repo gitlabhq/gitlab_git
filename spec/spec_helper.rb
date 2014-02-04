@@ -24,6 +24,11 @@ RSpec::Matchers.define :be_valid_commit do
   end
 end
 
+SUPPORT_PATH = File.join(File.expand_path(File.dirname(__FILE__)), '../support')
+TEST_REPO_PATH = File.join(SUPPORT_PATH, 'gitlabhq.git')
+TEST_SUB_REPO_PATH = File.join(SUPPORT_PATH, 'submodules.git')
+
+
 RSpec.configure do |config|
   config.treat_symbols_as_metadata_keys_with_true_values = true
   config.run_all_when_everything_filtered = true
@@ -31,15 +36,12 @@ RSpec.configure do |config|
   config.order = 'random'
 
   config.before(:all) do
-    support_path = File.join(File.expand_path(File.dirname(__FILE__)), '../support')
-
-    FileUtils.cd(support_path) do
-      # Extract the archive
-      `rm -rf gitlabhq.git`
-      `tar -xf seed_project.tar.gz`
-      `mv gitlabhq gitlabhq.git`
+    FileUtils.cd(SUPPORT_PATH) do
+      %w(gitlabhq submodules).each do |repo|
+        `rm -rf #{repo}.git`
+        `tar -xf #{repo}.tar.gz`
+        `mv #{repo} #{repo}.git`
+      end
     end
-
-    TEST_REPO_PATH = File.join(support_path, 'gitlabhq.git')
   end
 end
