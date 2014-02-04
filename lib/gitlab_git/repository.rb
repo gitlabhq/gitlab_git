@@ -23,9 +23,6 @@ module Gitlab
       # Rugged repo object
       attr_reader :rugged
 
-      # Alias to old method for compatibility
-      alias_method :raw, :grit
-
       def initialize(path)
         @path = path
         @name = path.split("/").last
@@ -36,6 +33,11 @@ module Gitlab
         @grit ||= Grit::Repo.new(path)
       rescue Grit::NoSuchPathError
         raise NoRepository.new('no repository for such path')
+      end
+
+      # Alias to old method for compatibility
+      def raw
+        grit
       end
 
       def rugged
