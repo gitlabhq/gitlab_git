@@ -1,6 +1,13 @@
-### GitLab Git [![build status](https://ci.gitlab.org/projects/6/status.png?ref=master)](https://ci.gitlab.org/projects/6?ref=master)
+## GitLab Git [![build status](https://ci.gitlab.org/projects/6/status.png?ref=master)](https://ci.gitlab.org/projects/6?ref=master)
 
-GitLab wrapper around git objects. Use patched Grit as main library for parsing git objects
+GitLab wrapper around git objects. 
+
+### Move from Grit to Rugged
+
+  GitLab Git used grit as main library in past. 
+  Right now GitLab Git uses 2 libraries: rugged and grit.
+  We want to increase usage of rugged and reduce usage of grit in this library.
+  If you can help us with that - please send Merge Request.   
 
 #### Code status
 
