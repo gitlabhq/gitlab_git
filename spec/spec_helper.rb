@@ -14,6 +14,7 @@ end
 require 'gitlab_git'
 require File.join(File.dirname(__FILE__), '../support/valid_commit')
 require 'pry'
+require_relative 'seed_helper'
 
 RSpec::Matchers.define :be_valid_commit do
   match do |actual|
@@ -28,20 +29,11 @@ SUPPORT_PATH = File.join(File.expand_path(File.dirname(__FILE__)), '../support')
 TEST_REPO_PATH = File.join(SUPPORT_PATH, 'gitlabhq.git')
 TEST_SUB_REPO_PATH = File.join(SUPPORT_PATH, 'submodules.git')
 
-
 RSpec.configure do |config|
   config.treat_symbols_as_metadata_keys_with_true_values = true
   config.run_all_when_everything_filtered = true
   config.filter_run :focus
   config.order = 'random'
-
-  config.before(:all) do
-    FileUtils.cd(SUPPORT_PATH) do
-      %w(gitlabhq submodules).each do |repo|
-        `rm -rf #{repo}.git`
-        `tar -xf #{repo}.tar.gz`
-        `mv #{repo} #{repo}.git`
-      end
-    end
-  end
+  config.include SeedHelper
+  config.before(:all) { ensure_seeds }
 end
