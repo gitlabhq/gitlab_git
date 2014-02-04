@@ -25,6 +25,12 @@ describe Gitlab::Git::Blob do
       it { blob.data[0..10].should == "# This file" }
       it { blob.size.should == 156  }
     end
+
+    context 'non-exist file' do
+      let(:blob) { Gitlab::Git::Blob.find(repository, ValidCommit::ID, "missing.rb") }
+
+      it { blob.should be_nil }
+    end
   end
 
   describe :raw do

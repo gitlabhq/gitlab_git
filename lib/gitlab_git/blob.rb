@@ -11,6 +11,9 @@ module Gitlab
           root_tree = commit.tree
 
           blob_entry = find_entry_by_path(repository, root_tree.oid, path)
+
+          return nil unless blob_entry
+
           blob = repository.lookup(blob_entry[:oid])
 
           if blob
