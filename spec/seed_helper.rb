@@ -11,7 +11,6 @@ module SeedHelper
       %w(gitlabhq submodules).each do |repo_name|
         `rm -rf #{repo_name}.git`
         `tar -xf #{repo_name}.tar.gz`
-        `mv #{repo_name} #{repo_name}.git`
       end
     end
   end
