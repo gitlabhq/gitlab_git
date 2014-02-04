@@ -102,8 +102,8 @@ module Gitlab
           nil
         elsif branch_names.length == 1
           branch_names.first
-        elsif grit.head
-          grit.head.name
+        elsif rugged.head
+          Ref.extract_branch_name(rugged.head.name)
         elsif branch_names.include?("master")
           "master"
         elsif

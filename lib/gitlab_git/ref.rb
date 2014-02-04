@@ -10,6 +10,14 @@ module Gitlab
       # when tag reference on other tag it can be tag sha
       attr_reader :target
 
+      # Extract branch name from full ref path
+      #
+      # Ex.
+      #   Ref.extract_branch_name('refs/heads/master') #=> 'master'
+      def self.extract_branch_name(str)
+        str.gsub(/\Arefs\/heads\//, '')
+      end
+
       def initialize(name, target)
         @name, @target = name.gsub(/\Arefs\/(tags|heads)\//, ''), target
       end
