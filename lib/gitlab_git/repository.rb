@@ -80,18 +80,21 @@ module Gitlab
         branch_names + tag_names
       end
 
+      # Deprecated. Will be removed in 5.2
       def heads
         @heads ||= grit.heads.sort_by(&:name)
       end
 
       def has_commits?
-        !!Gitlab::Git::Commit.last(self)
-      rescue Grit::NoSuchPathError
-        false
+        !empty?
       end
 
       def empty?
-        !has_commits?
+        rugged.empty?
+      end
+
+      def repo_exists?
+        !!rugged
       end
 
       # Discovers the default branch based on the repository's available branches
