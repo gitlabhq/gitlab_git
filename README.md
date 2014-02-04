@@ -56,7 +56,7 @@ GitLab wrapper around git objects.
     tree = Gitlab::Git::Tree.where(repo, '893ade32')
 
     # Tree objects for sub dir
-    tree = Gitlab::Git::Tree.where(repo, '893ade32', 'master', 'app/models/')
+    tree = Gitlab::Git::Tree.where(repo, '893ade32', 'app/models/')
 
     # [
     #   #<Gitlab::Git::Tree:0x00000002b2ed80 @id="38f45392ae61f0effa84048f208a81019cc306bb", @name="lib", @path="projects/lib", @type=:tree, @mode="040000", @commit_id="8470d70da67355c9c009e4401746b1d5410af2e3">
