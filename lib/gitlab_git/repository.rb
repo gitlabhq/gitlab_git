@@ -310,6 +310,11 @@ module Gitlab
         end
         @refs_hash
       end
+
+      # Lookup for rugged object by oid
+      def lookup(oid)
+        rugged.lookup(oid)
+      end
     end
   end
 end

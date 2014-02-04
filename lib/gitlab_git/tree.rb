@@ -11,13 +11,13 @@ module Gitlab
         def where(repository, sha, path = nil)
           path = nil if path == '' || path == '/'
 
-          commit = repository.rugged.lookup(sha)
+          commit = repository.lookup(sha)
           root_tree = commit.tree
 
           tree = if path
                    id = Tree.find_id_by_path(repository, root_tree.oid, path)
                    if id
-                     repository.rugged.lookup(id)
+                     repository.lookup(id)
                    else
                      []
                    end
@@ -50,7 +50,7 @@ module Gitlab
         # Tree.find_id_by_path(repo, '1a', 'app/models') # => '3a'
         #
         def find_id_by_path(repository, root_id, path)
-          root_tree = repository.rugged.lookup(root_id)
+          root_tree = repository.lookup(root_id)
           path_arr = path.split('/')
 
           entry = root_tree.find do |entry|
