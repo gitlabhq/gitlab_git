@@ -23,10 +23,10 @@ describe Gitlab::Git::Repository do
     end
 
     it "returns non-master when master exists but default branch is set to something else" do
-      File.write(File.join(repository.path, '.git', 'HEAD'), 'ref: refs/heads/stable')
+      File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/stable')
       repository.should_receive(:branch_names).at_least(:once).and_return([stable, master])
       repository.discover_default_branch.should == 'stable'
-      File.write(File.join(repository.path, '.git', 'HEAD'), 'ref: refs/heads/master')
+      File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/master')
     end
 
     it "returns a non-master branch when only one exists" do
