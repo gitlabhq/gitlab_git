@@ -17,14 +17,8 @@ describe Gitlab::Git::GitStats do
   end
 
   describe "#log" do
-    let(:repo) { double(Gitlab::Git::Repository) }
+    let(:repo) { double(Gitlab::Git::Repository).as_null_object }
     let(:gs) { Gitlab::Git::GitStats.new(repo.raw, repo.root_ref) }
-
-    before(:each) do
-      repo.stub(:raw).and_return(nil)
-      repo.stub(:root_ref).and_return(nil)
-      repo.raw.stub(:git)
-    end
 
     context "repo.git.run returns 'test'" do
       it "returns 'test'" do
