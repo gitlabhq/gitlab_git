@@ -1,6 +1,7 @@
 *.gem
 support/gitlabhq.git*
 support/submodules.git*
+support/encoding.git*
 tmp/*
 coverage/*
 .DS_Store
