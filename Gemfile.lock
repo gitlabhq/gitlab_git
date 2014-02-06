@@ -1,8 +1,9 @@
 PATH
   remote: .
   specs:
-    gitlab_git (5.1.0.pre)
+    gitlab_git (5.1.0)
       activesupport (~> 4.0.0)
+      charlock_holmes (~> 0.6.9)
       gitlab-grit (~> 2.6.1)
       gitlab-linguist (~> 3.0.0)
       rugged (~> 0.19.0)

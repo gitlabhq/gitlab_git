@@ -2,6 +2,7 @@ module Gitlab
   module Git
     class Blob
       include Linguist::BlobHelper
+      include EncodingHelper
 
       attr_accessor :name, :path, :size, :data, :mode, :id, :commit_id
 
@@ -83,6 +84,14 @@ module Gitlab
 
       def empty?
         !data || data == ''
+      end
+
+      def data
+        encode! @data
+      end
+
+      def name
+        encode! @name
       end
     end
   end

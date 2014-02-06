@@ -39,4 +39,24 @@ describe Gitlab::Git::Blob do
     it { raw_blob.data[0..10].should == "require \"gr" }
     it { raw_blob.size.should == 10049  }
   end
+
+  describe 'encoding' do
+    let(:repository) { Gitlab::Git::Repository.new(TEST_ENC_REPO_PATH) }
+
+    context 'file with russian text' do
+      let(:blob) { Gitlab::Git::Blob.find(repository, '606bf024cc6a4a17e121cb0772897732507db67e', "russian.rb") }
+
+      it { blob.name.should == "russian.rb" }
+      it { blob.data.lines.first.should == "Хороший файл" }
+      it { blob.size.should == 23  }
+    end
+
+    context 'file with Chinese text' do
+      let(:blob) { Gitlab::Git::Blob.find(repository, '606bf024cc6a4a17e121cb0772897732507db67e', "テスト.txt") }
+
+      it { blob.name.should == "テスト.txt" }
+      it { blob.data.should include("これはテスト") }
+      it { blob.size.should == 340  }
+    end
+  end
 end

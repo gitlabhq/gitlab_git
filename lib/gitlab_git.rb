@@ -7,6 +7,7 @@ require 'active_support/core_ext/hash/keys'
 require 'grit'
 require 'grit_ext'
 require 'rugged'
+require "charlock_holmes"
 
 Grit::Blob.class_eval do
   include Linguist::BlobHelper
@@ -14,6 +15,7 @@ end
 
 # Gitlab::Git
 require_relative "gitlab_git/popen"
+require_relative "gitlab_git/encoding_herlper"
 require_relative "gitlab_git/blame"
 require_relative "gitlab_git/blob"
 require_relative "gitlab_git/commit"
