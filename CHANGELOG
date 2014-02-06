@@ -1,3 +1,6 @@
+v 5.2.0
+  - Add EncodingHelper. Encode blob data to utf8
+
 v 5.1.0
   - Added rugged dependency
   - Git::Tag and Git::Branch objects
