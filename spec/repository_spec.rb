@@ -153,4 +153,26 @@ describe Gitlab::Git::Repository do
       its(:data) { should include "bundle exec rake db:seed_fu RAILS_ENV=test" }
     end
   end
+
+  context :submodules do
+    let(:repository) { Gitlab::Git::Repository.new(TEST_SUB_REPO_PATH) }
+    let(:submodules) { repository.submodules('898ce92b0e0b5ade8a7ef7e3c779dda476b3eef8') }
+
+    it { submodules.should be_kind_of Hash }
+    it { submodules.empty?.should be_false }
+
+    describe :submodule do
+      let(:submodule) { submodules.first }
+
+      it 'should have valid data' do
+        submodule.should == [
+          "rack", {
+            "id"=>"c67be4624545b4263184c4a0e8f887efd0a66320",
+            "path"=>"rack",
+            "url"=>"git://github.com/chneukirchen/rack.git"
+          }
+        ]
+      end
+    end
+  end
 end

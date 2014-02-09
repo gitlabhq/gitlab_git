@@ -320,6 +320,24 @@ module Gitlab
       def lookup(oid)
         rugged.lookup(oid)
       end
+
+      # Return hash with submodules info for this repository
+      #
+      # Ex.
+      #   {
+      #     "rack"  => {
+      #       "id" => "c67be4624545b4263184c4a0e8f887efd0a66320",
+      #       "path" => "rack",
+      #       "url" => "git://github.com/chneukirchen/rack.git"
+      #     },
+      #     "encoding" => {
+      #       "id" => ....
+      #     }
+      #   }
+      #
+      def submodules(ref)
+        Grit::Submodule.config(grit, ref)
+      end
     end
   end
 end
