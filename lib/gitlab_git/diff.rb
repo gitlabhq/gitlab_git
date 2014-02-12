@@ -4,7 +4,7 @@
 module Gitlab
   module Git
     class Diff
-      BROKEN_DIFF = "--broken-diff"
+      class TimeoutError < StandardError; end
 
       attr_accessor :raw_diff
 
@@ -25,7 +25,7 @@ module Gitlab
             Gitlab::Git::Diff.new(diff)
           end
         rescue Grit::Git::GitTimeout
-          [Gitlab::Git::Diff::BROKEN_DIFF]
+          raise TimeoutError.new("Diff.between exited with timeout")
         end
       end
 

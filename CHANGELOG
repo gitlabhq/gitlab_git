@@ -1,3 +1,9 @@
+v 5.4.0
+  - Get rid of BROKEN_DIFF constant
+  - Diff.between raises exception in case of timeout now
+  - Add tests to Compare
+  - Cache diff result for Compare 
+
 v 5.3.0
   - Add Repository#submodules method
 

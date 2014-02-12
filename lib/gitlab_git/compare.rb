@@ -1,7 +1,7 @@
 module Gitlab
   module Git
     class Compare
-      attr_accessor :commits, :commit, :diffs, :same
+      attr_accessor :commits, :commit, :diffs, :same, :limit, :timeout
 
       def initialize(repository, from, to, limit = 100)
         @commits, @diffs = [], []
@@ -9,6 +9,7 @@ module Gitlab
         @same = false
         @limit = limit
         @repository = repository
+        @timeout = false
 
         return unless from && to
 
@@ -27,10 +28,33 @@ module Gitlab
       end
 
       def diffs(paths = nil)
-        return [] if @commits.size > @limit
-        Gitlab::Git::Diff.between(@repository, @head.id, @base.id, *paths) rescue []
+        # Return empty array if amount of commits
+        # more than specified limit
+        return [] if commits_over_limit?
+
+        # Try to collect diff only if diffs is empty
+        # Otherwise return cached version
+        if @diffs.empty? && @timeout == false
+          begin
+            @diffs = Gitlab::Git::Diff.between(@repository, @head.id, @base.id, *paths)
+          rescue Gitlab::Git::Diff::TimeoutError => ex
+            @diffs = []
+            @timeout = true
+          end
+        end
+
+        @diffs
+      end
+
+      # Check if diff is empty because it is actually empty
+      # and not because its impossible to get it
+      def empty_diff?
+        diffs.empty? && timeout == false && commits.size < limit
+      end
+
+      def commits_over_limit?
+        commits.size > limit
       end
     end
   end
 end
-
