@@ -295,7 +295,14 @@ module Gitlab
       #
       def branch_names_contains(commit)
         output = grit.git.native(:branch, {contains: true}, commit)
-        output.force_encoding(Encoding::locale_charmap).encode(Encoding::UTF_8)
+
+        # Fix encoding issue
+        locale = Encoding::locale_charmap
+        if locale.nil?
+            locale = Encoding::UTF_8
+        end
+        output.force_encoding(locale).encode!(Encoding::UTF_8)
+
         # The output is expected as follow
         #   fix-aaa
         #   fix-bbb
