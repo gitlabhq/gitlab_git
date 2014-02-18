@@ -89,6 +89,10 @@ module Gitlab
       def readme?
         name =~ /^readme/i
       end
+
+      def contribution?
+        name =~ /^contribution/i
+      end
     end
   end
 end
