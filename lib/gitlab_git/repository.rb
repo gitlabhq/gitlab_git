@@ -1,6 +1,8 @@
 # Gitlab::Git::Commit is a wrapper around native Grit::Repository object
 # We dont want to use grit objects inside app/
 # It helps us easily migrate to rugged in future
+require_relative 'encoding_herlper'
+
 module Gitlab
   module Git
     class Repository
@@ -295,6 +297,10 @@ module Gitlab
       #
       def branch_names_contains(commit)
         output = grit.git.native(:branch, {contains: true}, commit)
+
+        # Fix encoding issue
+        output = EncodingHelper::encode!(output)
+
         # The output is expected as follow
         #   fix-aaa
         #   fix-bbb
