@@ -221,7 +221,9 @@ module Gitlab
         walker.sorting(Rugged::SORT_REVERSE)
         walker.push(to)
         walker.hide(from)
-        walker.to_a # remove to_a for lazy enumerator
+        commits = walker.to_a # remove to_a for lazy enumerator
+        walker.reset
+        commits
       end
 
       def merge_base_commit(from, to)

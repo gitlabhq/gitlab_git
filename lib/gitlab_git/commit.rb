@@ -104,8 +104,11 @@ module Gitlab
       def initialize(raw_commit, head = nil)
         raise "Nil as raw commit passed" unless raw_commit
 
-        if raw_commit.is_a?(Hash)
+        case raw_commit
+        when Hash
           init_from_hash(raw_commit)
+        when Rugged::Commit
+          init_from_rugged(raw_commit)
         else
           init_from_grit(raw_commit)
         end
@@ -214,6 +217,19 @@ module Gitlab
       end
 
       private
+
+      def init_from_rugged(rc)
+        @raw_commit = rc
+        @id = rc.oid
+        @message = rc.message
+        @authored_date = rc.author.time
+        @committed_date = rc.committer.time
+        @author_name = rc.author.name
+        @author_email = rc.author.email
+        @committer_name = rc.committer.name
+        @committer_email = rc.committer.email
+        @parent_ids = rc.parent_oids
+      end
 
       def init_from_grit(grit)
         @raw_commit = grit
