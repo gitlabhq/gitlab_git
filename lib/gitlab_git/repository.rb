@@ -214,10 +214,14 @@ module Gitlab
         )
       end
 
-      # Delegate commits_between to Grit method
+      # Delegate commits_between to Rugged::Walker
       #
       def commits_between(from, to)
-        grit.commits_between(from, to)
+        walker = Rugged::Walker.new(rugged)
+        walker.sorting(Rugged::SORT_REVERSE)
+        walker.push(to)
+        walker.hide(from)
+        walker.to_a # remove to_a for lazy enumerator
       end
 
       def merge_base_commit(from, to)
