@@ -221,11 +221,11 @@ module Gitlab
       end
 
       def merge_base_commit(from, to)
-        grit.git.native(:merge_base, {}, [to, from]).strip
+        rugged.merge_base(from, to)
       end
 
       def diff(from, to, *paths)
-        grit.diff(from, to, *paths)
+        rugged.diff(from, to, { paths: paths } )
       end
 
       # Returns commits collection
