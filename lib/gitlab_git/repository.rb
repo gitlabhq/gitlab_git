@@ -56,9 +56,7 @@ module Gitlab
 
       # Returns an Array of Branches
       def branches
-        rugged.refs.select do |ref|
-          ref.name =~ /\Arefs\/heads/
-        end.map do |rugged_ref|
+        rugged.branches.map do |rugged_ref|
           Branch.new(rugged_ref.name, rugged_ref.target)
         end.sort_by(&:name)
       end
