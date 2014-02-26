@@ -70,9 +70,7 @@ module Gitlab
 
       # Returns an Array of Tags
       def tags
-        rugged.refs.select do |ref|
-          ref.name =~ /\Arefs\/tags/
-        end.map do |rugged_ref|
+        rugged.tags.map do |rugged_ref|
           Tag.new(rugged_ref.name, rugged_ref.target)
         end.sort_by(&:name)
       end
