@@ -1,15 +1,31 @@
+# Seed repo:
+# 5937ac0a7beb003549fc5fd26fc247adbce4a52e Add submodule from gitlab.com
+# 570e7b2abdd848b95f2f578043fc23bd6f6fd24d Change some files
+# 6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9 More submodules
+# d14d6c0abdd253381df51a723d58691b2ee1ab08 Remove ds_store files
+# c1acaa58bbcbc3eafe538cb8274ba387047b69f8 Ignore DS files
+# ae73cb07c9eeaf35924a10f713b364d32b2dd34f Binary file added
+# 874797c3a73b60d2187ed6e2fcabd289ff75171e Ruby files modified
+# 2f63565e7aac07bcdadb654e253078b727143ec4 Modified image
+# 33f3729a45c02fc67d00adb1b8bca394b0e761d9 Image added
+# 913c66a37b4a45b9769037c55c2d238bd0942d2e Files, encoding and much more
+# cfe32cf61b73a0d5e9f13e774abde7ff789b1660 Add submodule
+# 6d394385cf567f80a8fd85055db1ab4c5295806f Added contributing guide
+# 1a0b36b3cdad1d2ee32457c102a8c0b7056fa863 Initial commit
+#
 module ValidCommit
-  ID = "8470d70da67355c9c009e4401746b1d5410af2e3"
-  MESSAGE = "notes controller refactored"
+  ID = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
+  PARENT_ID = "6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9"
+  FIRST_ID = "1a0b36b3cdad1d2ee32457c102a8c0b7056fa863"
+  MESSAGE = "Change some files"
   AUTHOR_FULL_NAME = "Dmitriy Zaporozhets"
 
-  FILES = [".foreman", ".gitignore", ".rails_footnotes", ".rspec", ".travis.yml", "CHANGELOG", "Gemfile", "Gemfile.lock", "LICENSE", "Procfile", "Procfile.production", "README.md", "Rakefile", "VERSION", "app", "config.ru", "config", "db", "doc", "lib", "log", "public", "resque.sh", "script", "spec", "vendor"]
-  FILES_COUNT = 26
+  FILES = ["files/ruby/popen.rb", "files/ruby/regex.rb"]
+  FILES_COUNT = 2
 
-  C_FILE_PATH = "app/models"
-  C_FILES = [".gitkeep", "ability.rb", "commit.rb", "issue.rb", "key.rb", "mailer_observer.rb", "merge_request.rb", "note.rb", "project.rb", "protected_branch.rb", "repository.rb", "snippet.rb", "tree.rb", "user.rb", "users_project.rb", "web_hook.rb", "wiki.rb"]
+  C_FILE_PATH = "files/ruby"
+  C_FILES = ["popen.rb", "regex.rb", "version_info.rb"]
 
   BLOB_FILE = %{%h3= @key.title\n%hr\n%pre= @key.key\n.actions\n  = link_to 'Remove', @key, :confirm => 'Are you sure?', :method => :delete, :class => \"btn danger delete-key\"\n\n\n}
   BLOB_FILE_PATH = "app/views/keys/show.html.haml"
 end
-

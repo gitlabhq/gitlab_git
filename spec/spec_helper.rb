@@ -26,9 +26,7 @@ RSpec::Matchers.define :be_valid_commit do
 end
 
 SUPPORT_PATH = File.join(File.expand_path(File.dirname(__FILE__)), '../support')
-TEST_REPO_PATH = File.join(SUPPORT_PATH, 'gitlabhq.git')
-TEST_SUB_REPO_PATH = File.join(SUPPORT_PATH, 'submodules.git')
-TEST_ENC_REPO_PATH = File.join(SUPPORT_PATH, 'encoding.git')
+TEST_REPO_PATH = File.join(SUPPORT_PATH, 'testme.git')
 
 RSpec.configure do |config|
   config.treat_symbols_as_metadata_keys_with_true_values = true

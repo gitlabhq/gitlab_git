@@ -15,23 +15,23 @@ describe Gitlab::Git::Repository do
 
   describe "#discover_default_branch" do
     let(:master) { 'master' }
-    let(:stable) { 'stable' }
+    let(:feature) { 'feature' }
 
     it "returns 'master' when master exists" do
-      repository.should_receive(:branch_names).at_least(:once).and_return([stable, master])
+      repository.should_receive(:branch_names).at_least(:once).and_return([feature, master])
       repository.discover_default_branch.should == 'master'
     end
 
     it "returns non-master when master exists but default branch is set to something else" do
-      File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/stable')
-      repository.should_receive(:branch_names).at_least(:once).and_return([stable, master])
-      repository.discover_default_branch.should == 'stable'
+      File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/feature')
+      repository.should_receive(:branch_names).at_least(:once).and_return([feature, master])
+      repository.discover_default_branch.should == 'feature'
       File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/master')
     end
 
     it "returns a non-master branch when only one exists" do
-      repository.should_receive(:branch_names).at_least(:once).and_return([stable])
-      repository.discover_default_branch.should == 'stable'
+      repository.should_receive(:branch_names).at_least(:once).and_return([feature])
+      repository.discover_default_branch.should == 'feature'
     end
 
     it "returns nil when no branch exists" do
@@ -155,8 +155,8 @@ describe Gitlab::Git::Repository do
   end
 
   context :submodules do
-    let(:repository) { Gitlab::Git::Repository.new(TEST_SUB_REPO_PATH) }
-    let(:submodules) { repository.submodules('898ce92b0e0b5ade8a7ef7e3c779dda476b3eef8') }
+    let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
+    let(:submodules) { repository.submodules(ValidCommit::ID) }
 
     it { submodules.should be_kind_of Hash }
     it { submodules.empty?.should be_false }
@@ -166,10 +166,10 @@ describe Gitlab::Git::Repository do
 
       it 'should have valid data' do
         submodule.should == [
-          "rack", {
-            "id"=>"c67be4624545b4263184c4a0e8f887efd0a66320",
-            "path"=>"rack",
-            "url"=>"git://github.com/chneukirchen/rack.git"
+          "six", {
+            "id"=>"409f37c4f05865e4fb208c771485f211a22c4c2d",
+            "path"=>"six",
+            "url"=>"git://github.com/randx/six.git"
           }
         ]
       end

@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Gitlab::Git::Commit do
   let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
-  let(:commit) { Gitlab::Git::Commit.last(repository) }
+  let(:commit) { Gitlab::Git::Commit.find(repository, ValidCommit::ID) }
 
   describe "Commit info" do
     before do
@@ -18,7 +18,7 @@ describe Gitlab::Git::Commit do
 
       @tree = double
 
-      @parents = [ double(id: "8716fc78f3c65bbf7bcf7b574febd583bc5d2812") ]
+      @parents = [ double(id: "874797c3a73b60d2187ed6e2fcabd289ff75171e") ]
 
       @raw_commit = double(
         id: "bcf03b5de6abcf03b5de6c",
@@ -62,7 +62,7 @@ describe Gitlab::Git::Commit do
       end
 
       it "should return valid commit for tag" do
-        Gitlab::Git::Commit.find(repository, 'v1.0.2').id.should == '3a2b273316fb29d63b489906f85d9b5329377258'
+        Gitlab::Git::Commit.find(repository, 'v1.0.0').id.should == '6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9'
       end
 
       it "should return nil" do
@@ -74,7 +74,7 @@ describe Gitlab::Git::Commit do
       context 'no path' do
         subject { Gitlab::Git::Commit.last_for_path(repository, 'master') }
 
-        its(:id) { should == 'bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a' }
+        its(:id) { should == '570e7b2abdd848b95f2f578043fc23bd6f6fd24d' }
       end
 
       context 'path' do
@@ -96,7 +96,7 @@ describe Gitlab::Git::Commit do
         commits = Gitlab::Git::Commit.where(
           repo: repository,
           ref: 'master',
-          path: 'app',
+          path: 'files',
           limit: 3,
           offset: 1
         )
@@ -105,21 +105,21 @@ describe Gitlab::Git::Commit do
       end
 
       it { should have(3).elements }
-      it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-      it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+      it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
+      it { should_not include("570e7b2abdd848b95f2f578043fc23bd6f6fd24d") }
     end
 
     describe :between do
       subject do
         commits = Gitlab::Git::Commit.between(repository,
-                                              "3a4b4fb4cde7809f033822a171b9feae19d41fff",
-                                              "8470d70da67355c9c009e4401746b1d5410af2e3")
+                                              "874797c3a73b60d2187ed6e2fcabd289ff75171e",
+                                              ValidCommit::ID)
         commits.map { |c| c.id }
       end
 
       it { should have(3).elements }
-      it { should include("f0f14c8eaba69ebddd766498a9d0b0e79becd633") }
-      it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+      it { should include(ValidCommit::PARENT_ID) }
+      it { should_not include(ValidCommit::FIRST_ID) }
     end
 
     describe :find_all do
@@ -133,10 +133,10 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(50).elements }
-        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-        it { should include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
-        it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
+        it { should have(15).elements }
+        it { should include(ValidCommit::ID) }
+        it { should include(ValidCommit::PARENT_ID) }
+        it { should include(ValidCommit::FIRST_ID) }
       end
 
       context 'ref + max_count + skip' do
@@ -151,26 +151,26 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(50).elements }
-        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-        it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+        it { should have(12).elements }
+        it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
+        it { should_not include("570e7b2abdd848b95f2f578043fc23bd6f6fd24d") }
         it { should_not include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
       end
 
-      context 'contains master_bk_2 + max_count' do
+      context 'contains feature + max_count' do
         subject do
           commits = Gitlab::Git::Commit.find_all(
             repository,
-            contains: 'master_bk_2',
+            contains: 'feature',
             max_count: 50
           )
 
           commits.map { |c| c.id }
         end
 
-        it { should have(50).elements }
-        it { should_not include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-        it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+        it { should have(9).elements }
+        it { should_not include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
+        it { should_not include("570e7b2abdd848b95f2f578043fc23bd6f6fd24d") }
         it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
       end
 
@@ -186,8 +186,8 @@ describe Gitlab::Git::Commit do
         end
 
         it { should have(50).elements }
-        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-        it { should include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+        it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
+        it { should include("570e7b2abdd848b95f2f578043fc23bd6f6fd24d") }
         it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
       end
     end
@@ -204,15 +204,15 @@ describe Gitlab::Git::Commit do
   describe :stats do
     subject { commit.stats }
 
-    its(:additions) { should eq(2) }
-    its(:deletions) { should eq(1) }
+    its(:additions) { should eq(11) }
+    its(:deletions) { should eq(6) }
   end
 
   describe :to_diff do
     subject { commit.to_diff }
 
-    it { should_not include "From bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a" }
-    it { should include 'diff --git a/app/assets/stylesheets/tree.scss b/app/assets/stylesheets/tree.scss'}
+    it { should_not include "From 570e7b2abdd848b95f2f578043fc23bd6f6fd24d" }
+    it { should include 'diff --git a/files/ruby/popen.rb b/files/ruby/popen.rb'}
   end
 
   describe :has_zero_stats? do
@@ -222,8 +222,8 @@ describe Gitlab::Git::Commit do
   describe :to_patch do
     subject { commit.to_patch }
 
-    it { should include "From bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a" }
-    it { should include 'diff --git a/app/assets/stylesheets/tree.scss b/app/assets/stylesheets/tree.scss'}
+    it { should include "From 570e7b2abdd848b95f2f578043fc23bd6f6fd24d" }
+    it { should include 'diff --git a/files/ruby/popen.rb b/files/ruby/popen.rb'}
   end
 
   describe :to_hash do
@@ -246,9 +246,9 @@ describe Gitlab::Git::Commit do
     let(:commit) { Gitlab::Git::Commit.find(repository, 'master') }
     subject { commit.ref_names(repository) }
 
-    it { should have(3).elements }
+    it { should have(1).elements }
     it { should include("master") }
-    it { should_not include("master_bk_2") }
+    it { should_not include("feature") }
   end
 
   def sample_commit_hash
@@ -259,9 +259,9 @@ describe Gitlab::Git::Commit do
       committed_date: "2012-02-27 20:51:12 +0200",
       committer_email: "dmitriy.zaporozhets@gmail.com",
       committer_name: "Dmitriy Zaporozhets",
-      id: "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a",
+      id: "570e7b2abdd848b95f2f578043fc23bd6f6fd24d",
       message: "tree css fixes",
-      parent_ids: ["8716fc78f3c65bbf7bcf7b574febd583bc5d2812"]
+      parent_ids: ["874797c3a73b60d2187ed6e2fcabd289ff75171e"]
     }
   end
 end
