@@ -7,6 +7,7 @@ module SeedHelper
 
   def create_seeds
     puts 'Prepare seeds'
+    FileUtils.mkdir_p(SUPPORT_PATH)
     FileUtils.cd(SUPPORT_PATH) do
       `git clone --bare https://github.com/gitlabhq/testme.git`
     end
