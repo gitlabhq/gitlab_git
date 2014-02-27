@@ -43,7 +43,7 @@ describe Gitlab::Git::Repository do
   describe :branch_names do
     subject { repository.branch_names }
 
-    it { should have(32).elements }
+    it { should have(SeedRepo::Repo::BRANCHES.size).elements }
     it { should include("master") }
     it { should_not include("branch-from-space") }
   end
@@ -52,9 +52,9 @@ describe Gitlab::Git::Repository do
     subject { repository.tag_names }
 
     it { should be_kind_of Array }
-    it { should have(16).elements }
-    its(:last) { should == "v2.2.0pre" }
-    it { should include("v1.2.0") }
+    it { should have(SeedRepo::Repo::TAGS.size).elements }
+    its(:last) { should == "v1.1.0" }
+    it { should include("v1.0.0") }
     it { should_not include("v5.0.0") }
   end
 
@@ -62,7 +62,7 @@ describe Gitlab::Git::Repository do
     let(:archive) { repository.archive_repo('master', '/tmp') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with ".tar.gz" }
     it { File.exists?(archive).should be_true }
   end
@@ -71,7 +71,7 @@ describe Gitlab::Git::Repository do
     let(:archive) { repository.archive_repo('master', '/tmp', 'zip') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with ".zip" }
     it { File.exists?(archive).should be_true }
   end
@@ -80,7 +80,7 @@ describe Gitlab::Git::Repository do
     let(:archive) { repository.archive_repo('master', '/tmp', 'tbz2') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with ".tar.bz2" }
     it { File.exists?(archive).should be_true }
   end
@@ -89,7 +89,7 @@ describe Gitlab::Git::Repository do
     let(:archive) { repository.archive_repo('master', '/tmp', 'madeup') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with ".tar.gz" }
     it { File.exists?(archive).should be_true }
   end
@@ -97,7 +97,7 @@ describe Gitlab::Git::Repository do
   describe :size do
     subject { repository.size }
 
-    it { should == 23.45 }
+    it { should == 1.34 }
   end
 
   describe :has_commits? do
@@ -113,7 +113,7 @@ describe Gitlab::Git::Repository do
     subject { heads }
 
     it { should be_kind_of Array }
-    its(:size) { should eq(32) }
+    its(:size) { should eq(3) }
 
     context :head do
       subject { heads.first }
@@ -123,7 +123,7 @@ describe Gitlab::Git::Repository do
       context :commit do
         subject { heads.first.commit }
 
-        its(:id) { should == '8470d70da67355c9c009e4401746b1d5410af2e3' }
+        its(:id) { should == '0b4bc9a49b562e85de7cc9e834518ea6828729b9' }
       end
     end
   end
@@ -134,7 +134,7 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     its(:first) { should == 'feature' }
-    its(:last) { should == 'v2.2.0pre' }
+    its(:last) { should == 'v1.1.0' }
   end
 
   describe :search_files do
@@ -148,9 +148,9 @@ describe Gitlab::Git::Repository do
       subject { results.first }
 
       its(:ref) { should == 'master' }
-      its(:filename) { should == '.travis.yml' }
-      its(:startline) { should == 6 }
-      its(:data) { should include "bundle exec rake db:seed_fu RAILS_ENV=test" }
+      its(:filename) { should == 'CHANGELOG' }
+      its(:startline) { should == 35 }
+      its(:data) { should include "Ability to filter by multiple labels" }
     end
   end
 
