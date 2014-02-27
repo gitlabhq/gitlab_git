@@ -228,7 +228,7 @@ describe Gitlab::Git::Commit do
     let(:commit) { Gitlab::Git::Commit.find(repository, 'master') }
     subject { commit.ref_names(repository) }
 
-    it { should have(1).elements }
+    it { should have(2).elements }
     it { should include("master") }
     it { should_not include("feature") }
   end
