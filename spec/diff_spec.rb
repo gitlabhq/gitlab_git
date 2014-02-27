@@ -37,18 +37,18 @@ describe Gitlab::Git::Diff do
   end
 
   describe :between do
-    let(:diffs) { Gitlab::Git::Diff.between(repository, 'master', 'stable') }
+    let(:diffs) { Gitlab::Git::Diff.between(repository, 'feature', 'master') }
     subject { diffs }
 
     it { should be_kind_of Array }
-    its(:size) { should eq(73) }
+    its(:size) { should eq(1) }
 
     context :diff do
       subject { diffs.first }
 
       it { should be_kind_of Gitlab::Git::Diff }
-      its(:new_path) { should == '.gitignore' }
-      its(:diff) { should include 'Vagrantfile' }
+      its(:new_path) { should == 'files/ruby/feature.rb' }
+      its(:diff) { should include '+class Feature' }
     end
   end
 end

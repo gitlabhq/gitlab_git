@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Gitlab::Git::Commit do
   let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
-  let(:commit) { Gitlab::Git::Commit.last(repository) }
+  let(:commit) { Gitlab::Git::Commit.find(repository, SeedRepo::Commit::ID) }
 
   describe "Commit info" do
     before do
@@ -18,7 +18,7 @@ describe Gitlab::Git::Commit do
 
       @tree = double
 
-      @parents = [ double(id: "8716fc78f3c65bbf7bcf7b574febd583bc5d2812") ]
+      @parents = [ double(id: "874797c3a73b60d2187ed6e2fcabd289ff75171e") ]
 
       @raw_commit = double(
         id: "bcf03b5de6abcf03b5de6c",
@@ -58,11 +58,11 @@ describe Gitlab::Git::Commit do
       end
 
       it "should return valid commit" do
-        Gitlab::Git::Commit.find(repository, ValidCommit::ID).should be_valid_commit
+        Gitlab::Git::Commit.find(repository, SeedRepo::Commit::ID).should be_valid_commit
       end
 
       it "should return valid commit for tag" do
-        Gitlab::Git::Commit.find(repository, 'v1.0.2').id.should == '3a2b273316fb29d63b489906f85d9b5329377258'
+        Gitlab::Git::Commit.find(repository, 'v1.0.0').id.should == '6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9'
       end
 
       it "should return nil" do
@@ -74,19 +74,19 @@ describe Gitlab::Git::Commit do
       context 'no path' do
         subject { Gitlab::Git::Commit.last_for_path(repository, 'master') }
 
-        its(:id) { should == 'bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a' }
+        its(:id) { should == SeedRepo::LastCommit::ID }
       end
 
       context 'path' do
-        subject { Gitlab::Git::Commit.last_for_path(repository, 'master', 'db') }
+        subject { Gitlab::Git::Commit.last_for_path(repository, 'master', 'files') }
 
-        its(:id) { should == '621bfdb4aa6c5ef2b031f7c4fb7753eb80d7a5b5' }
+        its(:id) { should == SeedRepo::Commit::ID }
       end
 
       context 'ref + path' do
-        subject { Gitlab::Git::Commit.last_for_path(repository, ValidCommit::ID, 'config') }
+        subject { Gitlab::Git::Commit.last_for_path(repository, SeedRepo::Commit::ID, 'encoding') }
 
-        its(:id) { should == '215a01f63ccdc085f75a48f6f7ab6f2b15b5852c' }
+        its(:id) { should == SeedRepo::BigCommit::ID }
       end
     end
 
@@ -96,7 +96,7 @@ describe Gitlab::Git::Commit do
         commits = Gitlab::Git::Commit.where(
           repo: repository,
           ref: 'master',
-          path: 'app',
+          path: 'files',
           limit: 3,
           offset: 1
         )
@@ -105,21 +105,19 @@ describe Gitlab::Git::Commit do
       end
 
       it { should have(3).elements }
-      it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-      it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+      it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
+      it { should_not include(SeedRepo::Commit::ID) }
     end
 
     describe :between do
       subject do
-        commits = Gitlab::Git::Commit.between(repository,
-                                              "3a4b4fb4cde7809f033822a171b9feae19d41fff",
-                                              "8470d70da67355c9c009e4401746b1d5410af2e3")
+        commits = Gitlab::Git::Commit.between(repository, SeedRepo::Commit::PARENT_ID, SeedRepo::Commit::ID)
         commits.map { |c| c.id }
       end
 
-      it { should have(3).elements }
-      it { should include("f0f14c8eaba69ebddd766498a9d0b0e79becd633") }
-      it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
+      it { should have(1).elements }
+      it { should include(SeedRepo::Commit::ID) }
+      it { should_not include(SeedRepo::FirstCommit::ID) }
     end
 
     describe :find_all do
@@ -133,10 +131,10 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(50).elements }
-        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-        it { should include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
-        it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
+        it { should have(15).elements }
+        it { should include(SeedRepo::Commit::ID) }
+        it { should include(SeedRepo::Commit::PARENT_ID) }
+        it { should include(SeedRepo::FirstCommit::ID) }
       end
 
       context 'ref + max_count + skip' do
@@ -151,44 +149,28 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(50).elements }
-        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-        it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
-        it { should_not include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
+        it { should have(12).elements }
+        it { should include(SeedRepo::Commit::ID) }
+        it { should include(SeedRepo::FirstCommit::ID) }
+        it { should_not include(SeedRepo::LastCommit::ID) }
       end
 
-      context 'contains master_bk_2 + max_count' do
+      context 'contains feature + max_count' do
         subject do
           commits = Gitlab::Git::Commit.find_all(
             repository,
-            contains: 'master_bk_2',
-            max_count: 50
+            contains: 'feature',
+            max_count: 7
           )
 
           commits.map { |c| c.id }
         end
 
-        it { should have(50).elements }
-        it { should_not include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-        it { should_not include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
-        it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
-      end
+        it { should have(7).elements }
 
-      context 'contains master_bk_2^ + max_count' do
-        subject do
-          commits = Gitlab::Git::Commit.find_all(
-            repository,
-            contains: 'master_bk_2^',
-            max_count: 50
-          )
-
-          commits.map { |c| c.id }
-        end
-
-        it { should have(50).elements }
-        it { should include("8716fc78f3c65bbf7bcf7b574febd583bc5d2812") }
-        it { should include("bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a") }
-        it { should include("0e7c3fc61e75fd7de0a68d9966b5b2142b23739f") }
+        it { should_not include(SeedRepo::Commit::PARENT_ID) }
+        it { should_not include(SeedRepo::Commit::ID) }
+        it { should include(SeedRepo::BigCommit::ID) }
       end
     end
   end
@@ -204,15 +186,15 @@ describe Gitlab::Git::Commit do
   describe :stats do
     subject { commit.stats }
 
-    its(:additions) { should eq(2) }
-    its(:deletions) { should eq(1) }
+    its(:additions) { should eq(11) }
+    its(:deletions) { should eq(6) }
   end
 
   describe :to_diff do
     subject { commit.to_diff }
 
-    it { should_not include "From bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a" }
-    it { should include 'diff --git a/app/assets/stylesheets/tree.scss b/app/assets/stylesheets/tree.scss'}
+    it { should_not include "From #{SeedRepo::Commit::ID}" }
+    it { should include 'diff --git a/files/ruby/popen.rb b/files/ruby/popen.rb'}
   end
 
   describe :has_zero_stats? do
@@ -222,8 +204,8 @@ describe Gitlab::Git::Commit do
   describe :to_patch do
     subject { commit.to_patch }
 
-    it { should include "From bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a" }
-    it { should include 'diff --git a/app/assets/stylesheets/tree.scss b/app/assets/stylesheets/tree.scss'}
+    it { should include "From #{SeedRepo::Commit::ID}" }
+    it { should include 'diff --git a/files/ruby/popen.rb b/files/ruby/popen.rb'}
   end
 
   describe :to_hash do
@@ -246,9 +228,9 @@ describe Gitlab::Git::Commit do
     let(:commit) { Gitlab::Git::Commit.find(repository, 'master') }
     subject { commit.ref_names(repository) }
 
-    it { should have(3).elements }
+    it { should have(2).elements }
     it { should include("master") }
-    it { should_not include("master_bk_2") }
+    it { should_not include("feature") }
   end
 
   def sample_commit_hash
@@ -259,9 +241,9 @@ describe Gitlab::Git::Commit do
       committed_date: "2012-02-27 20:51:12 +0200",
       committer_email: "dmitriy.zaporozhets@gmail.com",
       committer_name: "Dmitriy Zaporozhets",
-      id: "bcf03b5de6c33f3869ef70d68cf06e679d1d7f9a",
+      id: SeedRepo::Commit::ID,
       message: "tree css fixes",
-      parent_ids: ["8716fc78f3c65bbf7bcf7b574febd583bc5d2812"]
+      parent_ids: ["874797c3a73b60d2187ed6e2fcabd289ff75171e"]
     }
   end
 end

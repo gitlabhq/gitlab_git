@@ -15,23 +15,23 @@ describe Gitlab::Git::Repository do
 
   describe "#discover_default_branch" do
     let(:master) { 'master' }
-    let(:stable) { 'stable' }
+    let(:feature) { 'feature' }
 
     it "returns 'master' when master exists" do
-      repository.should_receive(:branch_names).at_least(:once).and_return([stable, master])
+      repository.should_receive(:branch_names).at_least(:once).and_return([feature, master])
       repository.discover_default_branch.should == 'master'
     end
 
     it "returns non-master when master exists but default branch is set to something else" do
-      File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/stable')
-      repository.should_receive(:branch_names).at_least(:once).and_return([stable, master])
-      repository.discover_default_branch.should == 'stable'
+      File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/feature')
+      repository.should_receive(:branch_names).at_least(:once).and_return([feature, master])
+      repository.discover_default_branch.should == 'feature'
       File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/master')
     end
 
     it "returns a non-master branch when only one exists" do
-      repository.should_receive(:branch_names).at_least(:once).and_return([stable])
-      repository.discover_default_branch.should == 'stable'
+      repository.should_receive(:branch_names).at_least(:once).and_return([feature])
+      repository.discover_default_branch.should == 'feature'
     end
 
     it "returns nil when no branch exists" do
@@ -43,7 +43,7 @@ describe Gitlab::Git::Repository do
   describe :branch_names do
     subject { repository.branch_names }
 
-    it { should have(32).elements }
+    it { should have(SeedRepo::Repo::BRANCHES.size).elements }
     it { should include("master") }
     it { should_not include("branch-from-space") }
   end
@@ -52,9 +52,9 @@ describe Gitlab::Git::Repository do
     subject { repository.tag_names }
 
     it { should be_kind_of Array }
-    it { should have(16).elements }
-    its(:last) { should == "v2.2.0pre" }
-    it { should include("v1.2.0") }
+    it { should have(SeedRepo::Repo::TAGS.size).elements }
+    its(:last) { should == "v1.1.0" }
+    it { should include("v1.0.0") }
     it { should_not include("v5.0.0") }
   end
 
@@ -62,7 +62,7 @@ describe Gitlab::Git::Repository do
     let(:archive) { repository.archive_repo('master', '/tmp') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with ".tar.gz" }
     it { File.exists?(archive).should be_true }
   end
@@ -71,7 +71,7 @@ describe Gitlab::Git::Repository do
     let(:archive) { repository.archive_repo('master', '/tmp', 'zip') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with ".zip" }
     it { File.exists?(archive).should be_true }
   end
@@ -80,7 +80,7 @@ describe Gitlab::Git::Repository do
     let(:archive) { repository.archive_repo('master', '/tmp', 'tbz2') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with ".tar.bz2" }
     it { File.exists?(archive).should be_true }
   end
@@ -89,7 +89,7 @@ describe Gitlab::Git::Repository do
     let(:archive) { repository.archive_repo('master', '/tmp', 'madeup') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/gitlabhq.git\/gitlabhq-bcf03b5/) }
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with ".tar.gz" }
     it { File.exists?(archive).should be_true }
   end
@@ -97,7 +97,7 @@ describe Gitlab::Git::Repository do
   describe :size do
     subject { repository.size }
 
-    it { should == 23.45 }
+    it { should < 2 }
   end
 
   describe :has_commits? do
@@ -113,17 +113,17 @@ describe Gitlab::Git::Repository do
     subject { heads }
 
     it { should be_kind_of Array }
-    its(:size) { should eq(32) }
+    its(:size) { should eq(3) }
 
     context :head do
       subject { heads.first }
 
-      its(:name) { should == '2_3_notes_fix' }
+      its(:name) { should == 'feature' }
 
       context :commit do
         subject { heads.first.commit }
 
-        its(:id) { should == '8470d70da67355c9c009e4401746b1d5410af2e3' }
+        its(:id) { should == '0b4bc9a49b562e85de7cc9e834518ea6828729b9' }
       end
     end
   end
@@ -133,8 +133,8 @@ describe Gitlab::Git::Repository do
     subject { ref_names }
 
     it { should be_kind_of Array }
-    its(:first) { should == '2_3_notes_fix' }
-    its(:last) { should == 'v2.2.0pre' }
+    its(:first) { should == 'feature' }
+    its(:last) { should == 'v1.1.0' }
   end
 
   describe :search_files do
@@ -148,15 +148,15 @@ describe Gitlab::Git::Repository do
       subject { results.first }
 
       its(:ref) { should == 'master' }
-      its(:filename) { should == '.travis.yml' }
-      its(:startline) { should == 6 }
-      its(:data) { should include "bundle exec rake db:seed_fu RAILS_ENV=test" }
+      its(:filename) { should == 'CHANGELOG' }
+      its(:startline) { should == 35 }
+      its(:data) { should include "Ability to filter by multiple labels" }
     end
   end
 
   context :submodules do
-    let(:repository) { Gitlab::Git::Repository.new(TEST_SUB_REPO_PATH) }
-    let(:submodules) { repository.submodules('898ce92b0e0b5ade8a7ef7e3c779dda476b3eef8') }
+    let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
+    let(:submodules) { repository.submodules(SeedRepo::Commit::ID) }
 
     it { submodules.should be_kind_of Hash }
     it { submodules.empty?.should be_false }
@@ -166,10 +166,10 @@ describe Gitlab::Git::Repository do
 
       it 'should have valid data' do
         submodule.should == [
-          "rack", {
-            "id"=>"c67be4624545b4263184c4a0e8f887efd0a66320",
-            "path"=>"rack",
-            "url"=>"git://github.com/chneukirchen/rack.git"
+          "six", {
+            "id"=>"409f37c4f05865e4fb208c771485f211a22c4c2d",
+            "path"=>"six",
+            "url"=>"git://github.com/randx/six.git"
           }
         ]
       end

@@ -6,16 +6,16 @@ describe Gitlab::Git::Tag do
   describe 'first tag' do
     let(:tag) { repository.tags.first }
 
-    it { tag.name.should == "v0.9.4" }
-    it { tag.target.should == "38d99e9a05aeec3de09c4a7af2d8af8b34ed5084" }
+    it { tag.name.should == "v1.0.0" }
+    it { tag.target.should == "f4e6814c3e4e7a0de82a9e7cd20c626cc963a2f8" }
   end
 
   describe 'last tag' do
     let(:tag) { repository.tags.last }
 
-    it { tag.name.should == "v2.2.0pre" }
-    it { tag.target.should == "985804a92fe780a4729e9fdbf92e19496c0af15a" }
+    it { tag.name.should == "v1.1.0" }
+    it { tag.target.should == "8a2a6eb295bb170b34c24c76c49ed0e9b2eaf34b" }
   end
 
-  it { repository.tags.size.should == 16 }
+  it { repository.tags.size.should == 2 }
 end

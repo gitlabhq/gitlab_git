@@ -12,7 +12,7 @@ describe Gitlab::Git::Stats do
 
     it { author.name.should == 'Dmitriy Zaporozhets' }
     it { author.email.should == 'dmitriy.zaporozhets@gmail.com' }
-    it { author.commits.should == 254 }
+    it { author.commits.should == 13 }
   end
 
   describe :graph do
@@ -23,6 +23,6 @@ describe Gitlab::Git::Stats do
     it { graph.weeks.should == 4 }
   end
 
-  it { @stats.commits_count.should == 918 }
-  it { @stats.files_count.should == 550 }
+  it { @stats.commits_count.should == 13 }
+  it { @stats.files_count.should == 31 }
 end

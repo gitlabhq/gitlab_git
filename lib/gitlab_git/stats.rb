@@ -52,13 +52,13 @@ module Gitlab
         authors.sort_by(&:commits).reverse
       end
 
-      def build_graph n = 4
+      def build_graph(n = 4)
         from, to = (Date.today.prev_day(n*7)), Date.today
         args = ['--all', "--since=#{from.to_s}", '--format=%ad' ]
         rev_list = repo.git.run(nil, 'rev-list', nil, {}, args).split("\n")
 
         commits_dates = rev_list.values_at(* rev_list.each_index.select {|i| i.odd?})
-        commits_dates = commits_dates.map { |date_str| Time.parse(date_str).to_date.to_s(:date) }
+        commits_dates = commits_dates.map { |date_str| Time.parse(date_str).to_date.to_s }
 
         commits_per_day = from.upto(to).map do |day|
           commits_dates.count(day.to_date.to_s)
