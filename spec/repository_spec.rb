@@ -118,7 +118,7 @@ describe Gitlab::Git::Repository do
     context :head do
       subject { heads.first }
 
-      its(:name) { should == '2_3_notes_fix' }
+      its(:name) { should == 'feature' }
 
       context :commit do
         subject { heads.first.commit }
@@ -133,7 +133,7 @@ describe Gitlab::Git::Repository do
     subject { ref_names }
 
     it { should be_kind_of Array }
-    its(:first) { should == '2_3_notes_fix' }
+    its(:first) { should == 'feature' }
     its(:last) { should == 'v2.2.0pre' }
   end
 

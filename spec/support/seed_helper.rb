@@ -8,10 +8,7 @@ module SeedHelper
   def create_seeds
     puts 'Prepare seeds'
     FileUtils.cd(SUPPORT_PATH) do
-      %w(testme).each do |repo_name|
-        `rm -rf #{repo_name}.git`
-        `tar -xf #{repo_name}.tar.gz`
-      end
+      `git clone --bare https://github.com/gitlabhq/testme.git`
     end
   end
 end
