@@ -13,19 +13,13 @@
 # 6d394385cf567f80a8fd85055db1ab4c5295806f Added contributing guide
 # 1a0b36b3cdad1d2ee32457c102a8c0b7056fa863 Initial commit
 #
-module ValidCommit
-  ID = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
-  PARENT_ID = "6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9"
-  FIRST_ID = "1a0b36b3cdad1d2ee32457c102a8c0b7056fa863"
-  MESSAGE = "Change some files"
-  AUTHOR_FULL_NAME = "Dmitriy Zaporozhets"
-
-  FILES = ["files/ruby/popen.rb", "files/ruby/regex.rb"]
-  FILES_COUNT = 2
-
-  C_FILE_PATH = "files/ruby"
-  C_FILES = ["popen.rb", "regex.rb", "version_info.rb"]
-
-  BLOB_FILE = %{%h3= @key.title\n%hr\n%pre= @key.key\n.actions\n  = link_to 'Remove', @key, :confirm => 'Are you sure?', :method => :delete, :class => \"btn danger delete-key\"\n\n\n}
-  BLOB_FILE_PATH = "app/views/keys/show.html.haml"
+module SeedRepo
+  module LastCommit
+    ID = "5937ac0a7beb003549fc5fd26fc247adbce4a52e"
+    PARENT_ID = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
+    MESSAGE = "Add submodule from gitlab.com"
+    AUTHOR_FULL_NAME = "Dmitriy Zaporozhets"
+    FILES = [".gitmodules", "gitlab-grack"]
+    FILES_COUNT = 2
+  end
 end

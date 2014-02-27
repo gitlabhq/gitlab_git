@@ -7,29 +7,29 @@ describe Gitlab::Git::Blob do
 
   describe :find do
     context 'file in subdir' do
-      let(:blob) { Gitlab::Git::Blob.find(repository, ValidCommit::ID, "app/models/project.rb") }
+      let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, "app/models/project.rb") }
 
       it { blob.id.should == "b59dcd80c874a106258b5b1d30050360151fef2d" }
       it { blob.name.should == "project.rb" }
       it { blob.path.should == "app/models/project.rb" }
-      it { blob.commit_id.should == ValidCommit::ID }
+      it { blob.commit_id.should == SeedRepo::Commit::ID }
       it { blob.data[0..10].should == "require \"gr" }
       it { blob.size.should == 10049  }
     end
 
     context 'file in root' do
-      let(:blob) { Gitlab::Git::Blob.find(repository, ValidCommit::ID, "config.ru") }
+      let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, "config.ru") }
 
       it { blob.id.should == "5ef2a0289fee14259ff60c5a460fc97690443efd" }
       it { blob.name.should == "config.ru" }
       it { blob.path.should == "config.ru" }
-      it { blob.commit_id.should == ValidCommit::ID }
+      it { blob.commit_id.should == SeedRepo::Commit::ID }
       it { blob.data[0..10].should == "# This file" }
       it { blob.size.should == 156  }
     end
 
     context 'non-exist file' do
-      let(:blob) { Gitlab::Git::Blob.find(repository, ValidCommit::ID, "missing.rb") }
+      let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, "missing.rb") }
 
       it { blob.should be_nil }
     end

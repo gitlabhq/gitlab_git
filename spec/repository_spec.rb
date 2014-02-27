@@ -156,7 +156,7 @@ describe Gitlab::Git::Repository do
 
   context :submodules do
     let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
-    let(:submodules) { repository.submodules(ValidCommit::ID) }
+    let(:submodules) { repository.submodules(SeedRepo::Commit::ID) }
 
     it { submodules.should be_kind_of Hash }
     it { submodules.empty?.should be_false }
