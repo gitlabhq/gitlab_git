@@ -1,3 +1,6 @@
+#
+# From SeedRepo::Commit::ID
+#
 module SeedRepo
   module RubyBlob
     ID = "7e3e39ebb9b2bf433b4ad17313770fbe4051649c"

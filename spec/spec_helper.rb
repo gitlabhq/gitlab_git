@@ -15,6 +15,7 @@ require_relative 'support/first_commit'
 require_relative 'support/last_commit'
 require_relative 'support/big_commit'
 require_relative 'support/ruby_blob'
+require_relative 'support/repo'
 
 RSpec::Matchers.define :be_valid_commit do
   match do |actual|

@@ -6,16 +6,16 @@ describe Gitlab::Git::Branch do
   describe 'first branch' do
     let(:branch) { repository.branches.first }
 
-    it { branch.name.should == "2_3_notes_fix" }
-    it { branch.target.should == "8470d70da67355c9c009e4401746b1d5410af2e3" }
+    it { branch.name.should == SeedRepo::Repo::BRANCHES.first }
+    it { branch.target.should == "0b4bc9a49b562e85de7cc9e834518ea6828729b9" }
   end
 
   describe 'last branch' do
     let(:branch) { repository.branches.last }
 
-    it { branch.name.should == "wiki" }
-    it { branch.target.should == "621bfdb4aa6c5ef2b031f7c4fb7753eb80d7a5b5" }
+    it { branch.name.should == SeedRepo::Repo::BRANCHES.last }
+    it { branch.target.should == SeedRepo::LastCommit::ID }
   end
 
-  it { repository.branches.size.should == 32 }
+  it { repository.branches.size.should == SeedRepo::Repo::BRANCHES.size }
 end
