@@ -97,7 +97,7 @@ describe Gitlab::Git::Repository do
   describe :size do
     subject { repository.size }
 
-    it { should == 1.34 }
+    it { should < 2 }
   end
 
   describe :has_commits? do
