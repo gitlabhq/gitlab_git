@@ -1,3 +1,7 @@
+v 5.7.0
+  - Fixed issue with bz2 archive not being created (Jason Hollingsworth)
+  - Fixed branch discover if HEAD has not been updated to one of the existing branches (Jason Hollingsworth)
+
 v 5.6.0
   - Rename Tree#contribution? to Tree#contributing?
   - Use new light seed repo
