@@ -113,7 +113,7 @@ module Gitlab
           Ref.extract_branch_name(rugged.head.name)
         elsif branch_names.include?("master")
           "master"
-        elsif
+        else
           branch_names.first
         end
       end
