@@ -16,6 +16,7 @@ describe Gitlab::Git::Repository do
   describe "#discover_default_branch" do
     let(:master) { 'master' }
     let(:feature) { 'feature' }
+    let(:feature2) { 'feature2' }
 
     it "returns 'master' when master exists" do
       repository.should_receive(:branch_names).at_least(:once).and_return([feature, master])
@@ -31,6 +32,11 @@ describe Gitlab::Git::Repository do
 
     it "returns a non-master branch when only one exists" do
       repository.should_receive(:branch_names).at_least(:once).and_return([feature])
+      repository.discover_default_branch.should == 'feature'
+    end
+
+    it "returns a non-master branch when more than one exists and master does not" do
+      repository.should_receive(:branch_names).at_least(:once).and_return([feature, feature2])
       repository.discover_default_branch.should == 'feature'
     end
 

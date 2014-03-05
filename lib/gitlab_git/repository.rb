@@ -109,7 +109,7 @@ module Gitlab
           nil
         elsif branch_names.length == 1
           branch_names.first
-        elsif rugged.head
+        elsif rugged.head && branch_names.include?(Ref.extract_branch_name(rugged.head.name))
           Ref.extract_branch_name(rugged.head.name)
         elsif branch_names.include?("master")
           "master"
