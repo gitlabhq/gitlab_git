@@ -135,7 +135,7 @@ module Gitlab
         case format
         when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
           extension = ".tar.bz2"
-          pipe_cmd = "bzip"
+          pipe_cmd = "bzip2"
         when "tar"
           extension = ".tar"
           pipe_cmd = "cat"

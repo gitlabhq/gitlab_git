@@ -57,41 +57,40 @@ describe Gitlab::Git::Repository do
     it { should include("v1.0.0") }
     it { should_not include("v5.0.0") }
   end
+  
+  shared_examples 'archive check' do |extenstion|
+    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
+    it { archive.should end_with extenstion }
+    it { File.exists?(archive).should be_true }
+    it { File.size?(archive).should_not be_nil }
+  end
 
   describe :archive do
     let(:archive) { repository.archive_repo('master', '/tmp') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
-    it { archive.should end_with ".tar.gz" }
-    it { File.exists?(archive).should be_true }
+    it_should_behave_like 'archive check', '.tar.gz'
   end
 
   describe :archive_zip do
     let(:archive) { repository.archive_repo('master', '/tmp', 'zip') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
-    it { archive.should end_with ".zip" }
-    it { File.exists?(archive).should be_true }
+    it_should_behave_like 'archive check', '.zip'
   end
 
   describe :archive_bz2 do
     let(:archive) { repository.archive_repo('master', '/tmp', 'tbz2') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
-    it { archive.should end_with ".tar.bz2" }
-    it { File.exists?(archive).should be_true }
+    it_should_behave_like 'archive check', '.tar.bz2'
   end
 
   describe :archive_fallback do
     let(:archive) { repository.archive_repo('master', '/tmp', 'madeup') }
     after { FileUtils.rm_r(archive) }
 
-    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
-    it { archive.should end_with ".tar.gz" }
-    it { File.exists?(archive).should be_true }
+    it_should_behave_like 'archive check', '.tar.gz'
   end
 
   describe :size do
