@@ -1,9 +1,9 @@
 module Gitlab
   module Git
-    module Diff
+    module Diffs
       class Hunk
 
-        attr_accessor :raw_hunk, :store_hunk
+        attr_accessor :raw_hunk
 
         attr_accessor :header, :lines
 
@@ -13,10 +13,8 @@ module Gitlab
           case hunk
           when Hash
             init_from_hash(hunk)
-            @store_hunk = hunk
           when Rugged::Diff::Hunk
             init_from_rugged(hunk)
-            @store_hunk = to_hash
           end
         end
 
@@ -35,16 +33,16 @@ module Gitlab
 
         def init_from_hash(hh)
           @header = hh[:header]
-          @lines  = hh[:lines].map { |line| Gitlab::Git::Diff::Line.new(line) }
+          @lines  = hh[:lines].map { |line| Gitlab::Git::Diffs::Line.new(line) }
         end
 
         def init_from_rugged(rh)
           @header = rh.header
-          @lines  = rh.lines.map { |line| Gitlab::Git::Diff::Line.new(line) }
+          @lines  = rh.lines.map { |line| Gitlab::Git::Diffs::Line.new(line) }
         end
 
         def lines_hash
-          lines.reduce([]) {|line| line.to_hash }
+          lines.reduce([]) {|mem, line| mem.push(line.to_hash) }
         end
       end
     end

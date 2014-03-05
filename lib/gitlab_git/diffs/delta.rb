@@ -1,9 +1,9 @@
 module Gitlab
   module Git
-    module Diff
+    module Diffs
       class Delta
 
-        attr_accessor :raw_delta, :store_delta
+        attr_accessor :raw_delta
 
         attr_accessor :binary, :status, :similarity, :old_file, :new_file
 
@@ -13,10 +13,8 @@ module Gitlab
           case delta
           when Hash
             init_from_hash(delta)
-            @store_delta = delta
           when Rugged::Diff::Delta
             init_from_rugged(delta)
-            @store_delta = to_hash
           end
         end
 

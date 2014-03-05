@@ -1,11 +1,11 @@
 module Gitlab
   module Git
-    module Diff
+    module Diffs
       class Line
 
-        attr_accessor :line_origin, :content, :new_lineno, :old_lineno
+        attr_accessor :raw_line
 
-        attr_accessor :raw_line, :store_line
+        attr_accessor :line_origin, :content, :new_lineno, :old_lineno
 
         def initialize(line)
           @raw_line = line
@@ -13,10 +13,8 @@ module Gitlab
           case line
           when Hash
             init_from_hash(line)
-            @store_line = line
           when Rugged::Diff::Line
             init_from_rugged(line)
-            @store_line = to_hash
           end
         end
 
