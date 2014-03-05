@@ -11,6 +11,49 @@ module Gitlab
       # Diff properties
       attr_accessor :old_path, :new_path, :a_mode, :b_mode, :diff
 
+      # Rugged diff mapping
+      #
+      # diff = {
+      #  patches: [
+      #   {
+      #     additions: Fixnum,
+      #     deletions: Fixnum,
+      #     context:   Fixnum,
+      #     delta: {
+      #       old_file: {
+      #         path:  String,
+      #         mode:  Fixnum,
+      #         size:  Fixnum,
+      #         flags: Fixnum
+      #       },
+      #
+      #       new_file: {
+      #         path:  String,
+      #         mode:  Fixnum,
+      #         size:  Fixnum,
+      #         flags: Fixnum
+      #       },
+      #       status:   Symbol,
+      #       file_type: String
+      #     },
+      #     hunks: [
+      #       {
+      #         header: String,
+      #         lines: [
+      #           {
+      #             line_origin: Symbol
+      #             content: String,
+      #             old_lineno:  Fixnum,
+      #             new_lineno:  Fixnum,
+      #           }
+      #         ]
+      #       }
+      #     ]
+      #   }
+      #  ]
+      # }
+
+
       # Stats properties
       attr_accessor  :new_file, :renamed_file, :deleted_file
 
