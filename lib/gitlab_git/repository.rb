@@ -109,13 +109,19 @@ module Gitlab
           nil
         elsif branch_names.length == 1
           branch_names.first
-        elsif rugged.head && branch_names.include?(Ref.extract_branch_name(rugged.head.name))
-          Ref.extract_branch_name(rugged.head.name)
+        elsif rugged_head && branch_names.include?(Ref.extract_branch_name(rugged_head.name))
+          Ref.extract_branch_name(rugged_head.name)
         elsif branch_names.include?("master")
           "master"
         else
           branch_names.first
         end
+      end
+
+      def rugged_head
+        rugged.head
+      rescue Rugged::ReferenceError
+        nil
       end
 
       # Archive Project to .tar.gz
