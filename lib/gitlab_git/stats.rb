@@ -17,7 +17,7 @@ module Gitlab
 
       def files_count
         args = [ref, '-r', '--name-only' ]
-        repo.git.run(nil, 'ls-tree', nil, {}, args).split("\n").count
+        repo.git.native(:ls_tree, {}, args).split("\n").count
       end
 
       def authors_count
@@ -55,7 +55,7 @@ module Gitlab
       def build_graph(n = 4)
         from, to = (Date.today.prev_day(n*7)), Date.today
         args = ['--all', "--since=#{from.to_s}", '--format=%ad' ]
-        rev_list = repo.git.run(nil, 'rev-list', nil, {}, args).split("\n")
+        rev_list = repo.git.native(:rev_list, {}, args).split("\n")
 
         commits_dates = rev_list.values_at(* rev_list.each_index.select {|i| i.odd?})
         commits_dates = commits_dates.map { |date_str| Time.parse(date_str).to_date.to_s }

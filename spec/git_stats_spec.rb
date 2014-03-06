@@ -20,9 +20,9 @@ describe Gitlab::Git::GitStats do
     let(:repo) { double(Gitlab::Git::Repository).as_null_object }
     let(:gs) { Gitlab::Git::GitStats.new(repo.raw, repo.root_ref) }
 
-    context "repo.git.run returns 'test'" do
+    context "repo.git.native returns 'test'" do
       it "returns 'test'" do
-        repo.raw.git.stub(:run).and_return("test")
+        repo.raw.git.stub(:native).and_return("test")
         gs.log.should eq("test")
       end
     end
