@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gitlab_git (5.7.0)
+    gitlab_git (5.7.1)
       activesupport (~> 4.0.0)
       charlock_holmes (~> 0.6.9)
       gitlab-grit (~> 2.6.1)
