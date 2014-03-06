@@ -1,3 +1,6 @@
+v 5.7.1
+  - Fixed branch discover if master does not exist
+
 v 5.7.0
   - Fixed issue with bz2 archive not being created (Jason Hollingsworth)
   - Fixed branch discover if HEAD has not been updated to one of the existing branches (Jason Hollingsworth)
