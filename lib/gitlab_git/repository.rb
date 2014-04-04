@@ -174,7 +174,7 @@ module Gitlab
 
       # Return repo size in megabytes
       def size
-        size = popen('du -s', path).first.strip.to_i
+        size = popen(%W(du -s), path).first.strip.to_i
         (size.to_f / 1024).round(2)
       end
 
