@@ -141,19 +141,19 @@ module Gitlab
         case format
         when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
           extension = ".tar.bz2"
-          pipe_cmd = "bzip2"
+          pipe_cmd = %W(bzip2)
         when "tar"
           extension = ".tar"
-          pipe_cmd = "cat"
+          pipe_cmd = %W(cat)
         when "zip"
           extension = ".zip"
           git_archive_format = "zip"
-          pipe_cmd = "cat"
+          pipe_cmd = %W(cat)
         else
           # everything else should fall back to tar.gz
           extension = ".tar.gz"
           git_archive_format = nil
-          pipe_cmd = "gzip -n"
+          pipe_cmd = %W(gzip -n)
         end
 
         # Build file path
