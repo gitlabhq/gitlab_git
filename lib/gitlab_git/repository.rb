@@ -153,7 +153,7 @@ module Gitlab
           # everything else should fall back to tar.gz
           extension = ".tar.gz"
           git_archive_format = nil
-          pipe_cmd = "gzip"
+          pipe_cmd = "gzip -n"
         end
 
         # Build file path
