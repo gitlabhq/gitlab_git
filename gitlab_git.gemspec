@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency("gitlab-linguist", "~> 3.0")
   s.add_dependency("gitlab-grit", "~> 2.6")
-  s.add_dependency("activesupport", "~> 4.0")
+  s.add_dependency("activesupport", ">=4.0", "<=4.1")
   s.add_dependency("rugged", "~> 0.19.0")
   s.add_dependency("charlock_holmes", "~> 0.6")
 end
