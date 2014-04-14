@@ -1,6 +1,14 @@
-## GitLab Git [![build status](https://ci.gitlab.org/projects/6/status.png?ref=master)](https://ci.gitlab.org/projects/6?ref=master)
+## GitLab Git
 
 GitLab wrapper around git objects. 
+
+- - -
+
+[![build status](https://ci.gitlab.org/projects/6/status.png?ref=master)](https://ci.gitlab.org/projects/6?ref=master)
+[![Build Status](https://travis-ci.org/gitlabhq/gitlab_git.svg?branch=master)](https://travis-ci.org/gitlabhq/gitlab_git)
+[![Gem Version](https://badge.fury.io/rb/gitlab_git.svg)](http://badge.fury.io/rb/gitlab_git)
+[![Code Climate](https://codeclimate.com/github/gitlabhq/gitlab_git.png)](https://codeclimate.com/github/gitlabhq/gitlab_git)
+[![Coverage Status](https://coveralls.io/repos/gitlabhq/gitlab_git/badge.png?branch=master)](https://coveralls.io/r/gitlabhq/gitlab_git)
 
 ### Move from Grit to Rugged
 
@@ -8,11 +16,6 @@ GitLab wrapper around git objects.
   Right now GitLab Git uses 2 libraries: rugged and grit.
   We want to increase usage of rugged and reduce usage of grit in this library.
   If you can help us with that - please send Merge Request.   
-
-#### Code status
-
-* [![Code Climate](https://codeclimate.com/github/gitlabhq/gitlab_git.png)](https://codeclimate.com/github/gitlabhq/gitlab_git)
-* [![Coverage Status](https://coveralls.io/repos/gitlabhq/gitlab_git/badge.png?branch=master)](https://coveralls.io/r/gitlabhq/gitlab_git)
 
 
 ### How to use: 
