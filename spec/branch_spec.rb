@@ -3,6 +3,11 @@ require "spec_helper"
 describe Gitlab::Git::Branch do
   let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
 
+  subject { repository.branches }
+
+  it { should be_kind_of Array }
+  its(:size) { should eq(3) }
+
   describe 'first branch' do
     let(:branch) { repository.branches.first }
 

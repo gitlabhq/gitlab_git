@@ -63,7 +63,7 @@ describe Gitlab::Git::Repository do
     it { should include("v1.0.0") }
     it { should_not include("v5.0.0") }
   end
-  
+
   shared_examples 'archive check' do |extenstion|
     it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with extenstion }
@@ -111,21 +111,6 @@ describe Gitlab::Git::Repository do
 
   describe :empty? do
     it { repository.empty?.should be_false }
-  end
-
-  describe :branches do
-    let(:branches) { repository.branches }
-    subject { branches }
-
-    it { should be_kind_of Array }
-    its(:size) { should eq(32) }
-
-    context :branch do
-      subject { branches.first }
-
-      its(:name) { should == '2_3_notes_fix' }
-      its(:target) { should == '8470d70da67355c9c009e4401746b1d5410af2e3' }
-    end
   end
 
   describe :heads do
