@@ -63,7 +63,7 @@ describe Gitlab::Git::Repository do
     it { should include("v1.0.0") }
     it { should_not include("v5.0.0") }
   end
-  
+
   shared_examples 'archive check' do |extenstion|
     it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
     it { archive.should end_with extenstion }
