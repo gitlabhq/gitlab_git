@@ -40,18 +40,7 @@ module Gitlab
         #   Commit.find(repo, 'master')
         #
         def find(repo, commit_id = nil)
-          # Find repo.tags first,
-          # because if commit_id is "tag name",
-          # repo.commit(commit_id) returns wrong commit sha
-          # that is git tag object sha.
-          tag = repo.tags.find {|tag| tag.name == commit_id} if commit_id
-
-          commit = if tag
-                     repo.log(ref: tag.target).first
-                   else
-                     repo.log(ref: commit_id).first
-                   end
-
+          commit = repo.log(ref: commit_id, limit: 1).first
           decorate(commit) if commit
         end
 
