@@ -1,3 +1,6 @@
+v 5.9.0
+  - Performance improvements for Commit#find method
+
 v 5.8.0
   - Less strict dependency rules
   - Updated gems
