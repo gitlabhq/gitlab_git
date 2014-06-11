@@ -1,3 +1,6 @@
+v 6.0.0
+  - Add Repository#commit_count method
+
 v 5.9.0
   - Performance improvements for Commit#find method
 

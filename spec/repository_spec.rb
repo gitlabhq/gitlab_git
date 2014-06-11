@@ -180,4 +180,9 @@ describe Gitlab::Git::Repository do
       end
     end
   end
+
+  describe :commit_count do
+    it { repository.commit_count("master").should == 13 }
+    it { repository.commit_count("feature").should == 9 }
+  end
 end

@@ -349,6 +349,14 @@ module Gitlab
       def submodules(ref)
         Grit::Submodule.config(grit, ref)
       end
+
+      # Return total commits count accessible from passed ref
+      def commit_count(ref)
+        walker = Rugged::Walker.new(rugged)
+        walker.sorting(Rugged::SORT_TOPO | Rugged::SORT_REVERSE)
+        walker.push(ref)
+        walker.count
+      end
     end
   end
 end
