@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gitlab_git (6.0.0)
+    gitlab_git (6.0.1)
       activesupport (~> 4.0)
       charlock_holmes (~> 0.6)
       gitlab-grit (~> 2.6)
@@ -59,7 +59,7 @@ GEM
     lumberjack (1.0.3)
     method_source (0.8.1)
     mime-types (1.25.1)
-    minitest (5.3.4)
+    minitest (5.3.5)
     multi_json (1.7.2)
     posix-spawn (0.3.8)
     pry (0.9.12.1)
