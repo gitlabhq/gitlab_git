@@ -1,3 +1,6 @@
+v 6.0.1
+  - Use tmp file for archive repository unless file is ready 
+
 v 6.0.0
   - Add Repository#commit_count method
 
