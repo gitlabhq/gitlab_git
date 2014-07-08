@@ -2,6 +2,7 @@
 # We dont want to use grit objects inside app/
 # It helps us easily migrate to rugged in future
 require_relative 'encoding_herlper'
+require 'tempfile'
 
 module Gitlab
   module Git
@@ -164,8 +165,17 @@ module Gitlab
 
         # Create file if not exists
         unless File.exists?(file_path)
+          # create archive in temp file
+          tmp_file = Tempfile.new('gitlab-archive-repo')
+          self.grit.archive_to_file(ref, prefix, tmp_file.path, git_archive_format, pipe_cmd)
+
+          # move temp file to persisted location
           FileUtils.mkdir_p File.dirname(file_path)
-          file = self.grit.archive_to_file(ref, prefix, file_path, git_archive_format, pipe_cmd)
+          FileUtils.move(tmp_file.path, file_path)
+
+          # delte temp file
+          tmp_file.close
+          tmp_file.unlink
         end
 
         file_path
