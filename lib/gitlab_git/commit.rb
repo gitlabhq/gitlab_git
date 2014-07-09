@@ -26,6 +26,11 @@ module Gitlab
         #   )
         #
         def where(options)
+          default_options = {
+            follow: options[:path].present?
+          }
+          options = default_options.merge(options)
+
           repo = options.delete(:repo)
           raise 'Gitlab::Git::Repository is required' unless repo.respond_to?(:log)
 
