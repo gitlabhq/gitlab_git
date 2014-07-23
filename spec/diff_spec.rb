@@ -62,4 +62,14 @@ EOT
       its(:diff) { should include '+class Feature' }
     end
   end
+
+  describe :submodule? do
+    before do
+      commit = repository.lookup('5937ac0a7beb003549fc5fd26fc247adbce4a52e')
+      @diffs = commit.parents[0].diff(commit).patches
+    end
+
+    it { Gitlab::Git::Diff.new(@diffs[0]).submodule?.should == false }
+    it { Gitlab::Git::Diff.new(@diffs[1]).submodule?.should == true }
+  end
 end

@@ -33,6 +33,13 @@ describe Gitlab::Git::Blob do
 
       it { blob.should be_nil }
     end
+
+    context 'six submodule' do
+      let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, 'six') }
+
+      it { blob.id.should == '409f37c4f05865e4fb208c771485f211a22c4c2d' }
+      it { blob.data.should == '' }
+    end
   end
 
   describe :raw do
