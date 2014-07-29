@@ -64,8 +64,7 @@ module Gitlab
 
       # Returns an Array of tag names
       def tag_names
-        # rugged.tags returns array of names
-        rugged.tags.to_a
+        rugged.tags.map { |t| t.name }
       end
 
       # Returns an Array of Tags

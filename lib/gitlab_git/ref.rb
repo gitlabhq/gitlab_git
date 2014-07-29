@@ -19,7 +19,7 @@ module Gitlab
       end
 
       def initialize(name, target)
-        @name, @target = name.gsub(/\Arefs\/(tags|heads)\//, ''), target
+        @name, @target = name.gsub(/\Arefs\/(tags|heads)\//, ''), target.oid
       end
     end
   end

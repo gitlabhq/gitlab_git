@@ -30,7 +30,7 @@ module Gitlab
               id: entry[:oid],
               root_id: root_tree.oid,
               name: entry[:name],
-              type: entry[:type] || :submodule,
+              type: entry[:type],
               mode: entry[:filemode],
               path: path ? File.join(path, entry[:name]) : entry[:name],
               commit_id: sha,
@@ -83,7 +83,7 @@ module Gitlab
       end
 
       def submodule?
-        type == :submodule
+        type == :commit
       end
 
       def readme?
