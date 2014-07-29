@@ -25,4 +25,11 @@ describe Gitlab::Git::Compare do
     it { compare.timeout.should be_false }
     it { compare.empty_diff?.should be_false }
   end
+
+  describe 'non-existing refs' do
+    let(:compare) { Gitlab::Git::Compare.new(repository, 'no-such-branch', '1234567890') }
+
+    it { compare.commits.should be_empty }
+    it { compare.diffs.should be_empty }
+  end
 end

@@ -1,3 +1,7 @@
+v 6.1.0
+  - Remove limit parameter from Compare.new method 
+  - Prevent 'undefined method' exception when pass wrong ref to Compare
+
 v 6.0.1
   - Use tmp file for archive repository unless file is ready 
 
