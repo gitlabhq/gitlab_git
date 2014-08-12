@@ -1,3 +1,7 @@
+v 6.2.0
+  - When archive repository - use storage path for temp files too
+  - Updated rugged to 0.21
+
 v 6.1.0
   - Remove limit parameter from Compare.new method 
   - Prevent 'undefined method' exception when pass wrong ref to Compare
