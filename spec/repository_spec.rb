@@ -185,4 +185,8 @@ describe Gitlab::Git::Repository do
     it { repository.commit_count("master").should == 13 }
     it { repository.commit_count("feature").should == 9 }
   end
+
+  describe :archive_repo do
+    it { repository.archive_repo('master', '/tmp').should == '/tmp/testme.git/testme-5937ac0a7beb003549fc5fd26fc247adbce4a52e.tar.gz' }
+  end
 end

@@ -165,7 +165,7 @@ module Gitlab
         # Create file if not exists
         unless File.exists?(file_path)
           # create archive in temp file
-          tmp_file = Tempfile.new('gitlab-archive-repo')
+          tmp_file = Tempfile.new('gitlab-archive-repo', storage_path)
           self.grit.archive_to_file(ref, prefix, tmp_file.path, git_archive_format, pipe_cmd)
 
           # move temp file to persisted location
