@@ -19,7 +19,14 @@ module Gitlab
       end
 
       def initialize(name, target)
-        @name, @target = name.gsub(/\Arefs\/(tags|heads)\//, ''), target.oid
+        @name = name.gsub(/\Arefs\/(tags|heads)\//, '')
+        @target = if target.respond_to?(:oid)
+                    target.oid
+                  elsif target.respond_to?(:name)
+                    target.name
+                  else
+                    nil
+                  end
       end
     end
   end
