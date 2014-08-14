@@ -1,4 +1,4 @@
-## GitLab Git
+# GitLab Git
 
 GitLab wrapper around git objects. 
 
@@ -18,9 +18,9 @@ GitLab wrapper around git objects.
   If you can help us with that - please send Merge Request.   
 
 
-### How to use: 
+## How to use: 
 
-#### Repository
+### Repository
 
     # Init repo with full path
     repo = Gitlab::Git::Repository.new('/home/git/repositories/gitlab/gitlab-ci.git')
@@ -53,7 +53,7 @@ GitLab wrapper around git objects.
     # Access to grit repo object 
     repo.grit
 
-#### Tree
+### Tree
 
     # Tree objects for root dir
     tree = Gitlab::Git::Tree.where(repo, '893ade32')
@@ -84,7 +84,7 @@ GitLab wrapper around git objects.
     # Find readme
     tree.find(&:readme?)
 
-#### Blob
+### Blob
 
     # Blob object for Commit sha 893ade32
     blob = Gitlab::Git::Blob.find(repo, '893ade32', 'Gemfile')
@@ -107,9 +107,9 @@ GitLab wrapper around git objects.
     raw_blob.data
 
 
-#### Commit
+### Commit
 
-##### Picking
+#### Picking
 
      # Get commits collection with pagination
      Gitlab::Git::Commit.where(
@@ -135,7 +135,7 @@ GitLab wrapper around git objects.
      # [ <Gitlab::Git::Commit:0x000..>, <Gitlab::Git::Commit:0x000..>]
     
 
-##### Commit object
+#### Commit object
 
      # Commit id
      commit.id
@@ -169,7 +169,7 @@ GitLab wrapper around git objects.
      # jsmith@sample.com
 
 
-#### Diff object
+### Diff object
 
      # From commit
      commit.diffs
@@ -179,7 +179,19 @@ GitLab wrapper around git objects.
      Gitlab::Git::Diff.between(repo, 'dev', 'master')
      # [ <Gitlab::Git::Diff:0x000..>, <Gitlab::Git::Diff:0x000..>]
 
-#### Git blame
+     # Diff object
+     diff = commit.diffs.first
+ 
+     diff.diff #  "--- a/Gemfile.lock\....."
+     diff.new_path # => "Gemfile.lock",
+     diff.old_path # => "Gemfile.lock",
+     diff.a_mode # => nil,
+     diff.b_mode # => "100644",
+     diff.new_file # => false,
+     diff.renamed_file # => false,
+     diff.deleted_file # => false
+
+### Git blame
 
      # Git blame for file
      blame = Gitlab::Git::Blame.new(repo, 'master, 'app/models/project.rb')
@@ -189,7 +201,7 @@ GitLab wrapper around git objects.
      end
 
 
-#### Compare
+### Compare
 
 Allows you to get difference(commits, diffs) between two sha/branch/tag
 
