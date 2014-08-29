@@ -8,6 +8,6 @@ module SeedHelper
   def create_seeds
     puts 'Prepare seeds'
     FileUtils.mkdir_p(SUPPORT_PATH)
-    system(*%W(git clone --bare https://github.com/gitlabhq/testme.git), chdir: SUPPORT_PATH)
+    system(*%W(git clone --bare https://gitlab.com/gitlab-org/gitlab-git-test.git), chdir: SUPPORT_PATH)
   end
 end
