@@ -65,7 +65,7 @@ describe Gitlab::Git::Repository do
   end
 
   shared_examples 'archive check' do |extenstion|
-    it { archive.should match(/tmp\/testme.git\/testme-5937ac0a/) }
+    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-5937ac0a/) }
     it { archive.should end_with extenstion }
     it { File.exists?(archive).should be_true }
     it { File.size?(archive).should_not be_nil }
@@ -187,6 +187,6 @@ describe Gitlab::Git::Repository do
   end
 
   describe :archive_repo do
-    it { repository.archive_repo('master', '/tmp').should == '/tmp/testme.git/testme-5937ac0a7beb003549fc5fd26fc247adbce4a52e.tar.gz' }
+    it { repository.archive_repo('master', '/tmp').should == '/tmp/gitlab-git-test.git/gitlab-git-test-5937ac0a7beb003549fc5fd26fc247adbce4a52e.tar.gz' }
   end
 end
