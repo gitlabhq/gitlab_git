@@ -16,7 +16,7 @@ end
 
 # Gitlab::Git
 require_relative "gitlab_git/popen"
-require_relative "gitlab_git/encoding_herlper"
+require_relative 'gitlab_git/encoding_helper'
 require_relative "gitlab_git/blame"
 require_relative "gitlab_git/blob"
 require_relative "gitlab_git/commit"
