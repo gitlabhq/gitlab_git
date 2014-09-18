@@ -8,11 +8,7 @@ module Gitlab
 
       attr_accessor :raw_diff
 
-      # Diff properties
-      attr_accessor :old_path, :new_path, :a_mode, :b_mode, :diff
-
-      # Stats properties
-      attr_accessor  :new_file, :renamed_file, :deleted_file
+      attr_accessor :patches
 
       class << self
         def between(repo, head, base, *paths)
@@ -20,11 +16,10 @@ module Gitlab
           # The linex below with merge_base is equivalent to diff with three dots (git diff branch1...branch2)
           # From the git documentation: "git diff A...B" is equivalent to "git diff $(git-merge-base A B) B"
           common_commit = repo.merge_base_commit(head, base)
+          raw_diff = repo.diff(common_commit, head, *paths)
 
-          repo.diff(common_commit, head, *paths).map do |diff|
-            Gitlab::Git::Diff.new(diff)
-          end
-        rescue Grit::Git::GitTimeout
+          Gitlab::Git::Diff.new(raw_diff)
+        rescue
           raise TimeoutError.new("Diff.between exited with timeout")
         end
       end
@@ -32,47 +27,33 @@ module Gitlab
       def initialize(raw_diff)
         raise "Nil as raw diff passed" unless raw_diff
 
-        if raw_diff.is_a?(Hash)
-          init_from_hash(raw_diff)
-        else
-          init_from_grit(raw_diff)
-        end
-      end
+        @raw_diff = raw_diff
 
-      def serialize_keys
-        @serialize_keys ||= %w(diff new_path old_path a_mode b_mode new_file renamed_file deleted_file).map(&:to_sym)
+        case raw_diff
+        when Hash
+          init_from_hash(raw_diff)
+        when Rugged::Diff
+          init_from_rugged(raw_diff)
+        else
+          raise "We don't known how parse raw diff"
+        end
       end
 
       def to_hash
-        hash = {}
-
-        keys = serialize_keys
-
-        keys.each do |key|
-          hash[key] = send(key)
-        end
-
-        hash
+        {
+          patches: patches.reduce([]) { |mem, patch| mem.push(patch.to_hash) }
+        }
       end
 
       private
 
-      def init_from_grit(grit)
-        @raw_diff = grit
-
-        serialize_keys.each do |key|
-          send(:"#{key}=", grit.send(key))
-        end
+      def init_from_rugged(diff)
+        @patches = diff.patches.map { |patch| Gitlab::Git::Diffs::Patch.new(patch) }
       end
 
       def init_from_hash(hash)
-        raw_diff = hash.symbolize_keys
-
-        serialize_keys.each do |key|
-          send(:"#{key}=", raw_diff[key.to_sym])
-        end
+        @patches = hash[:patches].map { |patch| Gitlab::Git::Diffs::Patch.new(patch) }
       end
     end
   end
 end
-
