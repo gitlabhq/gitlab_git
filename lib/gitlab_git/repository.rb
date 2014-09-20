@@ -246,8 +246,12 @@ module Gitlab
         grit.git.native(:merge_base, {}, [to, from]).strip
       end
 
+      # Return an array of Diff objects that represent the diff
+      # between +from+ and +to+.
       def diff(from, to, *paths)
-        grit.diff(from, to, *paths)
+        rugged.diff(from, to, paths: paths).patches.map do |p|
+          Gitlab::Git::Diff.new(p)
+        end
       end
 
       # Return the diff between +from+ and +to+ in a single patch string.
