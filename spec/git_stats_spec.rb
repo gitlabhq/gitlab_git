@@ -17,13 +17,21 @@ describe Gitlab::Git::GitStats do
   end
 
   describe "#log" do
-    let(:repo) { double(Gitlab::Git::Repository).as_null_object }
-    let(:gs) { Gitlab::Git::GitStats.new(repo.raw, repo.root_ref) }
+    let(:repo) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
+    let(:gs) { Gitlab::Git::GitStats.new(repo, repo.root_ref) }
 
     context "repo.git.native returns 'test'" do
       it "returns 'test'" do
-        repo.raw.git.stub(:native).and_return("test")
-        gs.log.should eq("test")
+        lines = gs.log.split("\n")
+        lines.first.should eq("Dmitriy Zaporozhets")
+
+        lines[4].should include("2 files changed")
+        lines[4].should include("4 insertions")
+        lines[4].should_not include("deletions")
+
+        lines[9].should include("2 files changed")
+        lines[9].should include("11 insertions")
+        lines[9].should include("6 deletions")
       end
     end
   end

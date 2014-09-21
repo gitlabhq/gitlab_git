@@ -51,8 +51,11 @@ module Gitlab
         #
         #   Commit.find(repo, 'master')
         #
-        def find(repo, commit_id = 'HEAD')
-          obj = repo.rugged.rev_parse(commit_id)
+        def find(repo, commit_id = nil)
+          return decorate(commit_id) if commit_id.is_a?(Rugged::Commit)
+          rev = commit_id || "HEAD"
+
+          obj = repo.rugged.rev_parse(rev)
           if obj.is_a?(Rugged::Tag::Annotation)
             commit = obj.target
           elsif obj.is_a?(Rugged::Commit)
@@ -99,6 +102,8 @@ module Gitlab
           repo.commits_between(base, head).map do |commit|
             decorate(commit)
           end
+        rescue Rugged::ReferenceError
+          []
         end
 
         # Delegate Repository#find_commits
@@ -171,7 +176,7 @@ module Gitlab
       # empty repo.
       def diff_from_parent
         if raw_commit.parents.empty?
-          raw_commit.diff
+          raw_commit.diff(reverse: true)
         else
           raw_commit.parents[0].diff(raw_commit)
         end

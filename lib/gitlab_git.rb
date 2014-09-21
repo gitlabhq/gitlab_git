@@ -9,6 +9,7 @@ require 'grit'
 require 'grit_ext'
 require 'rugged'
 require "charlock_holmes"
+require "zip"
 
 Grit::Blob.class_eval do
   include Linguist::BlobHelper

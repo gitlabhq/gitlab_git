@@ -9,55 +9,65 @@ describe Gitlab::Git::Commit do
 
   describe "Commit info" do
     before do
-      @committer = double(
+      repo = Gitlab::Git::Repository.new(TEST_REPO_PATH).rugged
+
+      @committer = {
         email: 'mike@smith.com',
-        name: 'Mike Smith'
-      )
+        name: 'Mike Smith',
+        time: Time.now
+      }
 
-      @author = double(
+      @author = {
         email: 'john@smith.com',
-        name: 'John Smith'
-      )
+        name: 'John Smith',
+        time: Time.now
+      }
 
-      @tree = double
+      @parents = [repo.head.target]
+      @gitlab_parents = @parents.map { |c| Gitlab::Git::Commit.decorate(c) }
+      @tree = @parents.first.tree
 
-      @parents = [ double(id: "874797c3a73b60d2187ed6e2fcabd289ff75171e") ]
-
-      @raw_commit = double(
-        id: "bcf03b5de6abcf03b5de6c",
+      sha = Rugged::Commit.create(
+        repo,
         author: @author,
         committer: @committer,
-        committed_date: Date.today.prev_day,
-        authored_date: Date.today.prev_day,
         tree: @tree,
         parents: @parents,
-        message: 'Refactoring specs'
+        message: 'Refactoring specs',
+        update_ref: "HEAD"
       )
 
+      @raw_commit = repo.lookup(sha)
       @commit = Gitlab::Git::Commit.new(@raw_commit)
     end
 
-    it { @commit.short_id.should == "bcf03b5de6a" }
-    it { @commit.id.should == @raw_commit.id }
-    it { @commit.sha.should == @raw_commit.id }
+    it { @commit.short_id.should == @raw_commit.oid[0..10] }
+    it { @commit.id.should == @raw_commit.oid }
+    it { @commit.sha.should == @raw_commit.oid }
     it { @commit.safe_message.should == @raw_commit.message }
-    it { @commit.created_at.should == @raw_commit.committed_date }
-    it { @commit.date.should == @raw_commit.committed_date }
-    it { @commit.author_email.should == @author.email }
-    it { @commit.author_name.should == @author.name }
-    it { @commit.committer_name.should == @committer.name }
-    it { @commit.committer_email.should == @committer.email }
+    it { @commit.created_at.should == @raw_commit.author[:time] }
+    it { @commit.date.should == @raw_commit.committer[:time] }
+    it { @commit.author_email.should == @author[:email] }
+    it { @commit.author_name.should == @author[:name] }
+    it { @commit.committer_name.should == @committer[:name] }
+    it { @commit.committer_email.should == @committer[:email] }
     it { @commit.different_committer?.should be_true }
-    it { @commit.parents.should == @parents }
-    it { @commit.parent_id.should == @parents.first.id }
+    it { @commit.parents.should == @gitlab_parents }
+    it { @commit.parent_id.should == @parents.first.oid }
     it { @commit.no_commit_message.should == "--no commit message" }
     it { @commit.tree.should == @tree }
+
+    after do
+      # Erase the new commit so other tests get the original repo
+      repo = Gitlab::Git::Repository.new(TEST_REPO_PATH).rugged
+      repo.references.update("refs/heads/master", SeedRepo::LastCommit::ID)
+    end
   end
 
   context 'Class methods' do
     describe :find do
       it "should return first head commit if without params" do
-        Gitlab::Git::Commit.last(repository).id.should == repository.raw.commits.first.id
+        Gitlab::Git::Commit.last(repository).id.should == repository.raw.head.target.oid
       end
 
       it "should return valid commit" do

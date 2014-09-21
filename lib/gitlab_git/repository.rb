@@ -1,8 +1,7 @@
-# Gitlab::Git::Repository is a wrapper around native Grit::Repository object
-# We dont want to use grit objects inside app/
-# It helps us easily migrate to rugged in future
+# Gitlab::Git::Repository is a wrapper around native Rugged::Repository object
 require_relative 'encoding_helper'
 require 'tempfile'
+require 'rubygems/package'
 
 module Gitlab
   module Git
@@ -20,9 +19,6 @@ module Gitlab
       # Directory name of repo
       attr_reader :name
 
-      # Grit repo object
-      attr_reader :grit
-
       # Rugged repo object
       attr_reader :rugged
 
@@ -32,15 +28,9 @@ module Gitlab
         @root_ref = discover_default_branch
       end
 
-      def grit
-        @grit ||= Grit::Repo.new(path)
-      rescue Grit::NoSuchPathError
-        raise NoRepository.new('no repository for such path')
-      end
-
       # Alias to old method for compatibility
       def raw
-        grit
+        rugged
       end
 
       def rugged
@@ -69,18 +59,8 @@ module Gitlab
 
       # Returns an Array of Tags
       def tags
-        rugged.refs.select do |ref|
-          ref.name =~ /\Arefs\/tags/
-        end.map do |rugged_ref|
-          target = rugged_ref.target
-          message = nil
-          if rugged_ref.target.is_a?(Rugged::Tag::Annotation) &&
-             rugged_ref.target.target.is_a?(Rugged::Commit)
-            unless rugged_ref.target.target.message == rugged_ref.target.message
-              message = rugged_ref.target.message.chomp
-            end
-          end
-          Tag.new(rugged_ref.name, target, message)
+        rugged.references.each("refs/tags/*").map do |ref|
+          Tag.new(ref.name, ref.target, ref.target.message.chomp)
         end.sort_by(&:name)
       end
 
@@ -139,12 +119,11 @@ module Gitlab
       # app_root/tmp/repositories/project_name/project_name-commit-id.tag.gz
       #
       def archive_repo(ref, storage_path, format = "tar.gz")
-        ref = ref || self.root_ref
+        ref ||= self.root_ref
         commit = Gitlab::Git::Commit.find(self, ref)
         return nil unless commit
 
         extension = nil
-        git_archive_format = nil
         pipe_cmd = nil
 
         case format
@@ -156,12 +135,10 @@ module Gitlab
           pipe_cmd = %W(cat)
         when "zip"
           extension = ".zip"
-          git_archive_format = "zip"
           pipe_cmd = %W(cat)
         else
           # everything else should fall back to tar.gz
           extension = ".tar.gz"
-          git_archive_format = nil
           pipe_cmd = %W(gzip -n)
         end
 
@@ -169,23 +146,8 @@ module Gitlab
         file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + extension
         file_path = File.join(storage_path, self.name, file_name)
 
-        # Put files into a directory before archiving
-        prefix = File.basename(self.name) + "/"
-
         # Create file if not exists
-        unless File.exists?(file_path)
-          # create archive in temp file
-          tmp_file = Tempfile.new('gitlab-archive-repo', storage_path)
-          self.grit.archive_to_file(ref, prefix, tmp_file.path, git_archive_format, pipe_cmd)
-
-          # move temp file to persisted location
-          FileUtils.mkdir_p File.dirname(file_path)
-          FileUtils.move(tmp_file.path, file_path)
-
-          # delte temp file
-          tmp_file.close
-          tmp_file.unlink
-        end
+        create_archive(ref, pipe_cmd, file_path) unless File.exist?(file_path)
 
         file_path
       end
@@ -196,19 +158,24 @@ module Gitlab
         (size.to_f / 1024).round(2)
       end
 
+      # Returns an array of BlobSnippets for files at the specified +ref+ that
+      # contain the +query+ string.
       def search_files(query, ref = nil)
-        if ref.nil? || ref == ""
-          ref = root_ref
+        greps = []
+        ref ||= root_ref
+
+        populated_index(ref).each do |entry|
+          # Discard submodules
+          next if submodule?(entry)
+
+          content = rugged.lookup(entry[:oid]).content
+          greps += build_greps(content, query, ref, entry[:path])
         end
 
-        greps = grit.grep(query, 3, ref)
-
-        greps.map do |grep|
-          Gitlab::Git::BlobSnippet.new(ref, grep.content, grep.startline, grep.filename)
-        end
+        greps
       end
 
-      # Delegate log to Grit method
+      # Use the Rugged Walker API to build an array of commits.
       #
       # Usage.
       #   repo.log(
@@ -228,24 +195,32 @@ module Gitlab
         }
 
         options = default_options.merge(options)
+        options[:limit] ||= 0
+        options[:offset] ||= 0
+        actual_ref = options[:ref] || root_ref
+        sha = rugged.rev_parse_oid(actual_ref)
 
-        grit.log(
-          options[:ref] || root_ref,
-          options[:path],
-          max_count: options[:limit].to_i,
-          skip: options[:offset].to_i,
-          follow: options[:follow]
-        )
+        build_log(sha, options)
+      rescue Rugged::OdbError, Rugged::InvalidError, Rugged::ReferenceError
+        # Return an empty array if the ref wasn't found
+        []
       end
 
-      # Delegate commits_between to Grit method
+      # Return a collection of Rugged::Commits between the two SHA arguments.
       #
       def commits_between(from, to)
-        grit.commits_between(from, to)
+        walker = Rugged::Walker.new(rugged)
+        walker.push(to)
+        walker.hide(from)
+        commits = walker.to_a
+        walker.reset
+
+        commits.reverse
       end
 
+      # Returns the SHA of the most recent common ancestor of +from+ and +to+
       def merge_base_commit(from, to)
-        grit.git.native(:merge_base, {}, [to, from]).strip
+        rugged.merge_base(from, to)
       end
 
       # Return an array of Diff objects that represent the diff
@@ -288,81 +263,92 @@ module Gitlab
 
         allowed_options = [:ref, :max_count, :skip, :contains, :order]
 
-        actual_options.keep_if do |key, value|
+        actual_options.keep_if do |key|
           allowed_options.include?(key)
         end
 
-        default_options = {pretty: 'raw', order: :date}
-
+        default_options = { skip: 0 }
         actual_options = default_options.merge(actual_options)
 
-        order = actual_options.delete(:order)
+        walker = Rugged::Walker.new(rugged)
 
-        case order
-        when :date
-          actual_options[:date_order] = true
-        when :topo
-          actual_options[:topo_order] = true
-        end
-
-        ref = actual_options.delete(:ref)
-
-        containing_commit = actual_options.delete(:contains)
-
-        args = []
-
-        if ref
-          args.push(ref)
-        elsif containing_commit
-          args.push(*branch_names_contains(containing_commit))
+        if actual_options[:ref]
+          walker.push(rugged.rev_parse_oid(actual_options[:ref]))
+        elsif actual_options[:contains]
+          branches_contains(actual_options[:contains]).each do |branch|
+            walker.push(branch.target_id)
+          end
         else
-          actual_options[:all] = true
+          rugged.references.each("refs/heads/*") do |ref|
+            walker.push(ref.target_id)
+          end
         end
 
-        output = grit.git.native(:rev_list, actual_options, *args)
+        walker.sorting(Rugged::SORT_TOPO) if actual_options[:order] == :topo
 
-        Grit::Commit.list_from_string(grit, output).map do |commit|
-          Gitlab::Git::Commit.decorate(commit)
+        commits = []
+        offset = actual_options[:skip]
+        limit = actual_options[:max_count]
+        walker.each(offset: offset, limit: limit) do |commit|
+          gitlab_commit = Gitlab::Git::Commit.decorate(commit)
+          commits.push(gitlab_commit)
         end
-      rescue Grit::GitRuby::Repository::NoSuchShaFound
+
+        walker.reset
+
+        commits
+      rescue Rugged::OdbError
         []
       end
 
-      # Returns branch names collection that contains the special commit(SHA1 or name)
+      # Returns branch names collection that contains the special commit(SHA1
+      # or name)
       #
       # Ex.
       #   repo.branch_names_contains('master')
       #
       def branch_names_contains(commit)
-        output = grit.git.native(:branch, {contains: true}, commit)
+        branches_contains(commit).map { |c| c.target_id }
+      end
 
-        # Fix encoding issue
-        output = EncodingHelper::encode!(output)
+      # Returns branch collection that contains the special commit(SHA1 or name)
+      #
+      # Ex.
+      #   repo.branch_names_contains('master')
+      #
+      def branches_contains(commit)
+        sha = rugged.rev_parse_oid(commit)
 
-        # The output is expected as follow
-        #   fix-aaa
-        #   fix-bbb
-        # * master
-        output.scan(/[^* \n]+/)
+        walker = Rugged::Walker.new(rugged)
+
+        rugged.branches.select do |branch|
+          walker.push(branch.target_id)
+          result = walker.any? { |c| c.oid == sha }
+          walker.reset
+
+          result
+        end
       end
 
       # Get refs hash which key is SHA1
-      # and value is ref object(Grit::Head or Grit::Remote or Grit::Tag)
+      # and value is a Rugged::Reference
       def refs_hash
         # Initialize only when first call
         if @refs_hash.nil?
           @refs_hash = Hash.new { |h, k| h[k] = [] }
 
-          grit.refs.each do |r|
-            @refs_hash[r.commit.id] << r
+          rugged.references.each do |r|
+            sha = rev_parse_target(r.target.oid).oid
+
+            @refs_hash[sha] << r
           end
         end
         @refs_hash
       end
 
-      # Lookup for rugged object by oid
-      def lookup(oid)
-        rugged.lookup(oid)
+      # Lookup for rugged object by oid or ref name
+      def lookup(oid_or_ref_name)
+        rugged.rev_parse(oid_or_ref_name)
       end
 
       # Return hash with submodules info for this repository
@@ -380,7 +366,10 @@ module Gitlab
       #   }
       #
       def submodules(ref)
-        Grit::Submodule.config(grit, ref)
+        tree = rugged.lookup(rugged.rev_parse_oid(ref)).tree
+
+        content = blob_content(tree, ".gitmodules")
+        parse_gitmodules(tree, content)
       end
 
       # Return total commits count accessible from passed ref
@@ -652,6 +641,23 @@ module Gitlab
         Rugged::Commit.create(rugged, actual_options)
       end
 
+      def commits_since(from_date)
+        walker = Rugged::Walker.new(rugged)
+        walker.sorting(Rugged::SORT_DATE | Rugged::SORT_REVERSE)
+
+        rugged.references.each("refs/heads/*") do |ref|
+          walker.push(ref.target_id)
+        end
+
+        commits = []
+        walker.each do |commit|
+          break if commit.author[:time].to_date < from_date
+          commits.push(commit)
+        end
+
+        commits
+      end
+
       private
 
       # Return the object that +revspec+ points to.  If +revspec+ is an
@@ -712,7 +718,8 @@ module Gitlab
         current_path = options[:path]
 
         walker.each do |c|
-          break if options[:limit] > 0 && commits.length >= options[:limit]
+          break if options[:limit].to_i > 0 &&
+            commits.length >= options[:limit].to_i
 
           if !current_path ||
             commit_touches_path?(c, current_path, options[:follow])
