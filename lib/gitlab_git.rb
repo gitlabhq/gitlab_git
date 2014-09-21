@@ -20,6 +20,7 @@ require_relative 'gitlab_git/encoding_helper'
 require_relative "gitlab_git/blame"
 require_relative "gitlab_git/blob"
 require_relative "gitlab_git/commit"
+require_relative "gitlab_git/commit_stats"
 require_relative "gitlab_git/compare"
 require_relative "gitlab_git/diff"
 require_relative "gitlab_git/repository"

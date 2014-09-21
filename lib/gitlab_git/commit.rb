@@ -1,6 +1,4 @@
-# Gitlab::Git::Commit is a wrapper around native Grit::Commit object
-# We dont want to use grit objects inside app/
-# It helps us easily migrate to rugged in future
+# Gitlab::Git::Commit is a wrapper around native Rugged::Commit object
 module Gitlab
   module Git
     class Commit
@@ -12,6 +10,20 @@ module Gitlab
         :committed_date, :committer_name, :committer_email
       ]
       attr_accessor *SERIALIZE_KEYS
+
+      def ==(other)
+        return false unless other.is_a?(Gitlab::Git::Commit)
+
+        id == other.id &&
+          message == other.message &&
+          parent_ids == other.parent_ids &&
+          authored_date == other.authored_date &&
+          author_name == other.author_name &&
+          author_email == other.author_email &&
+          committed_date == other.committed_date &&
+          committer_name == other.committer_name &&
+          committer_email == other.committer_email
+      end
 
       class << self
         # Get commits collection
@@ -39,9 +51,18 @@ module Gitlab
         #
         #   Commit.find(repo, 'master')
         #
-        def find(repo, commit_id = nil)
-          commit = repo.log(ref: commit_id, limit: 1).first
+        def find(repo, commit_id = 'HEAD')
+          obj = repo.rugged.rev_parse(commit_id)
+          if obj.is_a?(Rugged::Tag::Annotation)
+            commit = obj.target
+          elsif obj.is_a?(Rugged::Commit)
+            commit = obj
+          else
+            raise("Invalid commit ID")
+          end
           decorate(commit) if commit
+        rescue Rugged::ReferenceError, Rugged::ObjectError
+          nil
         end
 
         # Get last commit for HEAD
@@ -50,7 +71,7 @@ module Gitlab
         #   Commit.last(repo)
         #
         def last(repo)
-          find(repo, nil)
+          find(repo)
         end
 
         # Get last commit for specified path and ref
@@ -133,7 +154,6 @@ module Gitlab
       #
       # Cuts out the header and stats from #to_patch and returns only the diff.
       def to_diff
-        # see Grit::Commit#show
         patch = to_patch
 
         # discard lines before the diff
@@ -144,6 +164,17 @@ module Gitlab
         lines.pop if lines.last =~ /^[\d.]+$/ # Git version
         lines.pop if lines.last == "-- "      # end of diff
         lines.join("\n")
+      end
+
+      # Returns a diff object for the changes from this commit's first parent.
+      # If there is no parent, then the diff is between this commit and an
+      # empty repo.
+      def diff_from_parent
+        if raw_commit.parents.empty?
+          raw_commit.diff
+        else
+          raw_commit.parents[0].diff(raw_commit)
+        end
       end
 
       def has_zero_stats?
@@ -167,11 +198,17 @@ module Gitlab
       end
 
       def diffs
-        raw_commit.diffs.map { |diff| Gitlab::Git::Diff.new(diff) }
+        if raw_commit.is_a?(Rugged::Commit)
+          diffs = diff_from_parent
+        else
+          diffs = raw_commit.diffs
+        end
+
+        diffs.map { |diff| Gitlab::Git::Diff.new(diff) }
       end
 
       def parents
-        raw_commit.parents
+        raw_commit.parents.map { |c| Gitlab::Git::Commit.new(c) }
       end
 
       def tree
@@ -179,14 +216,22 @@ module Gitlab
       end
 
       def stats
-        raw_commit.stats
+        if raw_commit.is_a?(Rugged::Commit)
+          Gitlab::Git::CommitStats.new(self)
+        else
+          raw_commit.stats
+        end
       end
 
       def to_patch
-        raw_commit.to_patch
+        if raw_commit.is_a?(Rugged::Commit)
+          raw_commit.to_mbox
+        else
+          raw_commit.to_patch
+        end
       end
 
-      # Get refs collection(Grit::Head or Grit::Remote or Grit::Tag)
+      # Get a collection of Rugged::Reference objects for this commit.
       #
       # Ex.
       #   commit.ref(repo)
@@ -201,7 +246,9 @@ module Gitlab
       #   commit.ref_names(repo)
       #
       def ref_names(repo)
-        refs(repo).map(&:name)
+        refs(repo).map do |ref|
+          ref.name.sub(%r{^refs/(heads|remotes|tags)/}, "")
+        end
       end
 
       private
