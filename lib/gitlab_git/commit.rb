@@ -95,6 +95,8 @@ module Gitlab
 
         if raw_commit.is_a?(Hash)
           init_from_hash(raw_commit)
+        elsif raw_commit.is_a?(Rugged::Commit)
+          init_from_rugged(raw_commit)
         else
           init_from_grit(raw_commit)
         end
@@ -223,6 +225,19 @@ module Gitlab
         serialize_keys.each do |key|
           send("#{key}=", raw_commit[key])
         end
+      end
+
+      def init_from_rugged(commit)
+        @raw_commit = commit
+        @id = commit.oid
+        @message = commit.message
+        @authored_date = commit.author[:time]
+        @committed_date = commit.committer[:time]
+        @author_name = commit.author[:name]
+        @author_email = commit.author[:email]
+        @committer_name = commit.committer[:name]
+        @committer_email = commit.committer[:email]
+        @parent_ids = commit.parents.map(&:oid)
       end
 
       def serialize_keys

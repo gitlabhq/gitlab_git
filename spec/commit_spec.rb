@@ -3,6 +3,9 @@ require "spec_helper"
 describe Gitlab::Git::Commit do
   let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
   let(:commit) { Gitlab::Git::Commit.find(repository, SeedRepo::Commit::ID) }
+  let(:rugged_commit) do
+    repository.rugged.lookup(SeedRepo::Commit::ID)
+  end
 
   describe "Commit info" do
     before do
@@ -173,6 +176,13 @@ describe Gitlab::Git::Commit do
         it { should include(SeedRepo::BigCommit::ID) }
       end
     end
+  end
+
+  describe :init_from_rugged do
+    let(:gitlab_commit) { Gitlab::Git::Commit.new(rugged_commit) }
+    subject { gitlab_commit }
+
+    its(:id) { should == SeedRepo::Commit::ID }
   end
 
   describe :init_from_hash do
