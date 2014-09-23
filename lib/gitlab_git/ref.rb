@@ -24,6 +24,8 @@ module Gitlab
                     target.oid
                   elsif target.respond_to?(:name)
                     target.name
+                  elsif target.is_a? String
+                    target
                   else
                     nil
                   end

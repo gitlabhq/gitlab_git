@@ -72,7 +72,15 @@ module Gitlab
         rugged.refs.select do |ref|
           ref.name =~ /\Arefs\/tags/
         end.map do |rugged_ref|
-          Tag.new(rugged_ref.name, rugged_ref.target)
+          target = rugged_ref.target
+          message = nil
+          if rugged_ref.target.is_a?(Rugged::Tag::Annotation) &&
+             rugged_ref.target.target.is_a?(Rugged::Commit)
+            unless rugged_ref.target.target.message == rugged_ref.target.message
+              message = rugged_ref.target.message.chomp
+            end
+          end
+          Tag.new(rugged_ref.name, target, message)
         end.sort_by(&:name)
       end
 
