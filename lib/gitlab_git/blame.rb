@@ -1,20 +1,22 @@
 module Gitlab
   module Git
     class Blame
-      attr_accessor :repository, :sha, :path
 
       def initialize(repository, sha, path)
-        @repository, @sha, @path = repository, sha, path
+        @repo = repository.rugged
+        @blame = Rugged::Blame.new(@repo, path)
+        @blob = @repo.blob_at(sha, path)
+        @lines = @blob.content.split("\n")
       end
 
       def each
-        raw_blame = Grit::Blob.blame(repository.raw, sha, path)
+        @blame.each do |blame|
+          from = blame[:final_start_line_number] - 1
+          commit = @repo.lookup(blame[:final_commit_id])
 
-        raw_blame.each do |commit, lines|
-          next unless commit
-
-          commit = Gitlab::Git::Commit.new(commit)
-          yield(commit, lines)
+          yield(Gitlab::Git::Commit.new(commit),
+              @lines[from, blame[:lines_in_hunk]] || [],
+              blame[:final_start_line_number])
         end
       end
     end
