@@ -1,3 +1,7 @@
+v 6.3.0
+  - Get messages for annotated tags (Sean Edge)
+  - Blame using rugged (Evgeniy Sokovikov)
+
 v 6.2.1
   - Fix Branch.new method for branch "origin/HEAD" because it points on ref instead of commit. 
 
