@@ -1,19 +1,12 @@
 # Libraries
 require 'ostruct'
 require 'fileutils'
-require 'grit'
 require 'linguist'
 require 'active_support/core_ext/hash/keys'
 require 'active_support/core_ext/object/try'
-require 'grit'
-require 'grit_ext'
 require 'rugged'
 require "charlock_holmes"
 require "zip"
-
-Grit::Blob.class_eval do
-  include Linguist::BlobHelper
-end
 
 # Gitlab::Git
 require_relative "gitlab_git/popen"

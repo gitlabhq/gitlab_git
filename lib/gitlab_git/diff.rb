@@ -19,11 +19,7 @@ module Gitlab
           # From the git documentation: "git diff A...B" is equivalent to "git diff $(git-merge-base A B) B"
           common_commit = repo.merge_base_commit(head, base)
 
-          repo.diff(common_commit, head, *paths).map do |diff|
-            Gitlab::Git::Diff.new(diff)
-          end
-        rescue Grit::Git::GitTimeout
-          raise TimeoutError.new("Diff.between exited with timeout")
+          repo.diff(common_commit, head, *paths)
         end
       end
 
@@ -35,7 +31,7 @@ module Gitlab
         elsif raw_diff.is_a?(Rugged::Patch)
           init_from_rugged(raw_diff)
         else
-          init_from_grit(raw_diff)
+          raise "Invalid raw diff type: #{raw_diff.class}"
         end
       end
 
@@ -56,14 +52,6 @@ module Gitlab
       end
 
       private
-
-      def init_from_grit(grit)
-        @raw_diff = grit
-
-        serialize_keys.each do |key|
-          send(:"#{key}=", grit.send(key))
-        end
-      end
 
       def init_from_rugged(rugged)
         @raw_diff = rugged

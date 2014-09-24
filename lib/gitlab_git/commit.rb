@@ -124,7 +124,7 @@ module Gitlab
         elsif raw_commit.is_a?(Rugged::Commit)
           init_from_rugged(raw_commit)
         else
-          init_from_grit(raw_commit)
+          raise "Invalid raw commit type: #{raw_commit.class}"
         end
 
         @head = head
@@ -203,13 +203,7 @@ module Gitlab
       end
 
       def diffs
-        if raw_commit.is_a?(Rugged::Commit)
-          diffs = diff_from_parent
-        else
-          diffs = raw_commit.diffs
-        end
-
-        diffs.map { |diff| Gitlab::Git::Diff.new(diff) }
+        diff_from_parent.map { |diff| Gitlab::Git::Diff.new(diff) }
       end
 
       def parents
@@ -221,19 +215,11 @@ module Gitlab
       end
 
       def stats
-        if raw_commit.is_a?(Rugged::Commit)
-          Gitlab::Git::CommitStats.new(self)
-        else
-          raw_commit.stats
-        end
+        Gitlab::Git::CommitStats.new(self)
       end
 
       def to_patch
-        if raw_commit.is_a?(Rugged::Commit)
-          raw_commit.to_mbox
-        else
-          raw_commit.to_patch
-        end
+        raw_commit.to_mbox
       end
 
       # Get a collection of Rugged::Reference objects for this commit.
@@ -257,19 +243,6 @@ module Gitlab
       end
 
       private
-
-      def init_from_grit(grit)
-        @raw_commit = grit
-        @id = grit.id
-        @message = grit.message
-        @authored_date = grit.authored_date
-        @committed_date = grit.committed_date
-        @author_name = grit.author.name
-        @author_email = grit.author.email
-        @committer_name = grit.committer.name
-        @committer_email = grit.committer.email
-        @parent_ids = grit.parents.map(&:id)
-      end
 
       def init_from_hash(hash)
         raw_commit = hash.symbolize_keys
