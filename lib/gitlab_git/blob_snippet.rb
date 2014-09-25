@@ -13,7 +13,7 @@ module Gitlab
       end
 
       def data
-        lines.join("\n")
+        lines.join("\n") if lines
       end
 
       def name
