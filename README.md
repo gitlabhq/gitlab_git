@@ -8,12 +8,9 @@ GitLab wrapper around git objects.
 [![Code Climate](https://codeclimate.com/github/gitlabhq/gitlab_git.png)](https://codeclimate.com/github/gitlabhq/gitlab_git)
 [![Coverage Status](https://coveralls.io/repos/gitlabhq/gitlab_git/badge.png?branch=master)](https://coveralls.io/r/gitlabhq/gitlab_git)
 
-## Move from Grit to Rugged
+## Moved from Grit to Rugged
 
-GitLab Git used grit as main library in past.
-Right now GitLab Git uses 2 libraries: rugged and grit.
-We want to increase usage of rugged and reduce usage of grit in this library.
-If you can help us with that - please send Merge Request.
+GitLab Git used grit as main library in past. Now it uses rugged
 
 ## How to use
 
