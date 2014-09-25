@@ -28,6 +28,8 @@ end
 
 SUPPORT_PATH = File.join(File.expand_path(File.dirname(__FILE__)), '../support')
 TEST_REPO_PATH = File.join(SUPPORT_PATH, 'gitlab-git-test.git')
+TEST_NORMAL_REPO_PATH = File.join(SUPPORT_PATH, "not-bare-repo.git")
+TEST_MUTABLE_REPO_PATH = File.join(SUPPORT_PATH, "mutable-repo.git")
 
 RSpec.configure do |config|
   config.treat_symbols_as_metadata_keys_with_true_values = true

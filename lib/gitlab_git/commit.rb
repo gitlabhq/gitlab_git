@@ -1,6 +1,4 @@
-# Gitlab::Git::Commit is a wrapper around native Grit::Commit object
-# We dont want to use grit objects inside app/
-# It helps us easily migrate to rugged in future
+# Gitlab::Git::Commit is a wrapper around native Rugged::Commit object
 module Gitlab
   module Git
     class Commit
@@ -12,6 +10,18 @@ module Gitlab
         :committed_date, :committer_name, :committer_email
       ]
       attr_accessor *SERIALIZE_KEYS
+
+      def ==(other)
+        return false unless other.is_a?(Gitlab::Git::Commit)
+
+        methods = [:message, :parent_ids, :authored_date, :author_name,
+                   :author_email, :committed_date, :committer_name,
+                   :committer_email]
+
+        methods.all? do |method|
+          send(method) == other.send(method)
+        end
+      end
 
       class << self
         # Get commits collection
@@ -39,9 +49,17 @@ module Gitlab
         #
         #   Commit.find(repo, 'master')
         #
-        def find(repo, commit_id = nil)
-          commit = repo.log(ref: commit_id, limit: 1).first
+        def find(repo, commit_id = "HEAD")
+          return decorate(commit_id) if commit_id.is_a?(Rugged::Commit)
+
+          obj = repo.rugged.rev_parse(commit_id)
+          commit = case obj
+                   when Rugged::Tag::Annotation then obj.target
+                   when Rugged::Commit then obj
+                   end
           decorate(commit) if commit
+        rescue Rugged::ReferenceError, Rugged::ObjectError
+          nil
         end
 
         # Get last commit for HEAD
@@ -50,7 +68,7 @@ module Gitlab
         #   Commit.last(repo)
         #
         def last(repo)
-          find(repo, nil)
+          find(repo)
         end
 
         # Get last commit for specified path and ref
@@ -78,6 +96,8 @@ module Gitlab
           repo.commits_between(base, head).map do |commit|
             decorate(commit)
           end
+        rescue Rugged::ReferenceError
+          []
         end
 
         # Delegate Repository#find_commits
@@ -98,7 +118,7 @@ module Gitlab
         elsif raw_commit.is_a?(Rugged::Commit)
           init_from_rugged(raw_commit)
         else
-          init_from_grit(raw_commit)
+          raise "Invalid raw commit type: #{raw_commit.class}"
         end
 
         @head = head
@@ -133,7 +153,6 @@ module Gitlab
       #
       # Cuts out the header and stats from #to_patch and returns only the diff.
       def to_diff
-        # see Grit::Commit#show
         patch = to_patch
 
         # discard lines before the diff
@@ -144,6 +163,17 @@ module Gitlab
         lines.pop if lines.last =~ /^[\d.]+$/ # Git version
         lines.pop if lines.last == "-- "      # end of diff
         lines.join("\n")
+      end
+
+      # Returns a diff object for the changes from this commit's first parent.
+      # If there is no parent, then the diff is between this commit and an
+      # empty repo.
+      def diff_from_parent
+        if raw_commit.parents.empty?
+          raw_commit.diff(reverse: true)
+        else
+          raw_commit.parents[0].diff(raw_commit)
+        end
       end
 
       def has_zero_stats?
@@ -167,11 +197,11 @@ module Gitlab
       end
 
       def diffs
-        raw_commit.diffs.map { |diff| Gitlab::Git::Diff.new(diff) }
+        diff_from_parent.map { |diff| Gitlab::Git::Diff.new(diff) }
       end
 
       def parents
-        raw_commit.parents
+        raw_commit.parents.map { |c| Gitlab::Git::Commit.new(c) }
       end
 
       def tree
@@ -179,14 +209,14 @@ module Gitlab
       end
 
       def stats
-        raw_commit.stats
+        Gitlab::Git::CommitStats.new(self)
       end
 
       def to_patch
-        raw_commit.to_patch
+        raw_commit.to_mbox
       end
 
-      # Get refs collection(Grit::Head or Grit::Remote or Grit::Tag)
+      # Get a collection of Rugged::Reference objects for this commit.
       #
       # Ex.
       #   commit.ref(repo)
@@ -201,23 +231,12 @@ module Gitlab
       #   commit.ref_names(repo)
       #
       def ref_names(repo)
-        refs(repo).map(&:name)
+        refs(repo).map do |ref|
+          ref.name.sub(%r{^refs/(heads|remotes|tags)/}, "")
+        end
       end
 
       private
-
-      def init_from_grit(grit)
-        @raw_commit = grit
-        @id = grit.id
-        @message = grit.message
-        @authored_date = grit.authored_date
-        @committed_date = grit.committed_date
-        @author_name = grit.author.name
-        @author_email = grit.author.email
-        @committer_name = grit.committer.name
-        @committer_email = grit.committer.email
-        @parent_ids = grit.parents.map(&:id)
-      end
 
       def init_from_hash(hash)
         raw_commit = hash.symbolize_keys

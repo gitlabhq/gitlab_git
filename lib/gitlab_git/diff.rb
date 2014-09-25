@@ -1,6 +1,4 @@
-# Gitlab::Git::Diff is a wrapper around native Grit::Diff object
-# We dont want to use grit objects inside app/
-# It helps us easily migrate to rugged in future
+# Gitlab::Git::Diff is a wrapper around native Rugged::Diff object
 module Gitlab
   module Git
     class Diff
@@ -21,11 +19,7 @@ module Gitlab
           # From the git documentation: "git diff A...B" is equivalent to "git diff $(git-merge-base A B) B"
           common_commit = repo.merge_base_commit(head, base)
 
-          repo.diff(common_commit, head, *paths).map do |diff|
-            Gitlab::Git::Diff.new(diff)
-          end
-        rescue Grit::Git::GitTimeout
-          raise TimeoutError.new("Diff.between exited with timeout")
+          repo.diff(common_commit, head, *paths)
         end
       end
 
@@ -34,8 +28,10 @@ module Gitlab
 
         if raw_diff.is_a?(Hash)
           init_from_hash(raw_diff)
+        elsif raw_diff.is_a?(Rugged::Patch)
+          init_from_rugged(raw_diff)
         else
-          init_from_grit(raw_diff)
+          raise "Invalid raw diff type: #{raw_diff.class}"
         end
       end
 
@@ -57,12 +53,19 @@ module Gitlab
 
       private
 
-      def init_from_grit(grit)
-        @raw_diff = grit
+      def init_from_rugged(rugged)
+        @raw_diff = rugged
 
-        serialize_keys.each do |key|
-          send(:"#{key}=", grit.send(key))
-        end
+        @diff = strip_diff_headers(rugged.to_s)
+
+        d = rugged.delta
+        @new_path = d.new_file[:path]
+        @old_path = d.old_file[:path]
+        @a_mode = d.old_file[:mode].to_s(8)
+        @b_mode = d.new_file[:mode].to_s(8)
+        @new_file = d.added?
+        @renamed_file = d.renamed?
+        @deleted_file = d.deleted?
       end
 
       def init_from_hash(hash)
@@ -71,6 +74,14 @@ module Gitlab
         serialize_keys.each do |key|
           send(:"#{key}=", raw_diff[key.to_sym])
         end
+      end
+
+      # Strip out the information at the beginning of the patch's text to match
+      # Grit's output
+      def strip_diff_headers(diff_text)
+        lines = diff_text.split("\n")
+        lines.shift until lines.empty? || lines.first.match("^(---|Binary)")
+        lines.join("\n")
       end
     end
   end

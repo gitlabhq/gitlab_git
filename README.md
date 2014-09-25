@@ -46,9 +46,9 @@ If you can help us with that - please send Merge Request.
     # Search for code
     repo.search_files('rspec', 'master')
     # [ <Gitlab::Git::BlobSnippet:0x000..>, <Gitlab::Git::BlobSnippet:0x000..>]
-
-    # Access to grit repo object
-    repo.grit
+ 
+    # Access to rugged repo object
+    repo.rugged
 
 ### Tree
 

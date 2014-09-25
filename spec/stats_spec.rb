@@ -4,7 +4,7 @@ describe Gitlab::Git::Stats do
   let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
 
   before do
-    @stats = Gitlab::Git::Stats.new(repository.raw, 'master')
+    @stats = Gitlab::Git::Stats.new(repository, "master")
   end
 
   describe :authors do
