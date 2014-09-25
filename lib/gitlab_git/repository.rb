@@ -60,7 +60,14 @@ module Gitlab
       # Returns an Array of Tags
       def tags
         rugged.references.each("refs/tags/*").map do |ref|
-          Tag.new(ref.name, ref.target, ref.target.message.chomp)
+          message = nil
+          if ref.target.is_a?(Rugged::Tag::Annotation) &&
+             ref.target.target.is_a?(Rugged::Commit)
+            unless ref.target.target.message == ref.target.message
+              message = ref.target.message.chomp
+            end
+          end
+          Tag.new(ref.name, ref.target, message)
         end.sort_by(&:name)
       end
 
