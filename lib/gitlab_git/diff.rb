@@ -3,6 +3,7 @@ module Gitlab
   module Git
     class Diff
       class TimeoutError < StandardError; end
+      include EncodingHelper
 
       attr_accessor :raw_diff
 
@@ -56,11 +57,11 @@ module Gitlab
       def init_from_rugged(rugged)
         @raw_diff = rugged
 
-        @diff = strip_diff_headers(rugged.to_s)
+        @diff = encode!(strip_diff_headers(rugged.to_s))
 
         d = rugged.delta
-        @new_path = d.new_file[:path]
-        @old_path = d.old_file[:path]
+        @new_path = encode!(d.new_file[:path])
+        @old_path = encode!(d.old_file[:path])
         @a_mode = d.old_file[:mode].to_s(8)
         @b_mode = d.new_file[:mode].to_s(8)
         @new_file = d.added?
