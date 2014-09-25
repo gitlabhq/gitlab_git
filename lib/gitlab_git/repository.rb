@@ -198,12 +198,23 @@ module Gitlab
         options[:limit] ||= 0
         options[:offset] ||= 0
         actual_ref = options[:ref] || root_ref
-        sha = rugged.rev_parse_oid(actual_ref)
+        sha = sha_from_ref(actual_ref)
 
         build_log(sha, options)
       rescue Rugged::OdbError, Rugged::InvalidError, Rugged::ReferenceError
         # Return an empty array if the ref wasn't found
         []
+      end
+
+      def sha_from_ref(ref)
+        sha = rugged.rev_parse_oid(ref)
+        object = rugged.lookup(sha)
+
+        if object.kind_of?(Rugged::Commit)
+          sha
+        elsif object.respond_to?(:target)
+          sha_from_ref(object.target.oid)
+        end
       end
 
       # Return a collection of Rugged::Commits between the two SHA arguments.

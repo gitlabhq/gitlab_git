@@ -106,21 +106,59 @@ describe Gitlab::Git::Commit do
 
 
     describe "where" do
-      subject do
-        commits = Gitlab::Git::Commit.where(
-          repo: repository,
-          ref: 'master',
-          path: 'files',
-          limit: 3,
-          offset: 1
-        )
+      context 'ref is branch name' do
+        subject do
+          commits = Gitlab::Git::Commit.where(
+            repo: repository,
+            ref: 'master',
+            path: 'files',
+            limit: 3,
+            offset: 1
+          )
 
-        commits.map { |c| c.id }
+          commits.map { |c| c.id }
+        end
+
+        it { should have(3).elements }
+        it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
+        it { should_not include(SeedRepo::Commit::ID) }
       end
 
-      it { should have(3).elements }
-      it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
-      it { should_not include(SeedRepo::Commit::ID) }
+      context 'ref is commit id' do
+        subject do
+          commits = Gitlab::Git::Commit.where(
+            repo: repository,
+            ref: "874797c3a73b60d2187ed6e2fcabd289ff75171e",
+            path: 'files',
+            limit: 3,
+            offset: 1
+          )
+
+          commits.map { |c| c.id }
+        end
+
+        it { should have(3).elements }
+        it { should include("2f63565e7aac07bcdadb654e253078b727143ec4") }
+        it { should_not include(SeedRepo::Commit::ID) }
+      end
+
+      context 'ref is tag' do
+        subject do
+          commits = Gitlab::Git::Commit.where(
+            repo: repository,
+            ref: 'v1.0.0',
+            path: 'files',
+            limit: 3,
+            offset: 1
+          )
+
+          commits.map { |c| c.id }
+        end
+
+        it { should have(3).elements }
+        it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
+        it { should_not include(SeedRepo::Commit::ID) }
+      end
     end
 
     describe :between do
