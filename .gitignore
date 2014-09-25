@@ -1,5 +1,5 @@
 *.gem
-support/gitlab-git-test.git*
+support/*
 tmp/*
 coverage/*
 .DS_Store
