@@ -13,13 +13,13 @@ describe Gitlab::Git::Commit do
 
       @committer = {
         email: 'mike@smith.com',
-        name: 'Mike Smith',
+        name: "Mike Smith",
         time: Time.now
       }
 
       @author = {
         email: 'john@smith.com',
-        name: 'John Smith',
+        name: "John Smith",
         time: Time.now
       }
 
@@ -33,7 +33,7 @@ describe Gitlab::Git::Commit do
         committer: @committer,
         tree: @tree,
         parents: @parents,
-        message: 'Refactoring specs',
+        message: "Refactoring specs",
         update_ref: "HEAD"
       )
 
@@ -67,7 +67,8 @@ describe Gitlab::Git::Commit do
   context 'Class methods' do
     describe :find do
       it "should return first head commit if without params" do
-        Gitlab::Git::Commit.last(repository).id.should == repository.raw.head.target.oid
+        Gitlab::Git::Commit.last(repository).id.should ==
+          repository.raw.head.target.oid
       end
 
       it "should return valid commit" do

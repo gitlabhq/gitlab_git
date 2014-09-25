@@ -1,7 +1,7 @@
 # Gitlab::Git::Repository is a wrapper around native Rugged::Repository object
 require_relative 'encoding_helper'
 require 'tempfile'
-require 'rubygems/package'
+require "rubygems/package"
 
 module Gitlab
   module Git
@@ -119,7 +119,7 @@ module Gitlab
       # app_root/tmp/repositories/project_name/project_name-commit-id.tag.gz
       #
       def archive_repo(ref, storage_path, format = "tar.gz")
-        ref ||= self.root_ref
+        ref ||= root_ref
         commit = Gitlab::Git::Commit.find(self, ref)
         return nil unless commit
 
@@ -633,11 +633,11 @@ module Gitlab
         merge_index = rugged.merge_commits(our_commit, their_commit)
         return false if merge_index.conflicts?
 
-        actual_options = options.merge({
+        actual_options = options.merge(
           parents: [our_commit, their_commit],
           tree: merge_index.write_tree(rugged),
           update_ref: "refs/heads/#{target_name}"
-        })
+        )
         Rugged::Commit.create(rugged, actual_options)
       end
 
@@ -674,7 +674,7 @@ module Gitlab
       # Get the content of a blob for a given tree.  If the blob is a commit
       # (for submodules) then return the blob's OID.
       def blob_content(tree, blob_name)
-        blob_hash = tree.find { |b| b[:name] == blob_name }
+        blob_hash = tree.detect { |b| b[:name] == blob_name }
 
         if blob_hash[:type] == :commit
           blob_hash[:oid]
@@ -751,7 +751,7 @@ module Gitlab
         # argument
         diff.each_delta do |d|
           if path_matches?(path, d.old_file[:path], d.new_file[:path])
-            if follow && d.renamed? && path == d.new_file[:path]
+            if should_follow?(follow, d, path)
               # Look for the old path in ancestors
               path.replace(d.old_file[:path])
             end
@@ -761,6 +761,14 @@ module Gitlab
         end
 
         false
+      end
+
+      # Used by the #commit_touches_path method to determine whether the
+      # specified file has been renamed and should be followed in ancestor
+      # commits.  Returns true if +follow_option+ is true, the file is renamed
+      # in this commit, and the new file's path matches the path option.
+      def should_follow?(follow_option, delta, path)
+        follow_option && delta.renamed? && path == delta.new_file[:path]
       end
 
       # Returns true if any of the strings in +*paths+ begins with the
@@ -774,7 +782,7 @@ module Gitlab
       # Create an archive with the repository's files
       def create_archive(ref_name, pipe_cmd, file_path)
         # Put files into a prefix directory in the archive
-        prefix = File.basename(self.name)
+        prefix = File.basename(name)
         extension = Pathname.new(file_path).extname
 
         if extension == ".zip"

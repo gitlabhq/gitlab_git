@@ -10,14 +10,14 @@ describe Gitlab::Git::Diff do
         +++ b/.gitmodules
         @@ -4,3 +4,6 @@
          [submodule "gitlab-shell"]
-         	path = gitlab-shell
-         	url = https://github.com/gitlabhq/gitlab-shell.git
+         \tpath = gitlab-shell
+         \turl = https://github.com/gitlabhq/gitlab-shell.git
         +[submodule "gitlab-grack"]
         +	path = gitlab-grack
         +	url = https://gitlab.com/gitlab-org/gitlab-grack.git
 EOT
-      new_path: '.gitmodules',
-      old_path: '.gitmodules',
+      new_path: ".gitmodules",
+      old_path: ".gitmodules",
       a_mode: '100644',
       b_mode: '100644',
       new_file: false,
@@ -30,7 +30,7 @@ EOT
   end
 
   describe :new do
-    context 'init from hash' do
+    context "init from hash" do
       before do
         @diff = Gitlab::Git::Diff.new(@raw_diff_hash)
       end
@@ -38,7 +38,7 @@ EOT
       it { @diff.to_hash.should == @raw_diff_hash }
     end
 
-    context 'init from rugged' do
+    context "init from rugged" do
       before do
         @diff = Gitlab::Git::Diff.new(@rugged_diff)
       end

@@ -128,7 +128,7 @@ describe Gitlab::Git::Repository do
       context :commit do
         subject { heads.first.target }
 
-        it { should == '0b4bc9a49b562e85de7cc9e834518ea6828729b9' }
+        it { should == "0b4bc9a49b562e85de7cc9e834518ea6828729b9" }
       end
     end
   end
@@ -396,7 +396,9 @@ describe Gitlab::Git::Repository do
     end
 
     it "should add the remote" do
-      expect(@repo.rugged.remotes["expendable"].url).to eq(TEST_NORMAL_REPO_PATH)
+      expect(@repo.rugged.remotes["expendable"].url).to(
+        eq(TEST_NORMAL_REPO_PATH)
+      )
     end
 
     after(:all) do

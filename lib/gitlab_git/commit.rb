@@ -14,15 +14,13 @@ module Gitlab
       def ==(other)
         return false unless other.is_a?(Gitlab::Git::Commit)
 
-        id == other.id &&
-          message == other.message &&
-          parent_ids == other.parent_ids &&
-          authored_date == other.authored_date &&
-          author_name == other.author_name &&
-          author_email == other.author_email &&
-          committed_date == other.committed_date &&
-          committer_name == other.committer_name &&
-          committer_email == other.committer_email
+        methods = [:message, :parent_ids, :authored_date, :author_name,
+                   :author_email, :committed_date, :committer_name,
+                   :committer_email]
+
+        methods.all? do |method|
+          send(method) == other.send(method)
+        end
       end
 
       class << self
@@ -51,18 +49,14 @@ module Gitlab
         #
         #   Commit.find(repo, 'master')
         #
-        def find(repo, commit_id = nil)
+        def find(repo, commit_id = "HEAD")
           return decorate(commit_id) if commit_id.is_a?(Rugged::Commit)
-          rev = commit_id || "HEAD"
 
-          obj = repo.rugged.rev_parse(rev)
-          if obj.is_a?(Rugged::Tag::Annotation)
-            commit = obj.target
-          elsif obj.is_a?(Rugged::Commit)
-            commit = obj
-          else
-            raise("Invalid commit ID")
-          end
+          obj = repo.rugged.rev_parse(commit_id)
+          commit = case obj
+                   when Rugged::Tag::Annotation then obj.target
+                   when Rugged::Commit then obj
+                   end
           decorate(commit) if commit
         rescue Rugged::ReferenceError, Rugged::ObjectError
           nil
