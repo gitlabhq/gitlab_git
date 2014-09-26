@@ -1,5 +1,6 @@
 v 7.0.0
   - Move everything to rugged. Drop gitlab-grit dependency
+  - Removed GitLab-only specific classes: GitStats, Stats, LogParser
 
 v 6.3.0
   - Get messages for annotated tags (Sean Edge)
