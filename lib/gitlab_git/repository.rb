@@ -198,7 +198,8 @@ module Gitlab
           offset: 0,
           path: nil,
           ref: root_ref,
-          follow: false
+          follow: false,
+          skip_merges: false
         }
 
         options = default_options.merge(options)
@@ -737,10 +738,16 @@ module Gitlab
 
         limit = options[:limit].to_i
         offset = options[:offset].to_i
+        skip_merges = options[:skip_merges]
 
         walker.sorting(Rugged::SORT_DATE)
         walker.each do |c|
           break if limit > 0 && commits.length >= limit
+
+          if skip_merges
+            # Skip merge commits
+            next if c.parents.length > 1
+          end
 
           if !current_path ||
             commit_touches_path?(c, current_path, options[:follow])
