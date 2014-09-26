@@ -844,24 +844,24 @@ module Gitlab
       # Add a file or directory from the index to the given tar or zip file
       def add_archive_entry(archive, prefix, entry)
         prefixed_path = File.join(prefix, entry[:path])
-        unless submodule?(entry)
+
+        if submodule?(entry)
+          # Create an empty directory for submodules
+          mask = case archive
+                 when Zip::File then 0755
+                 else '100755'.to_i(8)
+                 end
+          archive.mkdir(prefixed_path, mask)
+        else
           blob = rugged.lookup(entry[:oid])
           content = blob.content
-        end
 
-        # Create a file in the archive for each index entry
-        if archive.is_a?(Zip::File)
-          unless submodule?(entry)
+          # Write the blob contents to the archive
+          if archive.is_a?(Zip::File)
             archive.get_output_stream(prefixed_path) do |os|
               os.write(content)
             end
-          end
-        else
-          if submodule?(entry)
-            # Create directories for submodules
-            archive.mkdir(prefixed_path, 33261)
           else
-            # Write the blob contents to the file
             archive.add_file_simple(prefixed_path,
                                     entry[:mode], blob.size) do |tf|
               tf.write(content)
