@@ -803,33 +803,33 @@ module Gitlab
         prefix = File.basename(name)
         extension = Pathname.new(file_path).extname
 
-        if extension == ".zip"
+        if extension == '.zip'
           create_zip_archive(ref_name, file_path, prefix)
         else
-          # Create a tarfile in memory
-          tarfile = tar_string_io(ref_name, prefix)
+          rd_pipe, rw_pipe = IO.pipe
+          tar_pid = fork do
+            # Send the tar file to the write pipe
+            rd_pipe.close
+            Gem::Package::TarWriter.new(rw_pipe) do |tar|
+              tar.mkdir(prefix, 33261)
 
-          if extension == ".tar"
-            File.new(file_path, "wb").write(tarfile.read)
-          else
-            compress_tar(tarfile, file_path, pipe_cmd)
+              populated_index(ref_name).each do |entry|
+                add_archive_entry(tar, prefix, entry)
+              end
+            end
+            rw_pipe.close
           end
+
+          # Use the other end of the pipe to compress with bzip2 or gzip
+          FileUtils.mkdir_p(Pathname.new(file_path).dirname)
+          archive_file = File.new(file_path, 'wb')
+          rw_pipe.close
+          system(*pipe_cmd, in: rd_pipe, out: archive_file)
+
+          Process.waitpid(tar_pid)
+          rd_pipe.close
+          archive_file.close
         end
-      end
-
-      # Return a StringIO with the contents of the repo's tar file
-      def tar_string_io(ref_name, prefix)
-        tarfile = StringIO.new
-        Gem::Package::TarWriter.new(tarfile) do |tar|
-          tar.mkdir(prefix, 33261)
-
-          populated_index(ref_name).each do |entry|
-            add_archive_entry(tar, prefix, entry)
-          end
-        end
-
-        tarfile.rewind
-        tarfile
       end
 
       # Create a zip file with the contents of the repo
@@ -844,7 +844,10 @@ module Gitlab
       # Add a file or directory from the index to the given tar or zip file
       def add_archive_entry(archive, prefix, entry)
         prefixed_path = File.join(prefix, entry[:path])
-        content = rugged.lookup(entry[:oid]).content unless submodule?(entry)
+        unless submodule?(entry)
+          blob = rugged.lookup(entry[:oid])
+          content = blob.content
+        end
 
         # Create a file in the archive for each index entry
         if archive.is_a?(Zip::File)
@@ -859,7 +862,8 @@ module Gitlab
             archive.mkdir(prefixed_path, 33261)
           else
             # Write the blob contents to the file
-            archive.add_file(prefixed_path, entry[:mode]) do |tf|
+            archive.add_file_simple(prefixed_path,
+                                    entry[:mode], blob.size) do |tf|
               tf.write(content)
             end
           end
@@ -870,31 +874,6 @@ module Gitlab
       # a submodule.
       def submodule?(index_entry)
         index_entry[:mode] == 57344
-      end
-
-      # Send the +tar_string+ StringIO to +pipe_cmd+ for bzip2 or gzip
-      # compression.
-      def compress_tar(tar_string, file_path, pipe_cmd)
-        # Write the in-memory tarfile to a pipe
-        rd_pipe, rw_pipe = IO.pipe
-        tar_pid = fork do
-          rd_pipe.close
-          rw_pipe.write(tar_string.read)
-          rw_pipe.close
-        end
-
-        # Use the other end of the pipe to compress with bzip2 or gzip
-        FileUtils.mkdir_p(Pathname.new(file_path).dirname)
-        archive_file = File.new(file_path, "wb")
-        rw_pipe.close
-        compress_pid = spawn(*pipe_cmd, in: rd_pipe, out: archive_file)
-        rd_pipe.close
-
-        Process.waitpid(tar_pid)
-        Process.waitpid(compress_pid)
-
-        archive_file.close
-        tar_string.close
       end
 
       # Return a Rugged::Index that has read from the tree at +ref_name+
