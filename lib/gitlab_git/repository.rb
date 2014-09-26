@@ -206,7 +206,6 @@ module Gitlab
         options[:offset] ||= 0
         actual_ref = options[:ref] || root_ref
         sha = sha_from_ref(actual_ref)
-
         build_log(sha, options)
       rescue Rugged::OdbError, Rugged::InvalidError, Rugged::ReferenceError
         # Return an empty array if the ref wasn't found
@@ -734,10 +733,14 @@ module Gitlab
         commits = []
         skipped = 0
         current_path = options[:path]
+        current_path = nil if current_path == ''
 
+        limit = options[:limit].to_i
+        offset = options[:offset].to_i
+
+        walker.sorting(Rugged::SORT_DATE)
         walker.each do |c|
-          break if options[:limit].to_i > 0 &&
-            commits.length >= options[:limit].to_i
+          break if limit > 0 && commits.length >= limit
 
           if !current_path ||
             commit_touches_path?(c, current_path, options[:follow])
@@ -745,7 +748,7 @@ module Gitlab
             # This is a commit we care about, unless we haven't skipped enough
             # yet
             skipped += 1
-            commits.push(c) if skipped > options[:offset]
+            commits.push(c) if skipped > offset
           end
         end
 
