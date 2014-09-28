@@ -24,7 +24,7 @@ module Gitlab
         @commits = Gitlab::Git::Commit.between(repository, @base.id, @head.id)
       end
 
-      def diffs(paths = nil)
+      def diffs(paths = nil, options = {})
         unless @head && @base
           return []
         end
@@ -33,7 +33,8 @@ module Gitlab
         # Otherwise return cached version
         if @diffs.empty? && @timeout == false
           begin
-            @diffs = Gitlab::Git::Diff.between(@repository, @head.id, @base.id, *paths)
+            @diffs = Gitlab::Git::Diff.between(@repository, @head.id, @base.id,
+                                               options, *paths)
           rescue Gitlab::Git::Diff::TimeoutError => ex
             @diffs = []
             @timeout = true

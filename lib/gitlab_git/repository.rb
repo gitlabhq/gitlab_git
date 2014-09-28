@@ -242,19 +242,22 @@ module Gitlab
       end
 
       # Return an array of Diff objects that represent the diff
-      # between +from+ and +to+.
-      def diff(from, to, *paths)
-        rugged.diff(from, to, paths: paths).patches.map do |p|
+      # between +from+ and +to+.  See Diff::filter_diff_options for the allowed
+      # diff options.  The +options+ hash can also include :break_rewrites to
+      # split larger rewrites into delete/add pairs.
+      def diff(from, to, options = {}, *paths)
+        diff_patches(from, to, options, *paths).map do |p|
           Gitlab::Git::Diff.new(p)
         end
       end
 
-      # Return the diff between +from+ and +to+ in a single patch string.
-      def diff_text(from, to, *paths)
+      # Return the diff between +from+ and +to+ in a single patch string.  The
+      # +options+ hash has the same allowed keys as #diff.
+      def diff_text(from, to, options = {}, *paths)
         # NOTE: It would be simpler to use the Rugged::Diff#patch method, but
         # that formats the diff text differently than Rugged::Patch#to_s for
         # changes to binary files.
-        rugged.diff(from, to, paths: paths).patches.map do |p|
+        diff_patches(from, to, options, *paths).map do |p|
           p.to_s
         end.join("\n")
       end
@@ -628,13 +631,16 @@ module Gitlab
       end
 
       # Return a String containing the mbox-formatted diff between +from+ and
-      # +to+
-      def format_patch(from, to)
-        rugged.diff(from, to).patch
+      # +to+.  See #diff for the allowed keys in the +options+ hash.
+      def format_patch(from, to, options = {})
+        options ||= {}
+        break_rewrites = options[:break_rewrites]
+        actual_options = Diff.filter_diff_options(options)
+
         from_sha = rugged.rev_parse_oid(from)
         to_sha = rugged.rev_parse_oid(to)
         commits_between(from_sha, to_sha).map do |commit|
-          commit.to_mbox
+          commit.to_mbox(actual_options)
         end.join("\n")
       end
 
@@ -768,12 +774,8 @@ module Gitlab
       # +follow+ option is true and the file specified by +path+ was renamed,
       # then the path value is set to the old path.
       def commit_touches_path?(commit, path, follow)
-        if commit.parents.empty?
-          diff = commit.diff
-        else
-          diff = commit.parents[0].diff(commit)
-          diff.find_similar! if follow
-        end
+        diff = Commit.diff_from_parent(commit)
+        diff.find_similar! if follow
 
         # Check the commit's deltas to see if it touches the :path
         # argument
@@ -932,6 +934,17 @@ module Gitlab
         end
 
         greps
+      end
+
+      # Return the Rugged patches for the diff between +from+ and +to+.
+      def diff_patches(from, to, options = {}, *paths)
+        options ||= {}
+        break_rewrites = options[:break_rewrites]
+        actual_options = Diff.filter_diff_options(options.merge(paths: paths))
+
+        diff = rugged.diff(from, to, actual_options)
+        diff.find_similar!(break_rewrites: true) if break_rewrites
+        diff.patches
       end
     end
   end
