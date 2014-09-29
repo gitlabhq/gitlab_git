@@ -326,7 +326,7 @@ module Gitlab
       #   repo.branch_names_contains('master')
       #
       def branch_names_contains(commit)
-        branches_contains(commit).map { |c| c.target_id }
+        branches_contains(commit).map { |c| c.name }
       end
 
       # Returns branch collection that contains the special commit(SHA1 or name)

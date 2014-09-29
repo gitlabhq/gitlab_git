@@ -12,7 +12,6 @@ describe Gitlab::Git::Repository do
     it { should respond_to(:tags) }
   end
 
-
   describe "#discover_default_branch" do
     let(:master) { 'master' }
     let(:feature) { 'feature' }
@@ -531,5 +530,13 @@ describe Gitlab::Git::Repository do
       repo = Gitlab::Git::Repository.new(TEST_REPO_PATH).rugged
       repo.references.update("refs/heads/master", SeedRepo::LastCommit::ID)
     end
+  end
+
+  describe "branch_names_contains" do
+    subject { repository.branch_names_contains(SeedRepo::LastCommit::ID) }
+
+    it { should include('master') }
+    it { should_not include('feature') }
+    it { should_not include('fix') }
   end
 end
