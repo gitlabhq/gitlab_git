@@ -153,6 +153,10 @@ module Gitlab
         file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + extension
         file_path = File.join(storage_path, self.name, file_name)
 
+        # Create dir for archive file
+        parent_path = File.join(storage_path, self.name)
+        FileUtils.mkdir_p(parent_path) unless File.directory?(parent_path)
+
         # Create file if not exists
         create_archive(ref, pipe_cmd, file_path) unless File.exist?(file_path)
 
