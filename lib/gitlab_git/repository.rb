@@ -306,7 +306,12 @@ module Gitlab
           end
         end
 
-        walker.sorting(Rugged::SORT_TOPO) if actual_options[:order] == :topo
+        if actual_options[:order] == :topo
+          walker.sorting(Rugged::SORT_TOPO)
+        else
+          walker.sorting(Rugged::SORT_DATE)
+        end
+
 
         commits = []
         offset = actual_options[:skip]
