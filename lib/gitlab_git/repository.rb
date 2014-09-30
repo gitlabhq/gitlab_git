@@ -825,29 +825,32 @@ module Gitlab
         if extension == '.zip'
           create_zip_archive(ref_name, file_path, prefix)
         else
-          rd_pipe, rw_pipe = IO.pipe
-          tar_pid = fork do
-            # Send the tar file to the write pipe
-            rd_pipe.close
-            Gem::Package::TarWriter.new(rw_pipe) do |tar|
-              tar.mkdir(prefix, 33261)
-
-              populated_index(ref_name).each do |entry|
-                add_archive_entry(tar, prefix, entry)
-              end
-            end
-            rw_pipe.close
-          end
-
-          # Use the other end of the pipe to compress with bzip2 or gzip
+          # Open the file with the final result
           FileUtils.mkdir_p(Pathname.new(file_path).dirname)
           archive_file = File.new(file_path, 'wb')
-          rw_pipe.close
-          system(*pipe_cmd, in: rd_pipe, out: archive_file)
 
-          Process.waitpid(tar_pid)
-          rd_pipe.close
+          # Create a pipe to communicate with the compressor process
+          pipe_rd, pipe_wr = IO.pipe
+          compress_pid = spawn(*pipe_cmd, in: pipe_rd, out: archive_file)
+          # pipe_rd and archive_file belong to the compressor process now; close
+          # them straightaway in our process.
+          pipe_rd.close
           archive_file.close
+
+          # Change the external encoding of pipe_wr to prevent Ruby from trying
+          # to convert binary to UTF-8.
+          pipe_wr = IO.new(pipe_wr.fileno, 'w:ASCII-8BIT')
+          Gem::Package::TarWriter.new(pipe_wr) do |tar|
+            tar.mkdir(prefix, 33261)
+
+            populated_index(ref_name).each do |entry|
+              add_archive_entry(tar, prefix, entry)
+            end
+          end
+          # We are done with pipe_wr, close it straightaway.
+          pipe_wr.close
+
+          Process.waitpid(compress_pid)
         end
       end
 
