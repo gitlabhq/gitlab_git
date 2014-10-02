@@ -6,7 +6,6 @@ require 'active_support/core_ext/hash/keys'
 require 'active_support/core_ext/object/try'
 require 'rugged'
 require "charlock_holmes"
-require "zip"
 
 # Gitlab::Git
 require_relative "gitlab_git/popen"

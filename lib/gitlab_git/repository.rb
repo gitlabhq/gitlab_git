@@ -22,6 +22,8 @@ module Gitlab
       # Rugged repo object
       attr_reader :rugged
 
+      # 'path' must be the path to a _bare_ git repository, e.g.
+      # /path/to/my-repo.git
       def initialize(path)
         @path = path
         @name = path.split("/").last
@@ -131,6 +133,7 @@ module Gitlab
         return nil unless commit
 
         extension = nil
+        git_archive_format = nil
         pipe_cmd = nil
 
         case format
@@ -142,10 +145,12 @@ module Gitlab
           pipe_cmd = %W(cat)
         when "zip"
           extension = ".zip"
+          git_archive_format = "zip"
           pipe_cmd = %W(cat)
         else
           # everything else should fall back to tar.gz
           extension = ".tar.gz"
+          git_archive_format = nil
           pipe_cmd = %W(gzip -n)
         end
 
@@ -153,12 +158,24 @@ module Gitlab
         file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + extension
         file_path = File.join(storage_path, self.name, file_name)
 
-        # Create dir for archive file
-        parent_path = File.join(storage_path, self.name)
-        FileUtils.mkdir_p(parent_path) unless File.directory?(parent_path)
+        # Put files into a directory before archiving
+        prefix = File.basename(self.name) + "/"
 
         # Create file if not exists
-        create_archive(ref, pipe_cmd, file_path) unless File.exist?(file_path)
+        unless File.exists?(file_path)
+          FileUtils.mkdir_p File.dirname(file_path)
+
+          # Create the archive in temp file, to avoid leaving a corrupt archive
+          # to be downloaded by the next user if we get interrupted while
+          # creating the archive. Note that we do not care about cleaning up
+          # the temp file in that scenario, because GitLab cleans up the
+          # directory holding the archive files periodically.
+          temp_file_path = file_path + ".#{Process.pid}-#{Time.now.to_i}"
+          archive_to_file(ref, prefix, temp_file_path, git_archive_format, pipe_cmd)
+
+          # move temp file to persisted location
+          FileUtils.move(temp_file_path, file_path)
+        end
 
         file_path
       end
@@ -816,79 +833,35 @@ module Gitlab
         end
       end
 
-      # Create an archive with the repository's files
-      def create_archive(ref_name, pipe_cmd, file_path)
-        # Put files into a prefix directory in the archive
-        prefix = File.basename(name)
-        extension = Pathname.new(file_path).extname
+      def archive_to_file(treeish = 'master', prefix = nil, filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip))
+        git_archive_cmd = %W(git --git-dir=#{path} archive)
+        git_archive_cmd << "--prefix=#{prefix}" if prefix
+        git_archive_cmd << "--format=#{format}" if format
+        git_archive_cmd += %W(-- #{treeish})
 
-        if extension == '.zip'
-          create_zip_archive(ref_name, file_path, prefix)
-        else
-          # Open the file with the final result
-          FileUtils.mkdir_p(Pathname.new(file_path).dirname)
-          archive_file = File.new(file_path, 'wb')
-
-          # Create a pipe to communicate with the compressor process
+        open(filename, 'w') do |file|
+          # Create a pipe to act as the '|' in 'git archive ... | gzip'
           pipe_rd, pipe_wr = IO.pipe
-          compress_pid = spawn(*pipe_cmd, in: pipe_rd, out: archive_file)
-          # pipe_rd and archive_file belong to the compressor process now; close
-          # them straightaway in our process.
+
+          # Get the compression process ready to accept data from the read end
+          # of the pipe
+          compress_pid = spawn(*compress_cmd, :in => pipe_rd, :out => file)
+          # The read end belongs to the compression process now; we should
+          # close our file descriptor for it.
           pipe_rd.close
-          archive_file.close
 
-          # Change the external encoding of pipe_wr to prevent Ruby from trying
-          # to convert binary to UTF-8.
-          pipe_wr = IO.new(pipe_wr.fileno, 'w:ASCII-8BIT')
-          Gem::Package::TarWriter.new(pipe_wr) do |tar|
-            tar.mkdir(prefix, 33261)
-
-            populated_index(ref_name).each do |entry|
-              add_archive_entry(tar, prefix, entry)
-            end
-          end
-          # We are done with pipe_wr, close it straightaway.
+          # Start 'git archive' and tell it to write into the write end of the
+          # pipe.
+          git_archive_pid = spawn(*git_archive_cmd, :out => pipe_wr)
+          # The write end belongs to 'git archive' now; close it.
           pipe_wr.close
 
+          # When 'git archive' and the compression process are finished, we are
+          # done.
+          Process.waitpid(git_archive_pid)
+          raise "#{git_archive_cmd.join(' ')} failed" unless $?.success?
           Process.waitpid(compress_pid)
-        end
-      end
-
-      # Create a zip file with the contents of the repo
-      def create_zip_archive(ref_name, archive_path, prefix)
-        Zip::File.open(archive_path, Zip::File::CREATE) do |zipfile|
-          populated_index(ref_name).each do |entry|
-            add_archive_entry(zipfile, prefix, entry)
-          end
-        end
-      end
-
-      # Add a file or directory from the index to the given tar or zip file
-      def add_archive_entry(archive, prefix, entry)
-        prefixed_path = File.join(prefix, entry[:path])
-
-        if submodule?(entry)
-          # Create an empty directory for submodules
-          mask = case archive
-                 when Zip::File then 0755
-                 else '100755'.to_i(8)
-                 end
-          archive.mkdir(prefixed_path, mask)
-        else
-          blob = rugged.lookup(entry[:oid])
-          content = blob.content
-
-          # Write the blob contents to the archive
-          if archive.is_a?(Zip::File)
-            archive.get_output_stream(prefixed_path) do |os|
-              os.write(content)
-            end
-          else
-            archive.add_file_simple(prefixed_path,
-                                    entry[:mode], blob.size) do |tf|
-              tf.write(content)
-            end
-          end
+          raise "#{compress_cmd.join(' ')} failed" unless $?.success?
         end
       end
 
