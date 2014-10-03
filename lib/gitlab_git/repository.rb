@@ -361,13 +361,15 @@ module Gitlab
       #   repo.branch_names_contains('master')
       #
       def branches_contains(commit)
-        sha = rugged.rev_parse_oid(commit)
+        commit_obj = rugged.rev_parse(commit)
+        parent = commit_obj.parents.first unless commit_obj.parents.empty?
 
         walker = Rugged::Walker.new(rugged)
 
         rugged.branches.select do |branch|
           walker.push(branch.target_id)
-          result = walker.any? { |c| c.oid == sha }
+          walker.hide(parent) if parent
+          result = walker.any? { |c| c.oid == commit_obj.oid }
           walker.reset
 
           result
