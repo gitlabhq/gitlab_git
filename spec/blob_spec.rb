@@ -14,7 +14,8 @@ describe Gitlab::Git::Blob do
       it { blob.path.should == "files/ruby/popen.rb" }
       it { blob.commit_id.should == SeedRepo::Commit::ID }
       it { blob.data[0..10].should == SeedRepo::RubyBlob::CONTENT[0..10] }
-      it { blob.size.should == 669  }
+      it { blob.size.should == 669 }
+      it { blob.mode.should == 0100644 }
     end
 
     context 'file in root' do
@@ -25,7 +26,8 @@ describe Gitlab::Git::Blob do
       it { blob.path.should == ".gitignore" }
       it { blob.commit_id.should == SeedRepo::Commit::ID }
       it { blob.data[0..10].should == "*.rbc\n*.sas" }
-      it { blob.size.should == 241  }
+      it { blob.size.should == 241 }
+      it { blob.mode.should == 0100644 }
     end
 
     context 'non-exist file' do
@@ -46,7 +48,7 @@ describe Gitlab::Git::Blob do
     let(:raw_blob) { Gitlab::Git::Blob.raw(repository, SeedRepo::RubyBlob::ID) }
     it { raw_blob.id.should == SeedRepo::RubyBlob::ID }
     it { raw_blob.data[0..10].should == "require \'fi" }
-    it { raw_blob.size.should == 669  }
+    it { raw_blob.size.should == 669 }
   end
 
   describe 'encoding' do
@@ -55,7 +57,8 @@ describe Gitlab::Git::Blob do
 
       it { blob.name.should == "russian.rb" }
       it { blob.data.lines.first.should == "Хороший файл" }
-      it { blob.size.should == 23  }
+      it { blob.size.should == 23 }
+      it { blob.mode.should == 0100755 }
     end
 
     context 'file with Chinese text' do
@@ -63,7 +66,70 @@ describe Gitlab::Git::Blob do
 
       it { blob.name.should == "テスト.txt" }
       it { blob.data.should include("これはテスト") }
-      it { blob.size.should == 340  }
+      it { blob.size.should == 340 }
+      it { blob.mode.should == 0100755 }
+    end
+  end
+
+  describe 'mode' do
+    context 'file regular' do
+      let(:blob) do
+        Gitlab::Git::Blob.find(
+          repository,
+          'fa1b1e6c004a68b7d8763b86455da9e6b23e36d6',
+          'files/ruby/regex.rb'
+        )
+      end
+
+      it { blob.name.should == 'regex.rb' }
+      it { blob.path.should == 'files/ruby/regex.rb' }
+      it { blob.size.should == 1200 }
+      it { blob.mode.should == 0100644 }
+    end
+
+    context 'file binary' do
+      let(:blob) do
+        Gitlab::Git::Blob.find(
+          repository,
+          'fa1b1e6c004a68b7d8763b86455da9e6b23e36d6',
+          'files/executables/ls'
+        )
+      end
+
+      it { blob.name.should == 'ls' }
+      it { blob.path.should == 'files/executables/ls' }
+      it { blob.size.should == 110080 }
+      it { blob.mode.should == 0100755 }
+    end
+
+    context 'file symlink to regular' do
+      let(:blob) do
+        Gitlab::Git::Blob.find(
+          repository,
+          'fa1b1e6c004a68b7d8763b86455da9e6b23e36d6',
+          'files/links/ruby-style-guide.md'
+        )
+      end
+
+      it { blob.name.should == 'ruby-style-guide.md' }
+      it { blob.path.should == 'files/links/ruby-style-guide.md' }
+      it { blob.size.should == 31 }
+      it { blob.mode.should == 0120000 }
+    end
+
+    context 'file symlink to binary' do
+      let(:blob) do
+        Gitlab::Git::Blob.find(
+          repository,
+          'fa1b1e6c004a68b7d8763b86455da9e6b23e36d6',
+          'files/links/touch'
+        )
+      end
+
+      it { blob.name.should == 'touch' }
+      it { blob.path.should == 'files/links/touch' }
+      it { blob.size.should == 20 }
+      it { blob.mode.should == 0120000 }
     end
   end
 end

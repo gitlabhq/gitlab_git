@@ -26,7 +26,7 @@ module Gitlab
                 name: blob_entry[:name],
                 size: blob.size,
                 data: blob.content,
-                mode: blob_entry[:mode],
+                mode: blob_entry[:filemode],
                 path: path,
                 commit_id: sha,
               )
