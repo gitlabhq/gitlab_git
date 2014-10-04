@@ -796,18 +796,68 @@ module Gitlab
       # +follow+ option is true and the file specified by +path+ was renamed,
       # then the path value is set to the old path.
       def commit_touches_path?(commit, path, follow)
+        if follow
+          touches_path_diff?(commit, path)
+        else
+          touches_path_tree?(commit, path)
+        end
+      end
+
+      # Returns true if +commit+ introduced changes to +path+, using commit
+      # trees to make that determination.
+      def touches_path_tree?(commit, path)
+        parent = commit.parents[0]
+        entry = tree_entry(commit, path)
+
+        if parent.nil?
+          # This is the root commit, return true if it has +path+ in its tree
+          return entry != nil
+        end
+
+        parent_entry = tree_entry(parent, path)
+
+        if entry.nil? && parent_entry.nil?
+          false
+        elsif entry.nil? || parent_entry.nil?
+          true
+        else
+          entry[:oid] != parent_entry[:oid]
+        end
+      end
+
+      # Find the entry for +path+ in the tree for +commit+
+      def tree_entry(commit, path)
+        pathname = Pathname.new(path)
+        tmp_entry = nil
+
+        pathname.each_filename do |dir|
+          if tmp_entry.nil?
+            tmp_entry = commit.tree[dir]
+          else
+            tmp_entry = rugged.lookup(tmp_entry[:oid])[dir]
+          end
+        end
+
+        tmp_entry
+      end
+
+      # Returns true if +commit+ introduced changes to +path+, using
+      # Rugged::Diff objects to make that determination.  This is slower than
+      # comparing commit trees, but lets us use Rugged::Diff#find_similar to
+      # detect file renames.
+      def touches_path_diff?(commit, path)
         if commit.parents.empty?
           diff = commit.diff
         else
           diff = commit.parents[0].diff(commit)
-          diff.find_similar! if follow
+          diff.find_similar!
         end
 
         # Check the commit's deltas to see if it touches the :path
         # argument
         diff.each_delta do |d|
           if path_matches?(path, d.old_file[:path], d.new_file[:path])
-            if should_follow?(follow, d, path)
+            if d.renamed? && path == d.new_file[:path]
               # Look for the old path in ancestors
               path.replace(d.old_file[:path])
             end
@@ -817,14 +867,6 @@ module Gitlab
         end
 
         false
-      end
-
-      # Used by the #commit_touches_path method to determine whether the
-      # specified file has been renamed and should be followed in ancestor
-      # commits.  Returns true if +follow_option+ is true, the file is renamed
-      # in this commit, and the new file's path matches the path option.
-      def should_follow?(follow_option, delta, path)
-        follow_option && delta.renamed? && path == delta.new_file[:path]
       end
 
       # Returns true if any of the strings in +*paths+ begins with the
