@@ -846,35 +846,30 @@ module Gitlab
       # comparing commit trees, but lets us use Rugged::Diff#find_similar to
       # detect file renames.
       def touches_path_diff?(commit, path)
-        if commit.parents.empty?
-          diff = commit.diff
-        else
-          diff = commit.parents[0].diff(commit)
-          diff.find_similar!
-        end
+        diff = commit.diff(reverse: true, paths: [path],
+                           disable_pathspec_match: true)
 
-        # Check the commit's deltas to see if it touches the :path
-        # argument
-        diff.each_delta do |d|
-          if path_matches?(path, d.old_file[:path], d.new_file[:path])
-            if d.renamed? && path == d.new_file[:path]
+        return false if diff.deltas.empty?
+
+        # If +path+ is a filename, not a directory, then we should only have
+        # one delta.  We don't need to follow renames for directories.
+        return true if diff.deltas.length > 1
+
+        # Detect renames
+        delta = diff.deltas.first
+        if delta.added?
+          full_diff = commit.diff(reverse: true)
+          full_diff.find_similar!
+
+          full_diff.each_delta do |full_delta|
+            if full_delta.renamed? && path == full_delta.new_file[:path]
               # Look for the old path in ancestors
-              path.replace(d.old_file[:path])
+              path.replace(full_delta.old_file[:path])
             end
-
-            return true
           end
         end
 
-        false
-      end
-
-      # Returns true if any of the strings in +*paths+ begins with the
-      # +path_to_match+ argument
-      def path_matches?(path_to_match, *paths)
-        paths.any? do |p|
-          p.match(/^#{Regexp.escape(path_to_match)}/)
-        end
+        true
       end
 
       def archive_to_file(treeish = 'master', prefix = nil, filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip))
