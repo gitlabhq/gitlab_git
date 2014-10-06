@@ -796,43 +796,80 @@ module Gitlab
       # +follow+ option is true and the file specified by +path+ was renamed,
       # then the path value is set to the old path.
       def commit_touches_path?(commit, path, follow)
-        if commit.parents.empty?
-          diff = commit.diff
+        if follow
+          touches_path_diff?(commit, path)
         else
-          diff = commit.parents[0].diff(commit)
-          diff.find_similar! if follow
+          touches_path_tree?(commit, path)
+        end
+      end
+
+      # Returns true if +commit+ introduced changes to +path+, using commit
+      # trees to make that determination.
+      def touches_path_tree?(commit, path)
+        parent = commit.parents[0]
+        entry = tree_entry(commit, path)
+
+        if parent.nil?
+          # This is the root commit, return true if it has +path+ in its tree
+          return entry != nil
         end
 
-        # Check the commit's deltas to see if it touches the :path
-        # argument
-        diff.each_delta do |d|
-          if path_matches?(path, d.old_file[:path], d.new_file[:path])
-            if should_follow?(follow, d, path)
-              # Look for the old path in ancestors
-              path.replace(d.old_file[:path])
-            end
+        parent_entry = tree_entry(parent, path)
 
-            return true
+        if entry.nil? && parent_entry.nil?
+          false
+        elsif entry.nil? || parent_entry.nil?
+          true
+        else
+          entry[:oid] != parent_entry[:oid]
+        end
+      end
+
+      # Find the entry for +path+ in the tree for +commit+
+      def tree_entry(commit, path)
+        pathname = Pathname.new(path)
+        tmp_entry = nil
+
+        pathname.each_filename do |dir|
+          if tmp_entry.nil?
+            tmp_entry = commit.tree[dir]
+          else
+            tmp_entry = rugged.lookup(tmp_entry[:oid])[dir]
           end
         end
 
-        false
+        tmp_entry
       end
 
-      # Used by the #commit_touches_path method to determine whether the
-      # specified file has been renamed and should be followed in ancestor
-      # commits.  Returns true if +follow_option+ is true, the file is renamed
-      # in this commit, and the new file's path matches the path option.
-      def should_follow?(follow_option, delta, path)
-        follow_option && delta.renamed? && path == delta.new_file[:path]
-      end
+      # Returns true if +commit+ introduced changes to +path+, using
+      # Rugged::Diff objects to make that determination.  This is slower than
+      # comparing commit trees, but lets us use Rugged::Diff#find_similar to
+      # detect file renames.
+      def touches_path_diff?(commit, path)
+        diff = commit.diff(reverse: true, paths: [path],
+                           disable_pathspec_match: true)
 
-      # Returns true if any of the strings in +*paths+ begins with the
-      # +path_to_match+ argument
-      def path_matches?(path_to_match, *paths)
-        paths.any? do |p|
-          p.match(/^#{Regexp.escape(path_to_match)}/)
+        return false if diff.deltas.empty?
+
+        # If +path+ is a filename, not a directory, then we should only have
+        # one delta.  We don't need to follow renames for directories.
+        return true if diff.deltas.length > 1
+
+        # Detect renames
+        delta = diff.deltas.first
+        if delta.added?
+          full_diff = commit.diff(reverse: true)
+          full_diff.find_similar!
+
+          full_diff.each_delta do |full_delta|
+            if full_delta.renamed? && path == full_delta.new_file[:path]
+              # Look for the old path in ancestors
+              path.replace(full_delta.old_file[:path])
+            end
+          end
         end
+
+        true
       end
 
       def archive_to_file(treeish = 'master', prefix = nil, filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip))
