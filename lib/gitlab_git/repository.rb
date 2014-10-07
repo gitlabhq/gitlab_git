@@ -943,7 +943,7 @@ module Gitlab
         actual_options = Diff.filter_diff_options(options.merge(paths: paths))
 
         diff = rugged.diff(from, to, actual_options)
-        diff.find_similar!(break_rewrites: true) if break_rewrites
+        diff.find_similar!(break_rewrites: break_rewrites)
         diff.patches
       end
     end

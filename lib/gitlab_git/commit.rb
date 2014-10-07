@@ -124,7 +124,7 @@ module Gitlab
             diff = rugged_commit.parents[0].diff(rugged_commit, actual_options)
           end
 
-          diff.find_similar!(break_rewrites: true) if break_rewrites
+          diff.find_similar!(break_rewrites: break_rewrites)
           diff
         end
       end
