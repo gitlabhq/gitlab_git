@@ -23,9 +23,7 @@ module Gitlab
           options ||= {}
           break_rewrites = options[:break_rewrites]
           actual_options = filter_diff_options(options)
-          diff = repo.diff(common_commit, head, actual_options, *paths)
-          diff.find_similar!(break_rewrites: true) if break_rewrites
-          diff
+          repo.diff(common_commit, head, actual_options, *paths)
         end
 
         # Return a copy of the +options+ hash containing only keys that can be
