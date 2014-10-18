@@ -704,6 +704,11 @@ module Gitlab
         commits
       end
 
+      # Set the "core.autocrlf" config option to true for this repo.
+      def enable_autocrlf
+        rugged.config['core.autocrlf'] = true
+      end
+
       private
 
       # Return the object that +revspec+ points to.  If +revspec+ is an
