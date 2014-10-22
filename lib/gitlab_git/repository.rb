@@ -412,10 +412,10 @@ module Gitlab
       #   }
       #
       def submodules(ref)
-        tree = rugged.lookup(rugged.rev_parse_oid(ref)).tree
+        commit = rugged.rev_parse(ref)
 
-        content = blob_content(tree, ".gitmodules")
-        parse_gitmodules(tree, content)
+        content = blob_content(commit, ".gitmodules")
+        parse_gitmodules(commit, content)
       end
 
       # Return total commits count accessible from passed ref
@@ -717,21 +717,21 @@ module Gitlab
         end
       end
 
-      # Get the content of a blob for a given tree.  If the blob is a commit
+      # Get the content of a blob for a given commit.  If the blob is a commit
       # (for submodules) then return the blob's OID.
-      def blob_content(tree, blob_name)
-        blob_hash = tree.detect { |b| b[:name] == blob_name }
+      def blob_content(commit, blob_name)
+        blob_entry = tree_entry(commit, blob_name)
 
-        if blob_hash[:type] == :commit
-          blob_hash[:oid]
+        if blob_entry[:type] == :commit
+          blob_entry[:oid]
         else
-          rugged.lookup(blob_hash[:oid]).content
+          rugged.lookup(blob_entry[:oid]).content
         end
       end
 
       # Parses the contents of a .gitmodules file and returns a hash of
       # submodule information.
-      def parse_gitmodules(tree, content)
+      def parse_gitmodules(commit, content)
         results = {}
 
         current = ""
@@ -744,7 +744,7 @@ module Gitlab
             results[current][match_data[1]] = match_data[2]
 
             if match_data[1] == "path"
-              results[current]["id"] = blob_content(tree, match_data[2])
+              results[current]["id"] = blob_content(commit, match_data[2])
             end
           end
         end
