@@ -14,10 +14,10 @@ describe Gitlab::Git::Tag do
   describe 'last tag' do
     let(:tag) { repository.tags.last }
 
-    it { tag.name.should == "v1.1.0" }
-    it { tag.target.should == "8a2a6eb295bb170b34c24c76c49ed0e9b2eaf34b" }
-    it { tag.message.should == "Version 1.1.0" }
+    it { tag.name.should == "v1.2.0" }
+    it { tag.target.should == "10d64eed7760f2811ee2d64b44f1f7d3b364f17b" }
+    it { tag.message.should == "Version 1.2.0" }
   end
 
-  it { repository.tags.size.should == 2 }
+  it { repository.tags.size.should == 3 }
 end
