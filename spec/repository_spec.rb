@@ -160,7 +160,7 @@ describe Gitlab::Git::Repository do
 
   context :submodules do
     let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
-    let(:submodules) { repository.submodules(SeedRepo::Commit::ID) }
+    let(:submodules) { repository.submodules('master') }
 
     it { submodules.should be_kind_of Hash }
     it { submodules.empty?.should be_false }
@@ -176,6 +176,20 @@ describe Gitlab::Git::Repository do
             "url"=>"git://github.com/randx/six.git"
           }
         ]
+      end
+
+      it 'should handle nested submodules correctly' do
+        nested = submodules['nested/six']
+        expect(nested['path']).to eq('nested/six')
+        expect(nested['url']).to eq('git://github.com/randx/six.git')
+        expect(nested['id']).to eq('24fb71c79fcabc63dfd8832b12ee3bf2bf06b196')
+      end
+
+      it 'should handle deeply nested submodules correctly' do
+        nested = submodules['deeper/nested/six']
+        expect(nested['path']).to eq('deeper/nested/six')
+        expect(nested['url']).to eq('git://github.com/randx/six.git')
+        expect(nested['id']).to eq('24fb71c79fcabc63dfd8832b12ee3bf2bf06b196')
       end
     end
   end
