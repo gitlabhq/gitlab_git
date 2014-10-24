@@ -1,4 +1,5 @@
 # Seed repo:
+# eb49186cfa5c4338011f5f590fac11bd66c5c631 Add submodules nested deeper than the root
 # 5937ac0a7beb003549fc5fd26fc247adbce4a52e Add submodule from gitlab.com
 # 570e7b2abdd848b95f2f578043fc23bd6f6fd24d Change some files
 # 6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9 More submodules
@@ -15,11 +16,11 @@
 #
 module SeedRepo
   module LastCommit
-    ID = "5937ac0a7beb003549fc5fd26fc247adbce4a52e"
-    PARENT_ID = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
-    MESSAGE = "Add submodule from gitlab.com"
-    AUTHOR_FULL_NAME = "Dmitriy Zaporozhets"
-    FILES = [".gitmodules", "gitlab-grack"]
-    FILES_COUNT = 2
+    ID = "eb49186cfa5c4338011f5f590fac11bd66c5c631"
+    PARENT_ID = "5937ac0a7beb003549fc5fd26fc247adbce4a52e"
+    MESSAGE = "Add submodules nested deeper than the root"
+    AUTHOR_FULL_NAME = "Jacob Vosmaer"
+    FILES = [".gitmodules", "deeper/nested/six", "nested/six"]
+    FILES_COUNT = 3
   end
 end

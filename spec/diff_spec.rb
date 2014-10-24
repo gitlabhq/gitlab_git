@@ -25,7 +25,7 @@ EOT
       deleted_file: false,
     }
 
-    @rugged_diff = repository.rugged.diff("master^", "master", paths:
+    @rugged_diff = repository.rugged.diff("5937ac0a7beb003549fc5fd26fc247adbce4a52e^", "5937ac0a7beb003549fc5fd26fc247adbce4a52e", paths:
                                           [".gitmodules"]).patches.first
   end
 

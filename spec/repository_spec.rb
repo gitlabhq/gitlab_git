@@ -58,13 +58,13 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     it { should have(SeedRepo::Repo::TAGS.size).elements }
-    its(:last) { should == "v1.1.0" }
+    its(:last) { should == "v1.2.0" }
     it { should include("v1.0.0") }
     it { should_not include("v5.0.0") }
   end
 
   shared_examples 'archive check' do |extenstion|
-    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-5937ac0a/) }
+    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-eb49186cfa5c43380/) }
     it { archive.should end_with extenstion }
     it { File.exists?(archive).should be_true }
     it { File.size?(archive).should_not be_nil }
@@ -138,7 +138,7 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     its(:first) { should == 'feature' }
-    its(:last) { should == 'v1.1.0' }
+    its(:last) { should == 'v1.2.0' }
   end
 
   describe :search_files do
@@ -181,12 +181,12 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 13 }
+    it { repository.commit_count("master").should == 14 }
     it { repository.commit_count("feature").should == 9 }
   end
 
   describe :archive_repo do
-    it { repository.archive_repo('master', '/tmp').should == '/tmp/gitlab-git-test.git/gitlab-git-test-5937ac0a7beb003549fc5fd26fc247adbce4a52e.tar.gz' }
+    it { repository.archive_repo('master', '/tmp').should == '/tmp/gitlab-git-test.git/gitlab-git-test-eb49186cfa5c4338011f5f590fac11bd66c5c631.tar.gz' }
   end
 
   describe "#reset" do
@@ -212,7 +212,7 @@ describe Gitlab::Git::Repository do
         end
 
         @normal_repo = Gitlab::Git::Repository.new(TEST_NORMAL_REPO_PATH)
-        @normal_repo.reset("HEAD~3", :hard)
+        @normal_repo.reset("HEAD~4", :hard)
       end
 
       it "should replace the working directory with the content of the index" do
