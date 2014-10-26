@@ -736,11 +736,11 @@ module Gitlab
 
         current = ""
         content.split("\n").each do |txt|
-          if txt.match(/^\[/)
+          if txt.match(/^\s*\[/)
             current = txt.match(/(?<=").*(?=")/)[0]
             results[current] = {}
           else
-            match_data = txt.match(/(\w+) = (.*)/)
+            match_data = txt.match(/(\w+)\s*=\s*(.*)/)
             results[current][match_data[1]] = match_data[2]
 
             if match_data[1] == "path"
