@@ -778,7 +778,7 @@ module Gitlab
           end
 
           if !current_path ||
-            commit_touches_path?(c, current_path, options[:follow])
+            commit_touches_path?(c, current_path, options[:follow], walker)
 
             # This is a commit we care about, unless we haven't skipped enough
             # yet
@@ -792,36 +792,43 @@ module Gitlab
         commits
       end
 
-      # Returns true if the given commit affects the given path.  If the
-      # +follow+ option is true and the file specified by +path+ was renamed,
-      # then the path value is set to the old path.
-      def commit_touches_path?(commit, path, follow)
-        if follow
-          touches_path_diff?(commit, path)
-        else
-          touches_path_tree?(commit, path)
-        end
-      end
-
       # Returns true if +commit+ introduced changes to +path+, using commit
-      # trees to make that determination.
-      def touches_path_tree?(commit, path)
-        parent = commit.parents[0]
+      # trees to make that determination.  Uses the history simplification
+      # rules that `git log` uses by default, where a commit is omitted if it
+      # is TREESAME to any parent.
+      #
+      # If the +follow+ option is true and the file specified by +path+ was
+      # renamed, then the path value is set to the old path.
+      def commit_touches_path?(commit, path, follow, walker)
         entry = tree_entry(commit, path)
 
-        if parent.nil?
+        if commit.parents.empty?
           # This is the root commit, return true if it has +path+ in its tree
           return entry != nil
         end
 
-        parent_entry = tree_entry(parent, path)
+        num_treesame = 0
+        commit.parents.each do |parent|
+          parent_entry = tree_entry(parent, path)
 
-        if entry.nil? && parent_entry.nil?
-          false
-        elsif entry.nil? || parent_entry.nil?
+          # Only follow the first TREESAME parent for merge commits
+          if num_treesame > 0
+            walker.hide(parent)
+            next
+          end
+
+          if entry.nil? && parent_entry.nil?
+            num_treesame += 1
+          elsif entry && parent_entry && entry[:oid] == parent_entry[:oid]
+            num_treesame += 1
+          end
+        end
+
+        case num_treesame
+        when 0
+          detect_rename(commit, commit.parents.first, path) if follow
           true
-        else
-          entry[:oid] != parent_entry[:oid]
+        else false
         end
       end
 
@@ -841,24 +848,18 @@ module Gitlab
         tmp_entry
       end
 
-      # Returns true if +commit+ introduced changes to +path+, using
-      # Rugged::Diff objects to make that determination.  This is slower than
-      # comparing commit trees, but lets us use Rugged::Diff#find_similar to
-      # detect file renames.
-      def touches_path_diff?(commit, path)
-        diff = commit.diff(reverse: true, paths: [path],
-                           disable_pathspec_match: true)
-
-        return false if diff.deltas.empty?
+      # Compare +commit+ and +parent+ for +path+.  If +path+ is a file and was
+      # renamed in +commit+, then set +path+ to the old filename.
+      def detect_rename(commit, parent, path)
+        diff = parent.diff(commit, paths: [path], disable_pathspec_match: true)
 
         # If +path+ is a filename, not a directory, then we should only have
         # one delta.  We don't need to follow renames for directories.
-        return true if diff.deltas.length > 1
+        return nil if diff.deltas.length > 1
 
-        # Detect renames
         delta = diff.deltas.first
         if delta.added?
-          full_diff = commit.diff(reverse: true)
+          full_diff = parent.diff(commit)
           full_diff.find_similar!
 
           full_diff.each_delta do |full_delta|
@@ -868,8 +869,6 @@ module Gitlab
             end
           end
         end
-
-        true
       end
 
       def archive_to_file(treeish = 'master', prefix = nil, filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip))
