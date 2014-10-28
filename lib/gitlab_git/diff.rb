@@ -52,6 +52,10 @@ module Gitlab
         hash
       end
 
+      def submodule?
+        a_mode == '160000' || b_mode == '160000'
+      end
+
       private
 
       def init_from_rugged(rugged)
