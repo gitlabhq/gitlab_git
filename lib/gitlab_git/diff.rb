@@ -5,8 +5,6 @@ module Gitlab
       class TimeoutError < StandardError; end
       include EncodingHelper
 
-      attr_accessor :raw_diff
-
       # Diff properties
       attr_accessor :old_path, :new_path, :a_mode, :b_mode, :diff
 
@@ -59,8 +57,6 @@ module Gitlab
       private
 
       def init_from_rugged(rugged)
-        @raw_diff = rugged
-
         @diff = encode!(strip_diff_headers(rugged.to_s))
 
         d = rugged.delta
