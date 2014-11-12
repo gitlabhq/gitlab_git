@@ -84,9 +84,12 @@ module Gitlab
       # Strip out the information at the beginning of the patch's text to match
       # Grit's output
       def strip_diff_headers(diff_text)
-        lines = diff_text.split("\n")
-        lines.shift until lines.empty? || lines.first.match("^(---|Binary)")
-        lines.join("\n")
+        result = diff_text.sub!(/\A.*?^(---|Binary)/m, '\1').chomp!
+        if result.start_with?('---') or result.start_with?('Binary')
+          result
+        else
+          ''
+        end
       end
     end
   end
