@@ -84,9 +84,20 @@ module Gitlab
       # Strip out the information at the beginning of the patch's text to match
       # Grit's output
       def strip_diff_headers(diff_text)
-        lines = diff_text.split("\n")
-        lines.shift until lines.empty? || lines.first.match("^(---|Binary)")
-        lines.join("\n")
+        # Delete everything up to the first line that starts with '---' or
+        # 'Binary'
+        diff_text.sub!(/\A.*?^(---|Binary)/m, '\1')
+        # Remove trailing newline because the tests ask for it
+        diff_text.chomp!
+
+        if diff_text.start_with?('---') or diff_text.start_with?('Binary')
+          diff_text
+        else
+          # If the diff_text did not contain a line starting with '---' or
+          # 'Binary', return the empty string. No idea why; we are just
+          # preserving behavior from before the refactor.
+          ''
+        end
       end
     end
   end
