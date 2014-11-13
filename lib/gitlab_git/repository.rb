@@ -8,6 +8,8 @@ module Gitlab
     class Repository
       include Gitlab::Git::Popen
 
+      SEARCH_CONTEXT_LINES = 3
+
       class NoRepository < StandardError; end
 
       # Default branch in the repository
@@ -920,15 +922,63 @@ module Gitlab
       # Return an array of BlobSnippets for lines in +file_contents+ that match
       # +query+
       def build_greps(file_contents, query, ref, filename)
+        # The file_contents string is potentially huge so we make sure to loop
+        # through it one line at a time. This gives Ruby the chance to GC lines
+        # we are not interested in.
+        #
+        # We need to do a little extra work because we are not looking for just
+        # the lines that matches the query, but also for the context
+        # (surrounding lines). We will use Enumerable#each_cons to efficiently
+        # loop through the lines while keeping surrounding lines on hand.
+        #
+        # First, we turn "foo\nbar\nbaz" into
+        # [
+        #  [nil, -3], [nil, -2], [nil, -1],
+        #  ['foo', 0], ['bar', 1], ['baz', 3],
+        #  [nil, 4], [nil, 5], [nil, 6]
+        # ]
+        lines_with_index = Enumerator.new do |yielder|
+          # Yield fake 'before' lines for the first line of file_contents
+          (-SEARCH_CONTEXT_LINES..-1).each do |i|
+            yielder.yield [nil, i]
+          end
+
+          # Yield the actual file contents
+          count = 0
+          file_contents.each_line.each_with_index do |line, i|
+            line.chomp!
+            yielder.yield [line, i]
+            count += 1
+          end
+
+          # Yield fake 'after' lines for the last line of file_contents
+          (count+1..count+SEARCH_CONTEXT_LINES).each do |i|
+            yielder.yield [nil, i]
+          end
+        end
+
         greps = []
 
-        file_contents.split("\n").each_with_index do |line, i|
-          next unless line.match(/#{Regexp.escape(query)}/i)
+        # Loop through consecutive blocks of lines with indexes
+        lines_with_index.each_cons(2 * SEARCH_CONTEXT_LINES + 1) do |line_block|
+          # Get the 'middle' line and index from the block
+          line, i = line_block[SEARCH_CONTEXT_LINES]
+
+          next unless line && line.match(/#{Regexp.escape(query)}/i)
+
+          # Yay, 'line' contains a match!
+          # Get an array with just the context lines (no indexes)
+          match_with_context = line_block.map(&:first)
+          # Remove 'nil' lines in case we are close to the first or last line
+          match_with_context.compact!
+
+          # Get the line number (1-indexed) of the first context line
+          first_context_line_number = line_block[0][1] + 1
 
           greps << Gitlab::Git::BlobSnippet.new(
             ref,
-            file_contents.split("\n")[i - 3..i + 3],
-            i - 2,
+            match_with_context,
+            first_context_line_number,
             filename
           )
         end
