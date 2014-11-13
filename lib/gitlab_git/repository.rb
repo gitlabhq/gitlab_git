@@ -9,6 +9,7 @@ module Gitlab
       include Gitlab::Git::Popen
 
       class NoRepository < StandardError; end
+      class InvalidBlobName < StandardError; end
 
       # Default branch in the repository
       attr_accessor :root_ref
@@ -414,7 +415,12 @@ module Gitlab
       def submodules(ref)
         commit = rugged.rev_parse(ref)
 
-        content = blob_content(commit, ".gitmodules")
+        begin
+          content = blob_content(commit, ".gitmodules")
+        rescue InvalidBlobName
+          return {}
+        end
+
         parse_gitmodules(commit, content)
       end
 
@@ -722,6 +728,10 @@ module Gitlab
       def blob_content(commit, blob_name)
         blob_entry = tree_entry(commit, blob_name)
 
+        unless blob_entry
+          raise InvalidBlobName.new("Invalid blob name: #{blob_name}")
+        end
+
         if blob_entry[:type] == :commit
           blob_entry[:oid]
         else
@@ -740,11 +750,16 @@ module Gitlab
             current = txt.match(/(?<=").*(?=")/)[0]
             results[current] = {}
           else
+            next unless results[current]
             match_data = txt.match(/(\w+)\s*=\s*(.*)/)
             results[current][match_data[1]] = match_data[2]
 
             if match_data[1] == "path"
-              results[current]["id"] = blob_content(commit, match_data[2])
+              begin
+                results[current]["id"] = blob_content(commit, match_data[2])
+              rescue InvalidBlobName
+                results.delete(current)
+              end
             end
           end
         end
