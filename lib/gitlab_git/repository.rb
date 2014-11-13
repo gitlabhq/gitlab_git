@@ -265,7 +265,7 @@ module Gitlab
       # Return an array of Diff objects that represent the diff
       # between +from+ and +to+.
       def diff(from, to, *paths)
-        rugged.diff(from, to, paths: paths).patches.map do |p|
+        rugged.diff(from, to, paths: paths).each_patch.map do |p|
           Gitlab::Git::Diff.new(p)
         end
       end
@@ -275,7 +275,7 @@ module Gitlab
         # NOTE: It would be simpler to use the Rugged::Diff#patch method, but
         # that formats the diff text differently than Rugged::Patch#to_s for
         # changes to binary files.
-        rugged.diff(from, to, paths: paths).patches.map do |p|
+        rugged.diff(from, to, paths: paths).each_patch.map do |p|
           p.to_s
         end.join("\n")
       end
@@ -855,9 +855,9 @@ module Gitlab
 
         # If +path+ is a filename, not a directory, then we should only have
         # one delta.  We don't need to follow renames for directories.
-        return nil if diff.deltas.length > 1
+        return nil if diff.each_delta.count > 1
 
-        delta = diff.deltas.first
+        delta = diff.each_delta.first
         if delta.added?
           full_diff = parent.diff(commit)
           full_diff.find_similar!
