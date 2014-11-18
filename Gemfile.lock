@@ -5,7 +5,7 @@ PATH
       activesupport (~> 4.0)
       charlock_holmes (~> 0.6)
       gitlab-linguist (~> 3.0)
-      rugged (~> 0.21)
+      rugged (~> 0.21.2)
 
 GEM
   remote: http://rubygems.org/
