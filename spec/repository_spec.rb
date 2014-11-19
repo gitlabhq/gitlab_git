@@ -160,13 +160,13 @@ describe Gitlab::Git::Repository do
 
   context :submodules do
     let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
-    let(:submodules) { repository.submodules('master') }
 
-    it { submodules.should be_kind_of Hash }
-    it { submodules.empty?.should be_false }
-
-    describe :submodule do
+    context 'where repo has submodules' do
+      let(:submodules) { repository.submodules('master') }
       let(:submodule) { submodules.first }
+
+      it { submodules.should be_kind_of Hash }
+      it { submodules.empty?.should be_false }
 
       it 'should have valid data' do
         submodule.should == [
@@ -190,6 +190,17 @@ describe Gitlab::Git::Repository do
         expect(nested['path']).to eq('deeper/nested/six')
         expect(nested['url']).to eq('git://github.com/randx/six.git')
         expect(nested['id']).to eq('24fb71c79fcabc63dfd8832b12ee3bf2bf06b196')
+      end
+
+      it 'should not have an entry for an invalid submodule' do
+        expect(submodules).not_to have_key('invalid/path')
+      end
+    end
+
+    context 'where repo doesn\'t have submodules' do
+      let(:submodules) { repository.submodules('6d39438') }
+      it 'should return an empty hash' do
+        expect(submodules).to be_empty
       end
     end
   end
