@@ -4,10 +4,10 @@ gemspec
 
 group :development do
   gem 'coveralls', require: false
-  gem 'rspec'
+  gem 'rspec', '~> 3.1.0'
   gem 'webmock'
   gem 'guard'
-  gem 'guard-rspec'
+  gem 'guard-rspec', require: false
   gem 'pry'
   gem 'rake'
 end

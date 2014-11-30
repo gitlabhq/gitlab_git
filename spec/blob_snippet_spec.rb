@@ -7,13 +7,13 @@ describe Gitlab::Git::BlobSnippet do
     context 'empty lines' do
       let(:snippet) { Gitlab::Git::BlobSnippet.new('master', nil, nil, nil) }
 
-      it { snippet.data.should be_nil }
+      it { snippet.data == nil }
     end
 
     context 'present lines' do
       let(:snippet) { Gitlab::Git::BlobSnippet.new('master', ['wow', 'much'], 1, 'wow.rb') }
 
-      it { snippet.data.should == "wow\nmuch" }
+      it { snippet.data == "wow\nmuch" }
     end
   end
 end

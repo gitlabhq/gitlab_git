@@ -9,7 +9,7 @@ describe Gitlab::Git::Compare do
       compare.commits.map(&:id)
     end
 
-    it { should have(8).elements }
+    it { subject.size == 8 }
     it { should include(SeedRepo::Commit::PARENT_ID) }
     it { should_not include(SeedRepo::BigCommit::PARENT_ID) }
   end
@@ -19,17 +19,17 @@ describe Gitlab::Git::Compare do
       compare.diffs.map(&:new_path)
     end
 
-    it { should have(10).elements }
+    it { subject.size == 10 }
     it { should include('files/ruby/popen.rb') }
     it { should_not include('LICENSE') }
-    it { compare.timeout.should be_false }
-    it { compare.empty_diff?.should be_false }
+    it { compare.timeout == false }
+    it { compare.empty_diff? == false }
   end
 
   describe 'non-existing refs' do
     let(:compare) { Gitlab::Git::Compare.new(repository, 'no-such-branch', '1234567890') }
 
-    it { compare.commits.should be_empty }
-    it { compare.diffs.should be_empty }
+    it { expect(compare.commits).to be_empty }
+    it { expect(compare.diffs).to be_empty }
   end
 end

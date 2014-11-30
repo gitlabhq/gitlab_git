@@ -41,21 +41,21 @@ describe Gitlab::Git::Commit do
       @commit = Gitlab::Git::Commit.new(@raw_commit)
     end
 
-    it { @commit.short_id.should == @raw_commit.oid[0..10] }
-    it { @commit.id.should == @raw_commit.oid }
-    it { @commit.sha.should == @raw_commit.oid }
-    it { @commit.safe_message.should == @raw_commit.message }
-    it { @commit.created_at.should == @raw_commit.author[:time] }
-    it { @commit.date.should == @raw_commit.committer[:time] }
-    it { @commit.author_email.should == @author[:email] }
-    it { @commit.author_name.should == @author[:name] }
-    it { @commit.committer_name.should == @committer[:name] }
-    it { @commit.committer_email.should == @committer[:email] }
-    it { @commit.different_committer?.should be_true }
-    it { @commit.parents.should == @gitlab_parents }
-    it { @commit.parent_id.should == @parents.first.oid }
-    it { @commit.no_commit_message.should == "--no commit message" }
-    it { @commit.tree.should == @tree }
+    it { @commit.short_id == @raw_commit.oid[0..10] }
+    it { @commit.id == @raw_commit.oid }
+    it { @commit.sha == @raw_commit.oid }
+    it { @commit.safe_message == @raw_commit.message }
+    it { @commit.created_at == @raw_commit.author[:time] }
+    it { @commit.date == @raw_commit.committer[:time] }
+    it { @commit.author_email == @author[:email] }
+    it { @commit.author_name == @author[:name] }
+    it { @commit.committer_name == @committer[:name] }
+    it { @commit.committer_email == @committer[:email] }
+    it { @commit.different_committer? == true }
+    it { @commit.parents == @gitlab_parents }
+    it { @commit.parent_id == @parents.first.oid }
+    it { @commit.no_commit_message == "--no commit message" }
+    it { @commit.tree == @tree }
 
     after do
       # Erase the new commit so other tests get the original repo
@@ -67,20 +67,20 @@ describe Gitlab::Git::Commit do
   context 'Class methods' do
     describe :find do
       it "should return first head commit if without params" do
-        Gitlab::Git::Commit.last(repository).id.should ==
+        Gitlab::Git::Commit.last(repository).id ==
           repository.raw.head.target.oid
       end
 
       it "should return valid commit" do
-        Gitlab::Git::Commit.find(repository, SeedRepo::Commit::ID).should be_valid_commit
+        expect(Gitlab::Git::Commit.find(repository, SeedRepo::Commit::ID)).to be_valid_commit
       end
 
       it "should return valid commit for tag" do
-        Gitlab::Git::Commit.find(repository, 'v1.0.0').id.should == '6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9'
+        Gitlab::Git::Commit.find(repository, 'v1.0.0').id == '6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9'
       end
 
       it "should return nil" do
-        Gitlab::Git::Commit.find(repository, "+123_4532530XYZ").should be_nil
+        Gitlab::Git::Commit.find(repository, "+123_4532530XYZ") == nil
       end
     end
 
@@ -88,19 +88,19 @@ describe Gitlab::Git::Commit do
       context 'no path' do
         subject { Gitlab::Git::Commit.last_for_path(repository, 'master') }
 
-        its(:id) { should == SeedRepo::LastCommit::ID }
+        it { subject.id  == SeedRepo::LastCommit::ID }
       end
 
       context 'path' do
         subject { Gitlab::Git::Commit.last_for_path(repository, 'master', 'files') }
 
-        its(:id) { should == SeedRepo::Commit::ID }
+        it { subject.id == SeedRepo::Commit::ID }
       end
 
       context 'ref + path' do
         subject { Gitlab::Git::Commit.last_for_path(repository, SeedRepo::Commit::ID, 'encoding') }
 
-        its(:id) { should == SeedRepo::BigCommit::ID }
+        it { subject.id == SeedRepo::BigCommit::ID }
       end
     end
 
@@ -119,7 +119,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(3).elements }
+        it { subject.size == 3 }
         it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
         it { should_not include(SeedRepo::Commit::ID) }
       end
@@ -137,7 +137,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(3).elements }
+        it { subject.size == 3 }
         it { should include("2f63565e7aac07bcdadb654e253078b727143ec4") }
         it { should_not include(SeedRepo::Commit::ID) }
       end
@@ -155,7 +155,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(3).elements }
+        it { subject.size == 3 }
         it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
         it { should_not include(SeedRepo::Commit::ID) }
       end
@@ -167,7 +167,7 @@ describe Gitlab::Git::Commit do
         commits.map { |c| c.id }
       end
 
-      it { should have(1).elements }
+      it { subject.size == 1 }
       it { should include(SeedRepo::Commit::ID) }
       it { should_not include(SeedRepo::FirstCommit::ID) }
     end
@@ -183,7 +183,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(16).elements }
+        it { subject.size == 16 }
         it { should include(SeedRepo::Commit::ID) }
         it { should include(SeedRepo::Commit::PARENT_ID) }
         it { should include(SeedRepo::FirstCommit::ID) }
@@ -201,7 +201,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(13).elements }
+        it { subject.size == 13 }
         it { should include(SeedRepo::Commit::ID) }
         it { should include(SeedRepo::FirstCommit::ID) }
         it { should_not include(SeedRepo::LastCommit::ID) }
@@ -218,7 +218,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(7).elements }
+        it { subject.size == 7 }
 
         it { should_not include(SeedRepo::Commit::PARENT_ID) }
         it { should_not include(SeedRepo::Commit::ID) }
@@ -231,22 +231,22 @@ describe Gitlab::Git::Commit do
     let(:gitlab_commit) { Gitlab::Git::Commit.new(rugged_commit) }
     subject { gitlab_commit }
 
-    its(:id) { should == SeedRepo::Commit::ID }
+    it { subject.id == SeedRepo::Commit::ID }
   end
 
   describe :init_from_hash do
     let(:commit) { Gitlab::Git::Commit.new(sample_commit_hash) }
     subject { commit }
 
-    its(:id) { should == sample_commit_hash[:id]}
-    its(:message) { should == sample_commit_hash[:message]}
+    it { subject.id == sample_commit_hash[:id]}
+    it { subject.message== sample_commit_hash[:message]}
   end
 
   describe :stats do
     subject { commit.stats }
 
-    its(:additions) { should eq(11) }
-    its(:deletions) { should eq(6) }
+    it { subject.additions == 11 }
+    it { subject.deletions == 6 }
   end
 
   describe :to_diff do
@@ -257,7 +257,7 @@ describe Gitlab::Git::Commit do
   end
 
   describe :has_zero_stats? do
-    it { commit.has_zero_stats?.should == false }
+    it { commit.has_zero_stats? == false }
   end
 
   describe :to_patch do
@@ -272,22 +272,22 @@ describe Gitlab::Git::Commit do
     subject { hash }
 
     it { should be_kind_of Hash }
-    its(:keys) { should =~ sample_commit_hash.keys }
+    it { hash.keys =~ sample_commit_hash.keys }
   end
 
   describe :diffs do
     subject { commit.diffs }
 
     it { should be_kind_of Array }
-    its(:size) { should eq(2) }
-    its(:first) { should be_kind_of Gitlab::Git::Diff }
+    it { subject.size == 2 }
+    it { expect(subject.first).to be_kind_of Gitlab::Git::Diff }
   end
 
   describe :ref_names do
     let(:commit) { Gitlab::Git::Commit.find(repository, 'master') }
     subject { commit.ref_names(repository) }
 
-    it { should have(2).elements }
+    it { subject.size == 2 }
     it { should include("master") }
     it { should_not include("feature") }
   end

@@ -9,8 +9,8 @@ describe Gitlab::Git::Blame do
   context "each count" do
     it do
       blame.each do |commit, hunk_lines|
-        commit.should be_kind_of Gitlab::Git::Commit
-        hunk_lines.first.should == "# Contribute to GitLab"
+        expect(commit).to be_kind_of Gitlab::Git::Commit
+        hunk_lines.first == "# Contribute to GitLab"
       end
     end
   end

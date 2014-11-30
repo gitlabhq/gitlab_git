@@ -6,21 +6,21 @@ describe Gitlab::Git::Branch do
   subject { repository.branches }
 
   it { should be_kind_of Array }
-  its(:size) { should eq(3) }
+  it { subject.size == 3 }
 
   describe 'first branch' do
     let(:branch) { repository.branches.first }
 
-    it { branch.name.should == SeedRepo::Repo::BRANCHES.first }
-    it { branch.target.should == "0b4bc9a49b562e85de7cc9e834518ea6828729b9" }
+    it { branch.name == SeedRepo::Repo::BRANCHES.first }
+    it { branch.target == "0b4bc9a49b562e85de7cc9e834518ea6828729b9" }
   end
 
   describe 'last branch' do
     let(:branch) { repository.branches.last }
 
-    it { branch.name.should == SeedRepo::Repo::BRANCHES.last }
-    it { branch.target.should == SeedRepo::LastCommit::ID }
+    it { branch.name == SeedRepo::Repo::BRANCHES.last }
+    it { branch.target == SeedRepo::LastCommit::ID }
   end
 
-  it { repository.branches.size.should == SeedRepo::Repo::BRANCHES.size }
+  it { repository.branches.size == SeedRepo::Repo::BRANCHES.size }
 end
