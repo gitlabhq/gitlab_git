@@ -8,7 +8,10 @@ module Gitlab
     class Repository
       include Gitlab::Git::Popen
 
+      SEARCH_CONTEXT_LINES = 3
+
       class NoRepository < StandardError; end
+      class InvalidBlobName < StandardError; end
 
       # Default branch in the repository
       attr_accessor :root_ref
@@ -22,6 +25,8 @@ module Gitlab
       # Rugged repo object
       attr_reader :rugged
 
+      # 'path' must be the path to a _bare_ git repository, e.g.
+      # /path/to/my-repo.git
       def initialize(path)
         @path = path
         @name = path.split("/").last
@@ -131,6 +136,7 @@ module Gitlab
         return nil unless commit
 
         extension = nil
+        git_archive_format = nil
         pipe_cmd = nil
 
         case format
@@ -142,10 +148,12 @@ module Gitlab
           pipe_cmd = %W(cat)
         when "zip"
           extension = ".zip"
+          git_archive_format = "zip"
           pipe_cmd = %W(cat)
         else
           # everything else should fall back to tar.gz
           extension = ".tar.gz"
+          git_archive_format = nil
           pipe_cmd = %W(gzip -n)
         end
 
@@ -153,8 +161,24 @@ module Gitlab
         file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + extension
         file_path = File.join(storage_path, self.name, file_name)
 
+        # Put files into a directory before archiving
+        prefix = File.basename(self.name) + "/"
+
         # Create file if not exists
-        create_archive(ref, pipe_cmd, file_path) unless File.exist?(file_path)
+        unless File.exists?(file_path)
+          FileUtils.mkdir_p File.dirname(file_path)
+
+          # Create the archive in temp file, to avoid leaving a corrupt archive
+          # to be downloaded by the next user if we get interrupted while
+          # creating the archive. Note that we do not care about cleaning up
+          # the temp file in that scenario, because GitLab cleans up the
+          # directory holding the archive files periodically.
+          temp_file_path = file_path + ".#{Process.pid}-#{Time.now.to_i}"
+          archive_to_file(ref, prefix, temp_file_path, git_archive_format, pipe_cmd)
+
+          # move temp file to persisted location
+          FileUtils.move(temp_file_path, file_path)
+        end
 
         file_path
       end
@@ -305,7 +329,12 @@ module Gitlab
           end
         end
 
-        walker.sorting(Rugged::SORT_TOPO) if actual_options[:order] == :topo
+        if actual_options[:order] == :topo
+          walker.sorting(Rugged::SORT_TOPO)
+        else
+          walker.sorting(Rugged::SORT_DATE)
+        end
+
 
         commits = []
         offset = actual_options[:skip]
@@ -329,7 +358,7 @@ module Gitlab
       #   repo.branch_names_contains('master')
       #
       def branch_names_contains(commit)
-        branches_contains(commit).map { |c| c.target_id }
+        branches_contains(commit).map { |c| c.name }
       end
 
       # Returns branch collection that contains the special commit(SHA1 or name)
@@ -338,13 +367,15 @@ module Gitlab
       #   repo.branch_names_contains('master')
       #
       def branches_contains(commit)
-        sha = rugged.rev_parse_oid(commit)
+        commit_obj = rugged.rev_parse(commit)
+        parent = commit_obj.parents.first unless commit_obj.parents.empty?
 
         walker = Rugged::Walker.new(rugged)
 
         rugged.branches.select do |branch|
           walker.push(branch.target_id)
-          result = walker.any? { |c| c.oid == sha }
+          walker.hide(parent) if parent
+          result = walker.any? { |c| c.oid == commit_obj.oid }
           walker.reset
 
           result
@@ -387,10 +418,15 @@ module Gitlab
       #   }
       #
       def submodules(ref)
-        tree = rugged.lookup(rugged.rev_parse_oid(ref)).tree
+        commit = rugged.rev_parse(ref)
 
-        content = blob_content(tree, ".gitmodules")
-        parse_gitmodules(tree, content)
+        begin
+          content = blob_content(commit, ".gitmodules")
+        rescue InvalidBlobName
+          return {}
+        end
+
+        parse_gitmodules(commit, content)
       end
 
       # Return total commits count accessible from passed ref
@@ -695,34 +731,43 @@ module Gitlab
         end
       end
 
-      # Get the content of a blob for a given tree.  If the blob is a commit
+      # Get the content of a blob for a given commit.  If the blob is a commit
       # (for submodules) then return the blob's OID.
-      def blob_content(tree, blob_name)
-        blob_hash = tree.detect { |b| b[:name] == blob_name }
+      def blob_content(commit, blob_name)
+        blob_entry = tree_entry(commit, blob_name)
 
-        if blob_hash[:type] == :commit
-          blob_hash[:oid]
+        unless blob_entry
+          raise InvalidBlobName.new("Invalid blob name: #{blob_name}")
+        end
+
+        if blob_entry[:type] == :commit
+          blob_entry[:oid]
         else
-          rugged.lookup(blob_hash[:oid]).content
+          rugged.lookup(blob_entry[:oid]).content
         end
       end
 
       # Parses the contents of a .gitmodules file and returns a hash of
       # submodule information.
-      def parse_gitmodules(tree, content)
+      def parse_gitmodules(commit, content)
         results = {}
 
         current = ""
         content.split("\n").each do |txt|
-          if txt.match(/^\[/)
+          if txt.match(/^\s*\[/)
             current = txt.match(/(?<=").*(?=")/)[0]
             results[current] = {}
           else
-            match_data = txt.match(/(\w+) = (.*)/)
+            next unless results[current]
+            match_data = txt.match(/(\w+)\s*=\s*(.*)/)
             results[current][match_data[1]] = match_data[2]
 
             if match_data[1] == "path"
-              results[current]["id"] = blob_content(tree, match_data[2])
+              begin
+                results[current]["id"] = blob_content(commit, match_data[2])
+              rescue InvalidBlobName
+                results.delete(current)
+              end
             end
           end
         end
@@ -756,7 +801,7 @@ module Gitlab
           end
 
           if !current_path ||
-            commit_touches_path?(c, current_path, options[:follow])
+            commit_touches_path?(c, current_path, options[:follow], walker)
 
             # This is a commit we care about, unless we haven't skipped enough
             # yet
@@ -770,111 +815,114 @@ module Gitlab
         commits
       end
 
-      # Returns true if the given commit affects the given path.  If the
-      # +follow+ option is true and the file specified by +path+ was renamed,
-      # then the path value is set to the old path.
-      def commit_touches_path?(commit, path, follow)
-        diff = Commit.diff_from_parent(commit)
-        diff.find_similar! if follow
+      # Returns true if +commit+ introduced changes to +path+, using commit
+      # trees to make that determination.  Uses the history simplification
+      # rules that `git log` uses by default, where a commit is omitted if it
+      # is TREESAME to any parent.
+      #
+      # If the +follow+ option is true and the file specified by +path+ was
+      # renamed, then the path value is set to the old path.
+      def commit_touches_path?(commit, path, follow, walker)
+        entry = tree_entry(commit, path)
 
-        # Check the commit's deltas to see if it touches the :path
-        # argument
-        diff.each_delta do |d|
-          if path_matches?(path, d.old_file[:path], d.new_file[:path])
-            if should_follow?(follow, d, path)
+        if commit.parents.empty?
+          # This is the root commit, return true if it has +path+ in its tree
+          return entry != nil
+        end
+
+        num_treesame = 0
+        commit.parents.each do |parent|
+          parent_entry = tree_entry(parent, path)
+
+          # Only follow the first TREESAME parent for merge commits
+          if num_treesame > 0
+            walker.hide(parent)
+            next
+          end
+
+          if entry.nil? && parent_entry.nil?
+            num_treesame += 1
+          elsif entry && parent_entry && entry[:oid] == parent_entry[:oid]
+            num_treesame += 1
+          end
+        end
+
+        case num_treesame
+        when 0
+          detect_rename(commit, commit.parents.first, path) if follow
+          true
+        else false
+        end
+      end
+
+      # Find the entry for +path+ in the tree for +commit+
+      def tree_entry(commit, path)
+        pathname = Pathname.new(path)
+        tmp_entry = nil
+
+        pathname.each_filename do |dir|
+          if tmp_entry.nil?
+            tmp_entry = commit.tree[dir]
+          else
+            tmp_entry = rugged.lookup(tmp_entry[:oid])[dir]
+          end
+        end
+
+        tmp_entry
+      end
+
+      # Compare +commit+ and +parent+ for +path+.  If +path+ is a file and was
+      # renamed in +commit+, then set +path+ to the old filename.
+      def detect_rename(commit, parent, path)
+        diff = parent.diff(commit, paths: [path], disable_pathspec_match: true)
+
+        # If +path+ is a filename, not a directory, then we should only have
+        # one delta.  We don't need to follow renames for directories.
+        return nil if diff.each_delta.count > 1
+
+        delta = diff.each_delta.first
+        if delta.added?
+          full_diff = parent.diff(commit)
+          full_diff.find_similar!
+
+          full_diff.each_delta do |full_delta|
+            if full_delta.renamed? && path == full_delta.new_file[:path]
               # Look for the old path in ancestors
-              path.replace(d.old_file[:path])
-            end
-
-            return true
-          end
-        end
-
-        false
-      end
-
-      # Used by the #commit_touches_path method to determine whether the
-      # specified file has been renamed and should be followed in ancestor
-      # commits.  Returns true if +follow_option+ is true, the file is renamed
-      # in this commit, and the new file's path matches the path option.
-      def should_follow?(follow_option, delta, path)
-        follow_option && delta.renamed? && path == delta.new_file[:path]
-      end
-
-      # Returns true if any of the strings in +*paths+ begins with the
-      # +path_to_match+ argument
-      def path_matches?(path_to_match, *paths)
-        paths.any? do |p|
-          p.match(/^#{Regexp.escape(path_to_match)}/)
-        end
-      end
-
-      # Create an archive with the repository's files
-      def create_archive(ref_name, pipe_cmd, file_path)
-        # Put files into a prefix directory in the archive
-        prefix = File.basename(name)
-        extension = Pathname.new(file_path).extname
-
-        if extension == ".zip"
-          create_zip_archive(ref_name, file_path, prefix)
-        else
-          # Create a tarfile in memory
-          tarfile = tar_string_io(ref_name, prefix)
-
-          if extension == ".tar"
-            File.new(file_path, "wb").write(tarfile.read)
-          else
-            compress_tar(tarfile, file_path, pipe_cmd)
-          end
-        end
-      end
-
-      # Return a StringIO with the contents of the repo's tar file
-      def tar_string_io(ref_name, prefix)
-        tarfile = StringIO.new
-        Gem::Package::TarWriter.new(tarfile) do |tar|
-          tar.mkdir(prefix, 33261)
-
-          populated_index(ref_name).each do |entry|
-            add_archive_entry(tar, prefix, entry)
-          end
-        end
-
-        tarfile.rewind
-        tarfile
-      end
-
-      # Create a zip file with the contents of the repo
-      def create_zip_archive(ref_name, archive_path, prefix)
-        Zip::File.open(archive_path, Zip::File::CREATE) do |zipfile|
-          populated_index(ref_name).each do |entry|
-            add_archive_entry(zipfile, prefix, entry)
-          end
-        end
-      end
-
-      # Add a file or directory from the index to the given tar or zip file
-      def add_archive_entry(archive, prefix, entry)
-        prefixed_path = File.join(prefix, entry[:path])
-        content = rugged.lookup(entry[:oid]).content unless submodule?(entry)
-
-        # Create a file in the archive for each index entry
-        if archive.is_a?(Zip::File)
-          unless submodule?(entry)
-            archive.get_output_stream(prefixed_path) do |os|
-              os.write(content)
+              path.replace(full_delta.old_file[:path])
             end
           end
-        else
-          if submodule?(entry)
-            # Create directories for submodules
-            archive.mkdir(prefixed_path, 33261)
-          else
-            # Write the blob contents to the file
-            archive.add_file(prefixed_path, entry[:mode]) do |tf|
-              tf.write(content)
-            end
-          end
+        end
+      end
+
+      def archive_to_file(treeish = 'master', prefix = nil, filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip))
+        git_archive_cmd = %W(git --git-dir=#{path} archive)
+        git_archive_cmd << "--prefix=#{prefix}" if prefix
+        git_archive_cmd << "--format=#{format}" if format
+        git_archive_cmd += %W(-- #{treeish})
+
+        open(filename, 'w') do |file|
+          # Create a pipe to act as the '|' in 'git archive ... | gzip'
+          pipe_rd, pipe_wr = IO.pipe
+
+          # Get the compression process ready to accept data from the read end
+          # of the pipe
+          compress_pid = spawn(*compress_cmd, :in => pipe_rd, :out => file)
+          # The read end belongs to the compression process now; we should
+          # close our file descriptor for it.
+          pipe_rd.close
+
+          # Start 'git archive' and tell it to write into the write end of the
+          # pipe.
+          git_archive_pid = spawn(*git_archive_cmd, :out => pipe_wr)
+          # The write end belongs to 'git archive' now; close it.
+          pipe_wr.close
+
+          # When 'git archive' and the compression process are finished, we are
+          # done.
+          Process.waitpid(git_archive_pid)
+          raise "#{git_archive_cmd.join(' ')} failed" unless $?.success?
+          Process.waitpid(compress_pid)
+          raise "#{compress_cmd.join(' ')} failed" unless $?.success?
         end
       end
 
@@ -882,31 +930,6 @@ module Gitlab
       # a submodule.
       def submodule?(index_entry)
         index_entry[:mode] == 57344
-      end
-
-      # Send the +tar_string+ StringIO to +pipe_cmd+ for bzip2 or gzip
-      # compression.
-      def compress_tar(tar_string, file_path, pipe_cmd)
-        # Write the in-memory tarfile to a pipe
-        rd_pipe, rw_pipe = IO.pipe
-        tar_pid = fork do
-          rd_pipe.close
-          rw_pipe.write(tar_string.read)
-          rw_pipe.close
-        end
-
-        # Use the other end of the pipe to compress with bzip2 or gzip
-        FileUtils.mkdir_p(Pathname.new(file_path).dirname)
-        archive_file = File.new(file_path, "wb")
-        rw_pipe.close
-        compress_pid = spawn(*pipe_cmd, in: rd_pipe, out: archive_file)
-        rd_pipe.close
-
-        Process.waitpid(tar_pid)
-        Process.waitpid(compress_pid)
-
-        archive_file.close
-        tar_string.close
       end
 
       # Return a Rugged::Index that has read from the tree at +ref_name+
@@ -920,15 +943,63 @@ module Gitlab
       # Return an array of BlobSnippets for lines in +file_contents+ that match
       # +query+
       def build_greps(file_contents, query, ref, filename)
+        # The file_contents string is potentially huge so we make sure to loop
+        # through it one line at a time. This gives Ruby the chance to GC lines
+        # we are not interested in.
+        #
+        # We need to do a little extra work because we are not looking for just
+        # the lines that matches the query, but also for the context
+        # (surrounding lines). We will use Enumerable#each_cons to efficiently
+        # loop through the lines while keeping surrounding lines on hand.
+        #
+        # First, we turn "foo\nbar\nbaz" into
+        # [
+        #  [nil, -3], [nil, -2], [nil, -1],
+        #  ['foo', 0], ['bar', 1], ['baz', 3],
+        #  [nil, 4], [nil, 5], [nil, 6]
+        # ]
+        lines_with_index = Enumerator.new do |yielder|
+          # Yield fake 'before' lines for the first line of file_contents
+          (-SEARCH_CONTEXT_LINES..-1).each do |i|
+            yielder.yield [nil, i]
+          end
+
+          # Yield the actual file contents
+          count = 0
+          file_contents.each_line.each_with_index do |line, i|
+            line.chomp!
+            yielder.yield [line, i]
+            count += 1
+          end
+
+          # Yield fake 'after' lines for the last line of file_contents
+          (count+1..count+SEARCH_CONTEXT_LINES).each do |i|
+            yielder.yield [nil, i]
+          end
+        end
+
         greps = []
 
-        file_contents.split("\n").each_with_index do |line, i|
-          next unless line.match(/#{Regexp.escape(query)}/i)
+        # Loop through consecutive blocks of lines with indexes
+        lines_with_index.each_cons(2 * SEARCH_CONTEXT_LINES + 1) do |line_block|
+          # Get the 'middle' line and index from the block
+          line, i = line_block[SEARCH_CONTEXT_LINES]
+
+          next unless line && line.match(/#{Regexp.escape(query)}/i)
+
+          # Yay, 'line' contains a match!
+          # Get an array with just the context lines (no indexes)
+          match_with_context = line_block.map(&:first)
+          # Remove 'nil' lines in case we are close to the first or last line
+          match_with_context.compact!
+
+          # Get the line number (1-indexed) of the first context line
+          first_context_line_number = line_block[0][1] + 1
 
           greps << Gitlab::Git::BlobSnippet.new(
             ref,
-            file_contents.split("\n")[i - 3..i + 3],
-            i - 2,
+            match_with_context,
+            first_context_line_number,
             filename
           )
         end
@@ -944,7 +1015,7 @@ module Gitlab
 
         diff = rugged.diff(from, to, actual_options)
         diff.find_similar!(break_rewrites: break_rewrites)
-        diff.patches
+        diff.each_patch
       end
     end
   end
