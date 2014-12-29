@@ -442,7 +442,7 @@ describe Gitlab::Git::Repository do
     end
 
     it "should restrict its output to +paths+" do
-      diff_text = repo.diff_text("master", "feature", "files")
+      diff_text = repo.diff_text("master", "feature", nil, "files")
       repo.rugged.diff("master", "feature").each_delta do |delta|
         path = delta.old_file[:path]
         match_text = "diff --git a/#{path}"

@@ -108,6 +108,25 @@ module Gitlab
         def decorate(commit, ref = nil)
           Gitlab::Git::Commit.new(commit, ref)
         end
+
+        # Returns a diff object for the changes introduced by +rugged_commit+.
+        # If +rugged_commit+ doesn't have a parent, then the diff is between
+        # this commit and an empty repo.  See Repository#diff for the keys
+        # allowed in the +options+ hash.
+        def diff_from_parent(rugged_commit, options = {})
+          options ||= {}
+          break_rewrites = options[:break_rewrites]
+          actual_options = Diff.filter_diff_options(options)
+
+          if rugged_commit.parents.empty?
+            diff = rugged_commit.diff(actual_options.merge(reverse: true))
+          else
+            diff = rugged_commit.parents[0].diff(rugged_commit, actual_options)
+          end
+
+          diff.find_similar!(break_rewrites: break_rewrites)
+          diff
+        end
       end
 
       def initialize(raw_commit, head = nil)
@@ -152,8 +171,8 @@ module Gitlab
       # Shows the diff between the commit's parent and the commit.
       #
       # Cuts out the header and stats from #to_patch and returns only the diff.
-      def to_diff
-        patch = to_patch
+      def to_diff(options = {})
+        patch = to_patch(options)
 
         # discard lines before the diff
         lines = patch.split("\n")
@@ -167,13 +186,10 @@ module Gitlab
 
       # Returns a diff object for the changes from this commit's first parent.
       # If there is no parent, then the diff is between this commit and an
-      # empty repo.
-      def diff_from_parent
-        if raw_commit.parents.empty?
-          raw_commit.diff(reverse: true)
-        else
-          raw_commit.parents[0].diff(raw_commit)
-        end
+      # empty repo.  See Repository#diff for keys allowed in the +options+
+      # hash.
+      def diff_from_parent(options = {})
+        Commit.diff_from_parent(raw_commit, options)
       end
 
       def has_zero_stats?
@@ -196,8 +212,8 @@ module Gitlab
         committed_date
       end
 
-      def diffs
-        diff_from_parent.map { |diff| Gitlab::Git::Diff.new(diff) }
+      def diffs(options = {})
+        diff_from_parent(options).map { |diff| Gitlab::Git::Diff.new(diff) }
       end
 
       def parents
@@ -212,8 +228,8 @@ module Gitlab
         Gitlab::Git::CommitStats.new(self)
       end
 
-      def to_patch
-        raw_commit.to_mbox
+      def to_patch(options = {})
+        raw_commit.to_mbox(options)
       end
 
       # Get a collection of Rugged::Reference objects for this commit.

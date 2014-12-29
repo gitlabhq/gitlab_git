@@ -12,13 +12,146 @@ module Gitlab
       attr_accessor  :new_file, :renamed_file, :deleted_file
 
       class << self
-        def between(repo, head, base, *paths)
+        def between(repo, head, base, options = {}, *paths)
           # Only show what is new in the source branch compared to the target branch, not the other way around.
           # The linex below with merge_base is equivalent to diff with three dots (git diff branch1...branch2)
           # From the git documentation: "git diff A...B" is equivalent to "git diff $(git-merge-base A B) B"
           common_commit = repo.merge_base_commit(head, base)
 
-          repo.diff(common_commit, head, *paths)
+          options ||= {}
+          break_rewrites = options[:break_rewrites]
+          actual_options = filter_diff_options(options)
+          repo.diff(common_commit, head, actual_options, *paths)
+        end
+
+        # Return a copy of the +options+ hash containing only keys that can be
+        # passed to Rugged.  Allowed options are:
+        #
+        #  :max_size ::
+        #    An integer specifying the maximum byte size of a file before a it
+        #    will be treated as binary. The default value is 512MB.
+        #
+        #  :context_lines ::
+        #    The number of unchanged lines that define the boundary of a hunk
+        #    (and to display before and after the actual changes). The default is
+        #    3.
+        #
+        #  :interhunk_lines ::
+        #    The maximum number of unchanged lines between hunk boundaries before
+        #    the hunks will be merged into a one. The default is 0.
+        #
+        #  :old_prefix ::
+        #    The virtual "directory" to prefix to old filenames in hunk headers.
+        #    The default is "a".
+        #
+        #  :new_prefix ::
+        #    The virtual "directory" to prefix to new filenames in hunk headers.
+        #    The default is "b".
+        #
+        #  :reverse ::
+        #    If true, the sides of the diff will be reversed.
+        #
+        #  :force_text ::
+        #    If true, all files will be treated as text, disabling binary
+        #    attributes & detection.
+        #
+        #  :ignore_whitespace ::
+        #    If true, all whitespace will be ignored.
+        #
+        #  :ignore_whitespace_change ::
+        #    If true, changes in amount of whitespace will be ignored.
+        #
+        #  :ignore_whitespace_eol ::
+        #    If true, whitespace at end of line will be ignored.
+        #
+        #  :ignore_submodules ::
+        #    if true, submodules will be excluded from the diff completely.
+        #
+        #  :patience ::
+        #    If true, the "patience diff" algorithm will be used (currenlty
+        #    unimplemented).
+        #
+        #  :include_ignored ::
+        #    If true, ignored files will be included in the diff.
+        #
+        #  :include_untracked ::
+        #   If true, untracked files will be included in the diff.
+        #
+        #  :include_unmodified ::
+        #    If true, unmodified files will be included in the diff.
+        #
+        #  :recurse_untracked_dirs ::
+        #    Even if +:include_untracked+ is true, untracked directories will
+        #    only be marked with a single entry in the diff. If this flag is set
+        #    to true, all files under ignored directories will be included in the
+        #    diff, too.
+        #
+        #  :disable_pathspec_match ::
+        #    If true, the given +*paths+ will be applied as exact matches,
+        #    instead of as fnmatch patterns.
+        #
+        #  :deltas_are_icase ::
+        #    If true, filename comparisons will be made with case-insensitivity.
+        #
+        #  :include_untracked_content ::
+        #    if true, untracked content will be contained in the the diff patch
+        #    text.
+        #
+        #  :skip_binary_check ::
+        #    If true, diff deltas will be generated without spending time on
+        #    binary detection. This is useful to improve performance in cases
+        #    where the actual file content difference is not needed.
+        #
+        #  :include_typechange ::
+        #    If true, type changes for files will not be interpreted as deletion
+        #    of the "old file" and addition of the "new file", but will generate
+        #    typechange records.
+        #
+        #  :include_typechange_trees ::
+        #    Even if +:include_typechange+ is true, blob -> tree changes will
+        #    still usually be handled as a deletion of the blob. If this flag is
+        #    set to true, blob -> tree changes will be marked as typechanges.
+        #
+        #  :ignore_filemode ::
+        #    If true, file mode changes will be ignored.
+        #
+        #  :recurse_ignored_dirs ::
+        #    Even if +:include_ignored+ is true, ignored directories will only be
+        #    marked with a single entry in the diff. If this flag is set to true,
+        #    all files under ignored directories will be included in the diff,
+        #    too.
+        def filter_diff_options(options, default_options = {})
+          allowed_options = [:max_size, :context_lines, :interhunk_lines,
+                             :old_prefix, :new_prefix, :reverse, :force_text,
+                             :ignore_whitespace, :ignore_whitespace_change,
+                             :ignore_whitespace_eol, :ignore_submodules,
+                             :patience, :include_ignored, :include_untracked,
+                             :include_unmodified, :recurse_untracked_dirs,
+                             :disable_pathspec_match, :deltas_are_icase,
+                             :include_untracked_content, :skip_binary_check,
+                             :include_typechange, :include_typechange_trees,
+                             :ignore_filemode, :recurse_ignored_dirs, :paths]
+
+          if default_options
+            actual_defaults = default_options.dup
+            actual_defaults.keep_if do |key|
+              allowed_options.include?(key)
+            end
+          else
+            actual_defaults = {}
+          end
+
+          if options
+            filtered_opts = options.dup
+            filtered_opts.keep_if do |key|
+              allowed_options.include?(key)
+            end
+            filtered_opts = actual_defaults.merge(filtered_opts)
+          else
+            filtered_opts = actual_defaults
+          end
+
+          filtered_opts
         end
       end
 
