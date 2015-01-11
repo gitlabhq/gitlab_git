@@ -121,7 +121,7 @@ GitLab Git used grit as main library in past. Now it uses rugged
     commit = Gitlab::Git::Commit.last(repo)
 
     # Get last commit for specified file/directory
-    Gitlab::Git::Commit.find_for_path(repo, '29eda46b', 'app/models')
+    Gitlab::Git::Commit.last_for_path(repo, '29eda46b', 'app/models')
 
     # Commits between branches
     Gitlab::Git::Commit.between(repo, 'dev', 'master')
