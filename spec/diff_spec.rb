@@ -35,7 +35,7 @@ EOT
         @diff = Gitlab::Git::Diff.new(@raw_diff_hash)
       end
 
-      it { @diff.to_hash.should == @raw_diff_hash }
+      it { @diff.to_hash == @raw_diff_hash }
     end
 
     context "init from rugged" do
@@ -43,7 +43,7 @@ EOT
         @diff = Gitlab::Git::Diff.new(@rugged_diff)
       end
 
-      it { @diff.to_hash.should == @raw_diff_hash }
+      it { @diff.to_hash == @raw_diff_hash }
     end
   end
 
@@ -52,14 +52,14 @@ EOT
     subject { diffs }
 
     it { should be_kind_of Array }
-    its(:size) { should eq(1) }
+    it { diffs.size == 1 }
 
     context :diff do
       subject { diffs.first }
 
       it { should be_kind_of Gitlab::Git::Diff }
-      its(:new_path) { should == 'files/ruby/feature.rb' }
-      its(:diff) { should include '+class Feature' }
+      it { subject.new_path == 'files/ruby/feature.rb' }
+      it { expect(subject.diff).to include '+class Feature' }
     end
   end
 
@@ -102,7 +102,7 @@ EOT
       @diffs = commit.parents[0].diff(commit).patches
     end
 
-    it { Gitlab::Git::Diff.new(@diffs[0]).submodule?.should == false }
-    it { Gitlab::Git::Diff.new(@diffs[1]).submodule?.should == true }
+    it { Gitlab::Git::Diff.new(@diffs[0]).submodule? == false }
+    it { Gitlab::Git::Diff.new(@diffs[1]).submodule? == true }
   end
 end

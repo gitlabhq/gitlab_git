@@ -18,37 +18,37 @@ describe Gitlab::Git::Repository do
     let(:feature2) { 'feature2' }
 
     it "returns 'master' when master exists" do
-      repository.should_receive(:branch_names).at_least(:once).and_return([feature, master])
-      repository.discover_default_branch.should == 'master'
+      expect(repository).to receive(:branch_names).at_least(:once).and_return([feature, master])
+      repository.discover_default_branch == 'master'
     end
 
     it "returns non-master when master exists but default branch is set to something else" do
       File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/feature')
-      repository.should_receive(:branch_names).at_least(:once).and_return([feature, master])
-      repository.discover_default_branch.should == 'feature'
+      expect(repository).to receive(:branch_names).at_least(:once).and_return([feature, master])
+      repository.discover_default_branch == 'feature'
       File.write(File.join(repository.path, 'HEAD'), 'ref: refs/heads/master')
     end
 
     it "returns a non-master branch when only one exists" do
-      repository.should_receive(:branch_names).at_least(:once).and_return([feature])
-      repository.discover_default_branch.should == 'feature'
+      expect(repository).to receive(:branch_names).at_least(:once).and_return([feature])
+      repository.discover_default_branch == 'feature'
     end
 
     it "returns a non-master branch when more than one exists and master does not" do
-      repository.should_receive(:branch_names).at_least(:once).and_return([feature, feature2])
-      repository.discover_default_branch.should == 'feature'
+      expect(repository).to receive(:branch_names).at_least(:once).and_return([feature, feature2])
+      repository.discover_default_branch == 'feature'
     end
 
     it "returns nil when no branch exists" do
-      repository.should_receive(:branch_names).at_least(:once).and_return([])
-      repository.discover_default_branch.should be_nil
+      expect(repository).to receive(:branch_names).at_least(:once).and_return([])
+      repository.discover_default_branch == nil
     end
   end
 
   describe :branch_names do
     subject { repository.branch_names }
 
-    it { should have(SeedRepo::Repo::BRANCHES.size).elements }
+    it { subject.size == SeedRepo::Repo::BRANCHES.size }
     it { should include("master") }
     it { should_not include("branch-from-space") }
   end
@@ -57,17 +57,17 @@ describe Gitlab::Git::Repository do
     subject { repository.tag_names }
 
     it { should be_kind_of Array }
-    it { should have(SeedRepo::Repo::TAGS.size).elements }
-    its(:last) { should == "v1.2.0" }
+    it { subject.size == SeedRepo::Repo::TAGS.size }
+    it { subject.last == "v1.2.0" }
     it { should include("v1.0.0") }
     it { should_not include("v5.0.0") }
   end
 
   shared_examples 'archive check' do |extenstion|
-    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-eb49186cfa5c43380/) }
-    it { archive.should end_with extenstion }
-    it { File.exists?(archive).should be_true }
-    it { File.size?(archive).should_not be_nil }
+    it { expect(archive).to match(/tmp\/gitlab-git-test.git\/gitlab-git-test-eb49186cfa5c43380/) }
+    it { expect(archive).to end_with extenstion }
+    it { File.exists?(archive) == true }
+    it { expect(File.size?(archive)).not_to be_nil }
   end
 
   describe :archive do
@@ -105,11 +105,11 @@ describe Gitlab::Git::Repository do
   end
 
   describe :has_commits? do
-    it { repository.has_commits?.should be_true }
+    it { repository.has_commits? == true }
   end
 
   describe :empty? do
-    it { repository.empty?.should be_false }
+    it { repository.empty? == false }
   end
 
   describe :heads do
@@ -117,12 +117,12 @@ describe Gitlab::Git::Repository do
     subject { heads }
 
     it { should be_kind_of Array }
-    its(:size) { should eq(3) }
+    it { subject.size == 3 }
 
     context :head do
       subject { heads.first }
 
-      its(:name) { should == "feature" }
+      it { subject.name == "feature" }
 
       context :commit do
         subject { heads.first.target }
@@ -137,8 +137,8 @@ describe Gitlab::Git::Repository do
     subject { ref_names }
 
     it { should be_kind_of Array }
-    its(:first) { should == 'feature' }
-    its(:last) { should == 'v1.2.0' }
+    it { subject.first == 'feature' }
+    it { subject.last == 'v1.2.0' }
   end
 
   describe :search_files do
@@ -146,15 +146,15 @@ describe Gitlab::Git::Repository do
     subject { results }
 
     it { should be_kind_of Array }
-    its(:first) { should be_kind_of Gitlab::Git::BlobSnippet }
+    it { expect(subject.first).to be_kind_of Gitlab::Git::BlobSnippet }
 
     context 'blob result' do
       subject { results.first }
 
-      its(:ref) { should == 'master' }
-      its(:filename) { should == 'CHANGELOG' }
-      its(:startline) { should == 35 }
-      its(:data) { should include "Ability to filter by multiple labels" }
+      it { subject.ref == 'master' }
+      it { subject.filename == 'CHANGELOG' }
+      it { subject.startline == 35 }
+      it { expect(subject.data).to include "Ability to filter by multiple labels" }
     end
   end
 
@@ -165,11 +165,11 @@ describe Gitlab::Git::Repository do
       let(:submodules) { repository.submodules('master') }
       let(:submodule) { submodules.first }
 
-      it { submodules.should be_kind_of Hash }
-      it { submodules.empty?.should be_false }
+      it { expect(submodules).to be_kind_of Hash }
+      it { submodules.empty? == false }
 
       it 'should have valid data' do
-        submodule.should == [
+        submodule == [
           "six", {
             "id"=>"409f37c4f05865e4fb208c771485f211a22c4c2d",
             "path"=>"six",
@@ -206,12 +206,12 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 14 }
-    it { repository.commit_count("feature").should == 9 }
+    it { repository.commit_count("master") == 14 }
+    it { repository.commit_count("feature") == 9 }
   end
 
   describe :archive_repo do
-    it { repository.archive_repo('master', '/tmp').should == '/tmp/gitlab-git-test.git/gitlab-git-test-eb49186cfa5c4338011f5f590fac11bd66c5c631.tar.gz' }
+    it { repository.archive_repo('master', '/tmp') == '/tmp/gitlab-git-test.git/gitlab-git-test-eb49186cfa5c4338011f5f590fac11bd66c5c631.tar.gz' }
   end
 
   describe "#reset" do
@@ -251,7 +251,7 @@ describe Gitlab::Git::Repository do
       end
 
       it "should not touch untracked files" do
-        expect(File.exist?(untracked_path)).to be_true
+        File.exist?(untracked_path) == true
       end
 
       it "should move the HEAD to the correct commit" do
@@ -376,7 +376,7 @@ describe Gitlab::Git::Repository do
     let(:remotes) { repository.remote_names }
 
     it "should have one entry: 'origin'" do
-      expect(remotes).to have(1).items
+      remotes.size == 1
       expect(remotes.first).to eq("origin")
     end
   end
@@ -437,7 +437,7 @@ describe Gitlab::Git::Repository do
     it "should contain the same diffs as #diff" do
       diff_text = repo.diff_text("master", "feature")
       repo.diff("master", "feature").each do |single_diff|
-        expect(diff_text.include?(single_diff.diff)).to be_true
+        diff_text.include?(single_diff.diff) == true
       end
     end
 

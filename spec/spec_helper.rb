@@ -32,7 +32,6 @@ TEST_NORMAL_REPO_PATH = File.join(SUPPORT_PATH, "not-bare-repo.git")
 TEST_MUTABLE_REPO_PATH = File.join(SUPPORT_PATH, "mutable-repo.git")
 
 RSpec.configure do |config|
-  config.treat_symbols_as_metadata_keys_with_true_values = true
   config.run_all_when_everything_filtered = true
   config.filter_run :focus
   config.order = 'random'
