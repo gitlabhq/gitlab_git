@@ -907,6 +907,8 @@ module Gitlab
           # Get the compression process ready to accept data from the read end
           # of the pipe
           compress_pid = spawn(*compress_cmd, :in => pipe_rd, :out => file)
+          # Set the lowest priority for the compressing process
+          popen(nice_process(compress_pid), path)
           # The read end belongs to the compression process now; we should
           # close our file descriptor for it.
           pipe_rd.close
@@ -924,6 +926,16 @@ module Gitlab
           Process.waitpid(compress_pid)
           raise "#{compress_cmd.join(' ')} failed" unless $?.success?
         end
+      end
+
+      def nice_process(pid)
+        niced_process = %W(renice -n 20 -p #{pid})
+
+        unless RUBY_PLATFORM.include?('darwin')
+          niced_process = %W(ionice -c 2 -n 7 -p #{pid}) + niced_process
+        end
+
+        niced_process
       end
 
       # Returns true if the index entry has the special file mode that denotes
