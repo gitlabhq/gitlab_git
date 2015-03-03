@@ -238,14 +238,15 @@ module Gitlab
       end
 
       def sha_from_ref(ref)
-        sha = rugged.rev_parse_oid(ref)
-        object = rugged.lookup(sha)
+        rev_parse_target(ref).oid
+      end
 
-        if object.kind_of?(Rugged::Commit)
-          sha
-        elsif object.respond_to?(:target)
-          sha_from_ref(object.target.oid)
-        end
+      # Return the object that +revspec+ points to.  If +revspec+ is an
+      # annotated tag, then return the tag's target instead.
+      def rev_parse_target(revspec)
+        obj = rugged.rev_parse(revspec)
+        obj = obj.target while obj.is_a?(Rugged::Tag::Annotation)
+        obj
       end
 
       # Return a collection of Rugged::Commits between the two SHA arguments.
@@ -720,17 +721,6 @@ module Gitlab
 
       private
 
-      # Return the object that +revspec+ points to.  If +revspec+ is an
-      # annotated tag, then return the tag's target instead.
-      def rev_parse_target(revspec)
-        obj = rugged.rev_parse(revspec)
-        if obj.is_a?(Rugged::Tag::Annotation)
-          obj.target
-        else
-          obj
-        end
-      end
-
       # Get the content of a blob for a given commit.  If the blob is a commit
       # (for submodules) then return the blob's OID.
       def blob_content(commit, blob_name)
@@ -946,9 +936,9 @@ module Gitlab
 
       # Return a Rugged::Index that has read from the tree at +ref_name+
       def populated_index(ref_name)
-        tree = rugged.lookup(rugged.rev_parse_oid(ref_name)).tree
+        commit = rev_parse_target(ref_name)
         index = rugged.index
-        index.read_tree(tree)
+        index.read_tree(commit.tree)
         index
       end
 
