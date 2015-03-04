@@ -52,13 +52,8 @@ module Gitlab
         def find(repo, commit_id = "HEAD")
           return decorate(commit_id) if commit_id.is_a?(Rugged::Commit)
 
-          obj = repo.rugged.rev_parse(commit_id)
-          case obj
-          when Rugged::Tag::Annotation
-            find(repo, obj.target)
-          when Rugged::Commit
-            decorate(obj)
-          end
+          obj = repo.rev_parse_target(commit_id)
+          decorate(obj)
         rescue Rugged::ReferenceError, Rugged::ObjectError
           nil
         end
