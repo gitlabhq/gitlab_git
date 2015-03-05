@@ -4,12 +4,12 @@ module Gitlab
   module Git
     module Popen
       def popen(cmd, path)
-      unless cmd.is_a?(Array)
-        raise "System commands must be given as an array of strings"
-      end
+        unless cmd.is_a?(Array)
+          raise "System commands must be given as an array of strings"
+        end
 
         vars = { "PWD" => path }
-        options = { :chdir => path }
+        options = { chdir: path }
 
         @cmd_output = ""
         @cmd_status = 0

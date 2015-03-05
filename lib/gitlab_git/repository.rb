@@ -899,7 +899,7 @@ module Gitlab
 
           # Get the compression process ready to accept data from the read end
           # of the pipe
-          compress_pid = spawn(*compress_cmd, :in => pipe_rd, :out => file)
+          compress_pid = spawn(*compress_cmd, in: pipe_rd, out: file)
           # Set the lowest priority for the compressing process
           popen(nice_process(compress_pid), path)
           # The read end belongs to the compression process now; we should
@@ -908,7 +908,7 @@ module Gitlab
 
           # Start 'git archive' and tell it to write into the write end of the
           # pipe.
-          git_archive_pid = spawn(*git_archive_cmd, :out => pipe_wr)
+          git_archive_pid = spawn(*git_archive_cmd, out: pipe_wr)
           # The write end belongs to 'git archive' now; close it.
           pipe_wr.close
 

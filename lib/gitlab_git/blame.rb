@@ -4,7 +4,7 @@ module Gitlab
 
       def initialize(repository, sha, path)
         @repo = repository.rugged
-        @blame = Rugged::Blame.new(@repo, path, { :newest_commit => sha })
+        @blame = Rugged::Blame.new(@repo, path, { newest_commit: sha })
         @blob = @repo.blob_at(sha, path)
         @lines = @blob.content.split("\n")
       end
