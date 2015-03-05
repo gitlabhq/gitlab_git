@@ -27,7 +27,7 @@ module EncodingHelper
   private
 
   def clean(message)
-    message.encode("UTF-16BE", :undef => :replace, :invalid => :replace, :replace => "")
+    message.encode("UTF-16BE", undef: :replace, invalid: :replace, replace: "")
            .encode("UTF-8")
            .gsub("\0".encode("UTF-8"), "")
   end
