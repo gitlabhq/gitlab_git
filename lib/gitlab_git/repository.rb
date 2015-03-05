@@ -66,12 +66,15 @@ module Gitlab
       def tags
         rugged.references.each("refs/tags/*").map do |ref|
           message = nil
-          if ref.target.is_a?(Rugged::Tag::Annotation) &&
-             ref.target.target.is_a?(Rugged::Commit)
-            unless ref.target.target.message == ref.target.message
-              message = ref.target.message.chomp
+
+          if ref.target.is_a?(Rugged::Tag::Annotation)
+            tag_message = ref.target.message
+
+            if tag_message.respond_to?(:chomp)
+              message = tag_message.chomp
             end
           end
+
           Tag.new(ref.name, ref.target, message)
         end.sort_by(&:name)
       end
