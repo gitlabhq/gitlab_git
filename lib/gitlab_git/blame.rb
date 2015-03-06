@@ -1,12 +1,13 @@
 module Gitlab
   module Git
     class Blame
+      attr_accessor :blob
 
       def initialize(repository, sha, path)
         @repo = repository.rugged
         @blame = Rugged::Blame.new(@repo, path, { newest_commit: sha })
-        @blob = @repo.blob_at(sha, path)
-        @lines = @blob.content.split("\n")
+        @blob = Blob.find(repository, sha, path)
+        @lines = @blob.data.split("\n")
       end
 
       def each
