@@ -202,7 +202,11 @@ module Gitlab
           # Discard submodules
           next if submodule?(entry)
 
-          content = rugged.lookup(entry[:oid]).content
+          content = Blob.raw(self, entry[:oid]).data
+
+          # Skip binary files
+          next if content.encoding == Encoding::ASCII_8BIT
+
           greps += build_greps(content, query, ref, entry[:path])
         end
 
