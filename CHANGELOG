@@ -1,3 +1,6 @@
+v 7.1.0
+  - Convert encoding of all freeform text to UTF-8.
+
 v 7.0.0
   - Move everything to rugged. Drop gitlab-grit dependency
   - Removed GitLab-only specific classes: GitStats, Stats, LogParser
