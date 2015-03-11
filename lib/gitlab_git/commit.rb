@@ -2,6 +2,8 @@
 module Gitlab
   module Git
     class Commit
+      include EncodingHelper
+
       attr_accessor :raw_commit, :head, :refs
 
       SERIALIZE_KEYS = [
@@ -246,6 +248,26 @@ module Gitlab
         refs(repo).map do |ref|
           ref.name.sub(%r{^refs/(heads|remotes|tags)/}, "")
         end
+      end
+
+      def message
+        encode! @message
+      end
+
+      def author_name
+        encode! @author_name
+      end
+
+      def author_email
+        encode! @author_email
+      end
+
+      def committer_name
+        encode! @committer_name
+      end
+
+      def committer_email
+        encode! @committer_email
       end
 
       private

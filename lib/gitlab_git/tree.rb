@@ -1,6 +1,8 @@
 module Gitlab
   module Git
     class Tree
+      include EncodingHelper
+
       attr_accessor :id, :root_id, :name, :path, :type,
         :mode, :commit_id, :submodule_url
 
@@ -72,6 +74,10 @@ module Gitlab
         %w(id root_id name path type mode commit_id).each do |key|
           self.send("#{key}=", options[key.to_sym])
         end
+      end
+
+      def name
+        encode! @name
       end
 
       def dir?
