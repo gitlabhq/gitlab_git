@@ -53,6 +53,8 @@ module Gitlab
           return decorate(commit_id) if commit_id.is_a?(Rugged::Commit)
 
           obj = repo.rev_parse_target(commit_id)
+          return nil unless obj.is_a?(Rugged::Commit)
+
           decorate(obj)
         rescue Rugged::ReferenceError, Rugged::ObjectError
           nil
