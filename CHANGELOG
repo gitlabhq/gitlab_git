@@ -1,3 +1,6 @@
+v 7.1.1
+  - Verify found object is actually a commit in Commit.find
+
 v 7.1.0
   - Convert encoding of all freeform text to UTF-8.
 
