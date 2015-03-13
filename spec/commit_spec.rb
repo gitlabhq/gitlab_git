@@ -79,7 +79,12 @@ describe Gitlab::Git::Commit do
         Gitlab::Git::Commit.find(repository, 'v1.0.0').id.should == '6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9'
       end
 
-      it "should return nil" do
+      it "should return nil for non-commit ids" do
+        blob = Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, "files/ruby/popen.rb")
+        Gitlab::Git::Commit.find(repository, blob.id).should be_nil
+      end
+
+      it "should return nil for nonexisting ids" do
         Gitlab::Git::Commit.find(repository, "+123_4532530XYZ").should be_nil
       end
     end
