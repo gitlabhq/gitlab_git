@@ -84,6 +84,11 @@ describe Gitlab::Git::Commit do
         Gitlab::Git::Commit.find(repository, blob.id).should be_nil
       end
 
+      it "should return nil for parent of non-commit object" do
+        blob = Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, "files/ruby/popen.rb")
+        Gitlab::Git::Commit.find(repository, "#{blob.id}^").should be_nil
+      end
+
       it "should return nil for nonexisting ids" do
         Gitlab::Git::Commit.find(repository, "+123_4532530XYZ").should be_nil
       end
