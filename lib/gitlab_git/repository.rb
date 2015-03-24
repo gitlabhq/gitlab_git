@@ -135,55 +135,80 @@ module Gitlab
       #
       def archive_repo(ref, storage_path, format = "tar.gz")
         ref ||= root_ref
-        commit = Gitlab::Git::Commit.find(self, ref)
-        return nil unless commit
 
-        extension = nil
-        git_archive_format = nil
-        pipe_cmd = nil
+        file_path = archive_file_path(ref, storage_path, format)
+        return nil unless file_path
+
+        return file_path if File.exist?(file_path)
 
         case format
         when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
-          extension = ".tar.bz2"
           pipe_cmd = %W(bzip2)
         when "tar"
-          extension = ".tar"
           pipe_cmd = %W(cat)
         when "zip"
-          extension = ".zip"
           git_archive_format = "zip"
           pipe_cmd = %W(cat)
         else
           # everything else should fall back to tar.gz
-          extension = ".tar.gz"
           git_archive_format = nil
           pipe_cmd = %W(gzip -n)
         end
 
-        # Build file path
-        file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + extension
-        file_path = File.join(storage_path, self.name, file_name)
+        FileUtils.mkdir_p File.dirname(file_path)
 
-        # Put files into a directory before archiving
-        prefix = File.basename(self.name) + "/"
-
-        # Create file if not exists
-        unless File.exists?(file_path)
-          FileUtils.mkdir_p File.dirname(file_path)
-
-          # Create the archive in temp file, to avoid leaving a corrupt archive
-          # to be downloaded by the next user if we get interrupted while
-          # creating the archive. Note that we do not care about cleaning up
-          # the temp file in that scenario, because GitLab cleans up the
-          # directory holding the archive files periodically.
-          temp_file_path = file_path + ".#{Process.pid}-#{Time.now.to_i}"
-          archive_to_file(ref, prefix, temp_file_path, git_archive_format, pipe_cmd)
-
-          # move temp file to persisted location
-          FileUtils.move(temp_file_path, file_path)
+        pid_file_path = archive_pid_file_path(ref, storage_path, format)
+        return file_path if File.exist?(pid_file_path)
+        
+        File.open(pid_file_path, "w") do |file|
+          file.puts Process.pid
         end
 
+        # Create the archive in temp file, to avoid leaving a corrupt archive
+        # to be downloaded by the next user if we get interrupted while
+        # creating the archive.
+        temp_file_path = "#{file_path}.#{Process.pid}-#{Time.now.to_i}"
+
+        begin
+          archive_to_file(ref, temp_file_path, git_archive_format, pipe_cmd)
+        rescue
+          FileUtils.rm(temp_file_path)
+          raise
+        ensure
+          FileUtils.rm(pid_file_path)
+        end
+
+        # move temp file to persisted location
+        FileUtils.move(temp_file_path, file_path)
+
         file_path
+      end
+
+      def archive_file_path(ref, storage_path, format = "tar.gz")
+        ref ||= root_ref
+        commit = Gitlab::Git::Commit.find(self, ref)
+        return nil unless commit
+
+        extension = 
+          case format
+          when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
+            ".tar.bz2"
+          when "tar"
+            ".tar"
+          when "zip"
+            ".zip"
+          else
+            # everything else should fall back to tar.gz
+            ".tar.gz"
+          end
+
+        # Build file path
+        file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + extension
+        File.join(storage_path, self.name, file_name)
+      end
+
+      def archive_pid_file_path(*args)
+        "#{archive_file_path(*args)}.pid"
       end
 
       # Return repo size in megabytes
@@ -891,9 +916,13 @@ module Gitlab
         end
       end
 
-      def archive_to_file(treeish = 'master', prefix = nil, filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip))
+      def archive_to_file(treeish = 'master', filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip))
         git_archive_cmd = %W(git --git-dir=#{path} archive)
-        git_archive_cmd << "--prefix=#{prefix}" if prefix
+
+        # Put files into a directory before archiving
+        prefix = File.basename(self.name) + "/"
+        git_archive_cmd << "--prefix=#{prefix}"
+
         git_archive_cmd << "--format=#{format}" if format
         git_archive_cmd += %W(-- #{treeish})
 

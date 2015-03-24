@@ -1,5 +1,6 @@
 v 7.1.3
   - Improve the to_patch and to_diff methods for merge commits
+  - Prevent parallel archiving of same repo/ref/format.
 
 v 7.1.2
   - Finding commit by invalid rev returns nil instead of error.
