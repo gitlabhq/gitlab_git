@@ -172,16 +172,7 @@ module Gitlab
       #
       # Cuts out the header and stats from #to_patch and returns only the diff.
       def to_diff(options = {})
-        patch = to_patch(options)
-
-        # discard lines before the diff
-        lines = patch.split("\n")
-        while !lines.first.start_with?("diff --git") do
-          lines.shift
-        end
-        lines.pop if lines.last =~ /^[\d.]+$/ # Git version
-        lines.pop if lines.last == "-- "      # end of diff
-        lines.join("\n")
+        diff_from_parent(options).patch
       end
 
       # Returns a diff object for the changes from this commit's first parent.
@@ -229,7 +220,13 @@ module Gitlab
       end
 
       def to_patch(options = {})
-        raw_commit.to_mbox(options)
+        begin
+          raw_commit.to_mbox(options)
+        rescue Rugged::InvalidError => ex
+          if ex.message =~ /Commit \w+ is a merge commit/
+            'Patch format is not currently supported for merge commits.'
+          end
+        end
       end
 
       # Get a collection of Rugged::Reference objects for this commit.
