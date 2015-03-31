@@ -102,7 +102,7 @@ describe Gitlab::Git::Commit do
       end
 
       context 'path' do
-        subject { Gitlab::Git::Commit.last_for_path(repository, 'master', 'files') }
+        subject { Gitlab::Git::Commit.last_for_path(repository, 'master', 'files/ruby') }
 
         its(:id) { should == SeedRepo::Commit::ID }
       end
@@ -131,7 +131,7 @@ describe Gitlab::Git::Commit do
 
         it { should have(3).elements }
         it { should include("874797c3a73b60d2187ed6e2fcabd289ff75171e") }
-        it { should_not include(SeedRepo::Commit::ID) }
+        it { should_not include("eb49186cfa5c4338011f5f590fac11bd66c5c631") }
       end
 
       context 'ref is commit id' do
@@ -193,7 +193,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(16).elements }
+        it { should have(18).elements }
         it { should include(SeedRepo::Commit::ID) }
         it { should include(SeedRepo::Commit::PARENT_ID) }
         it { should include(SeedRepo::FirstCommit::ID) }
@@ -211,7 +211,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(13).elements }
+        it { should have(15).elements }
         it { should include(SeedRepo::Commit::ID) }
         it { should include(SeedRepo::FirstCommit::ID) }
         it { should_not include(SeedRepo::LastCommit::ID) }

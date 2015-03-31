@@ -58,13 +58,13 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     it { should have(SeedRepo::Repo::TAGS.size).elements }
-    its(:last) { should == "v1.2.0" }
+    its(:last) { should == "v1.2.1" }
     it { should include("v1.0.0") }
     it { should_not include("v5.0.0") }
   end
 
   shared_examples 'archive check' do |extenstion|
-    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-eb49186cfa5c43380/) }
+    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-#{SeedRepo::LastCommit::ID}/) }
     it { archive.should end_with extenstion }
     it { File.exists?(archive).should be_true }
     it { File.size?(archive).should_not be_nil }
@@ -138,7 +138,7 @@ describe Gitlab::Git::Repository do
 
     it { should be_kind_of Array }
     its(:first) { should == 'feature' }
-    its(:last) { should == 'v1.2.0' }
+    its(:last) { should == 'v1.2.1' }
   end
 
   describe :search_files do
@@ -206,12 +206,12 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 14 }
+    it { repository.commit_count("master").should == 16 }
     it { repository.commit_count("feature").should == 9 }
   end
 
   describe :archive_repo do
-    it { repository.archive_repo('master', '/tmp').should == '/tmp/gitlab-git-test.git/gitlab-git-test-eb49186cfa5c4338011f5f590fac11bd66c5c631.tar.gz' }
+    it { repository.archive_repo('master', '/tmp').should == "/tmp/gitlab-git-test.git/gitlab-git-test-#{SeedRepo::LastCommit::ID}.tar.gz" }
   end
 
   describe "#reset" do
@@ -222,7 +222,7 @@ describe Gitlab::Git::Repository do
     change_text = "New changelog text"
     untracked_text = "This file is untracked"
 
-    reset_commit = "d14d6c0abdd253381df51a723d58691b2ee1ab08"
+    reset_commit = "6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9"
 
     context "--hard" do
       before(:all) do

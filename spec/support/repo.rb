@@ -2,7 +2,7 @@ module SeedRepo
   module Repo
     HEAD = "master"
     BRANCHES = ["feature", "fix", "master"]
-    TAGS = ["v1.0.0", 'v1.1.0', 'v1.2.0']
+    TAGS = ["v1.0.0", 'v1.1.0', 'v1.2.0', 'v1.2.1']
   end
 end
 
