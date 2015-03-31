@@ -15,6 +15,7 @@ describe Gitlab::Git::Diff do
         +[submodule "gitlab-grack"]
         +	path = gitlab-grack
         +	url = https://gitlab.com/gitlab-org/gitlab-grack.git
+        
 EOT
       new_path: ".gitmodules",
       old_path: ".gitmodules",

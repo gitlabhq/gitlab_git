@@ -216,8 +216,6 @@ module Gitlab
         # Delete everything up to the first line that starts with '---' or
         # 'Binary'
         diff_text.sub!(/\A.*?^(---|Binary)/m, '\1')
-        # Remove trailing newline because the tests ask for it
-        diff_text.chomp!
 
         if diff_text.start_with?('---') or diff_text.start_with?('Binary')
           diff_text

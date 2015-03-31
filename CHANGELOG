@@ -1,3 +1,6 @@
+v 7.1.5
+  - Don't strip final newline of diff.
+
 v 7.1.4
   - Fix nil blob mode (Sullivan Sénéchal)
 
