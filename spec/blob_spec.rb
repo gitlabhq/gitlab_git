@@ -15,7 +15,7 @@ describe Gitlab::Git::Blob do
       it { blob.commit_id.should == SeedRepo::Commit::ID }
       it { blob.data[0..10].should == SeedRepo::RubyBlob::CONTENT[0..10] }
       it { blob.size.should == 669 }
-      it { blob.mode.should == 0100644 }
+      it { blob.mode.should == "100644" }
     end
 
     context 'file in root' do
@@ -27,7 +27,7 @@ describe Gitlab::Git::Blob do
       it { blob.commit_id.should == SeedRepo::Commit::ID }
       it { blob.data[0..10].should == "*.rbc\n*.sas" }
       it { blob.size.should == 241 }
-      it { blob.mode.should == 0100644 }
+      it { blob.mode.should == "100644" }
     end
 
     context 'non-exist file' do
@@ -58,7 +58,7 @@ describe Gitlab::Git::Blob do
       it { blob.name.should == "russian.rb" }
       it { blob.data.lines.first.should == "Хороший файл" }
       it { blob.size.should == 23 }
-      it { blob.mode.should == 0100755 }
+      it { blob.mode.should == "100755" }
     end
 
     context 'file with Chinese text' do
@@ -67,7 +67,7 @@ describe Gitlab::Git::Blob do
       it { blob.name.should == "テスト.txt" }
       it { blob.data.should include("これはテスト") }
       it { blob.size.should == 340 }
-      it { blob.mode.should == 0100755 }
+      it { blob.mode.should == "100755" }
     end
   end
 
@@ -84,7 +84,7 @@ describe Gitlab::Git::Blob do
       it { blob.name.should == 'regex.rb' }
       it { blob.path.should == 'files/ruby/regex.rb' }
       it { blob.size.should == 1200 }
-      it { blob.mode.should == 0100644 }
+      it { blob.mode.should == "100644" }
     end
 
     context 'file binary' do
@@ -99,7 +99,7 @@ describe Gitlab::Git::Blob do
       it { blob.name.should == 'ls' }
       it { blob.path.should == 'files/executables/ls' }
       it { blob.size.should == 110080 }
-      it { blob.mode.should == 0100755 }
+      it { blob.mode.should == "100755" }
     end
 
     context 'file symlink to regular' do
@@ -114,7 +114,7 @@ describe Gitlab::Git::Blob do
       it { blob.name.should == 'ruby-style-guide.md' }
       it { blob.path.should == 'files/links/ruby-style-guide.md' }
       it { blob.size.should == 31 }
-      it { blob.mode.should == 0120000 }
+      it { blob.mode.should == "120000" }
     end
 
     context 'file symlink to binary' do
@@ -129,7 +129,7 @@ describe Gitlab::Git::Blob do
       it { blob.name.should == 'touch' }
       it { blob.path.should == 'files/links/touch' }
       it { blob.size.should == 20 }
-      it { blob.mode.should == 0120000 }
+      it { blob.mode.should == "120000" }
     end
   end
 end
