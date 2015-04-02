@@ -1,5 +1,6 @@
 v 7.2.16
   - Strip leading slashes in blob path to resolve filenames properly (Stan Hu)
+  - Also nice+ionice 'git archive' itself
 
 v 7.2.15
   - Handle `git blame` for files encoded in different formats (e.g. ISO-8859) (Stan Hu)
