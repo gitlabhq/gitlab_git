@@ -99,6 +99,10 @@ module Gitlab
         rugged.empty?
       end
 
+      def bare?
+        rugged.bare?
+      end
+
       def repo_exists?
         !!rugged
       end
