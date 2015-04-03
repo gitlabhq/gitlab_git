@@ -159,7 +159,7 @@ module Gitlab
 
         pid_file_path = archive_pid_file_path(ref, storage_path, format)
         return file_path if File.exist?(pid_file_path)
-        
+
         File.open(pid_file_path, "w") do |file|
           file.puts Process.pid
         end
@@ -189,7 +189,7 @@ module Gitlab
         commit = Gitlab::Git::Commit.find(self, ref)
         return nil unless commit
 
-        extension = 
+        extension =
           case format
           when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
             ".tar.bz2"
@@ -957,7 +957,7 @@ module Gitlab
       def nice_process(pid)
         niced_process = %W(renice -n 20 -p #{pid})
 
-        unless RUBY_PLATFORM.include?('darwin')
+        unless RUBY_PLATFORM.include?('darwin') || RUBY_PLATFORM.include?('freebsd')
           niced_process = %W(ionice -c 2 -n 7 -p #{pid}) + niced_process
         end
 
