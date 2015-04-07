@@ -112,6 +112,10 @@ describe Gitlab::Git::Repository do
     it { repository.empty?.should be_false }
   end
 
+  describe :bare? do
+    it { repository.bare?.should be_true }
+  end
+
   describe :heads do
     let(:heads) { repository.heads }
     subject { heads }
