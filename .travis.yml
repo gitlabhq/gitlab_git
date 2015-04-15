@@ -7,8 +7,8 @@ branches:
   only:
     - 'master'
 rvm:
-  - 1.9.3-p327
   - 2.0.0
+  - 2.1.5
 before_script:
   - "bundle install"
 script: "bundle exec rspec spec"
