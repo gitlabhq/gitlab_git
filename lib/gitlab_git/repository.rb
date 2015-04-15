@@ -853,7 +853,7 @@ module Gitlab
 
         if commit.parents.empty?
           # This is the root commit, return true if it has +path+ in its tree
-          return entry != nil
+          return !entry.nil?
         end
 
         num_treesame = 0
