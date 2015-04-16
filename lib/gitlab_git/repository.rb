@@ -786,6 +786,7 @@ module Gitlab
           else
             next unless results[current]
             match_data = txt.match(/(\w+)\s*=\s*(.*)/)
+            next unless match_data
             results[current][match_data[1]] = match_data[2]
 
             if match_data[1] == "path"

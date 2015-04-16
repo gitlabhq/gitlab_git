@@ -1,4 +1,5 @@
 # Seed repo:
+# de5714f34c4e34f1d50b9a61a2e6c9132fe2b5fd Add comments to the end of .gitmodules to test parsing
 # fa1b1e6c004a68b7d8763b86455da9e6b23e36d6 Merge branch 'add-files' into 'master'
 # eb49186cfa5c4338011f5f590fac11bd66c5c631 Add submodules nested deeper than the root
 # 18d9c205d0d22fdf62bc2f899443b83aafbf941f Add executables and links files
@@ -18,11 +19,11 @@
 #
 module SeedRepo
   module LastCommit
-    ID = "fa1b1e6c004a68b7d8763b86455da9e6b23e36d6"
-    PARENT_ID = "eb49186cfa5c4338011f5f590fac11bd66c5c631"
-    MESSAGE = "Merge branch 'add-files' into 'master'"
-    AUTHOR_FULL_NAME = "Douwe Maan"
-    FILES = ["files/executables/ls", "files/executables/touch", "filex/links/regex.rb", "filex/links/ruby-style-guide.md", "files/links/touch"]
+    ID = "de5714f34c4e34f1d50b9a61a2e6c9132fe2b5fd"
+    PARENT_ID = "fa1b1e6c004a68b7d8763b86455da9e6b23e36d6"
+    MESSAGE = "Add comments to the end of .gitmodules to test parsing"
+    AUTHOR_FULL_NAME = "Stan Hu"
+    FILES = [".gitmodules"]
     FILES_COUNT = FILES.count
   end
 end
