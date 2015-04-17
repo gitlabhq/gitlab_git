@@ -210,7 +210,7 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 16 }
+    it { repository.commit_count("master").should == 18 }
     it { repository.commit_count("feature").should == 9 }
   end
 
@@ -226,7 +226,7 @@ describe Gitlab::Git::Repository do
     change_text = "New changelog text"
     untracked_text = "This file is untracked"
 
-    reset_commit = "6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9"
+    reset_commit = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
 
     context "--hard" do
       before(:all) do
@@ -250,7 +250,7 @@ describe Gitlab::Git::Repository do
         end
 
         File.open(tracked_path, "r") do |f|
-          expect(f.each_line.to_a[8]).to include('raise "System commands')
+          expect(f.each_line.to_a[8]).to include('raise RuntimeError, "System commands')
         end
       end
 
