@@ -1,4 +1,5 @@
 # Seed repo:
+# 66028349a123e695b589e09a36634d976edcc5e8 Merge branch 'add-comments-to-gitmodules' into 'master'
 # de5714f34c4e34f1d50b9a61a2e6c9132fe2b5fd Add comments to the end of .gitmodules to test parsing
 # fa1b1e6c004a68b7d8763b86455da9e6b23e36d6 Merge branch 'add-files' into 'master'
 # eb49186cfa5c4338011f5f590fac11bd66c5c631 Add submodules nested deeper than the root

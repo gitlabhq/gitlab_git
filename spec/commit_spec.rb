@@ -193,7 +193,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(19).elements }
+        it { should have(20).elements }
         it { should include(SeedRepo::Commit::ID) }
         it { should include(SeedRepo::Commit::PARENT_ID) }
         it { should include(SeedRepo::FirstCommit::ID) }
@@ -211,7 +211,7 @@ describe Gitlab::Git::Commit do
           commits.map { |c| c.id }
         end
 
-        it { should have(16).elements }
+        it { should have(17).elements }
         it { should include(SeedRepo::Commit::ID) }
         it { should include(SeedRepo::FirstCommit::ID) }
         it { should_not include(SeedRepo::LastCommit::ID) }
