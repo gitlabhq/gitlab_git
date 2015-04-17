@@ -766,9 +766,12 @@ module Gitlab
           raise InvalidBlobName.new("Invalid blob name: #{blob_name}")
         end
 
-        if blob_entry[:type] == :commit
+        case blob_entry[:type]
+        when :commit
           blob_entry[:oid]
-        else
+        when :tree
+          raise InvalidBlobName.new("#{blob_name} is a tree, not a blob")
+        when :blob
           rugged.lookup(blob_entry[:oid]).content
         end
       end
