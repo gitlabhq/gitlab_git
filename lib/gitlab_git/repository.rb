@@ -962,11 +962,15 @@ module Gitlab
       def nice_process(pid)
         niced_process = %W(renice -n 20 -p #{pid})
 
-        unless RUBY_PLATFORM.include?('darwin') || RUBY_PLATFORM.include?('freebsd')
+        unless unsupported_platform?
           niced_process = %W(ionice -c 2 -n 7 -p #{pid}) + niced_process
         end
 
         niced_process
+      end
+
+      def unsupported_platform?
+        %w( darwin freebsd solaris ).map{ |platform| RUBY_PLATFORM.include?(platform) }.any?
       end
 
       # Returns true if the index entry has the special file mode that denotes
