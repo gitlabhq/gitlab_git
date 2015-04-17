@@ -1,3 +1,6 @@
+v 7.1.10
+  - Ignore submodules that are defined in .gitmodules but are checked in as directories.
+
 v 7.1.9
   - Ignore invalid lines in .gitmodules.
 

@@ -6,7 +6,7 @@ describe Gitlab::Git::Branch do
   subject { repository.branches }
 
   it { should be_kind_of Array }
-  its(:size) { should eq(3) }
+  its(:size) { should eq(SeedRepo::Repo::BRANCHES.size) }
 
   describe 'first branch' do
     let(:branch) { repository.branches.first }

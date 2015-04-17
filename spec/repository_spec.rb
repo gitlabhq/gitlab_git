@@ -121,7 +121,7 @@ describe Gitlab::Git::Repository do
     subject { heads }
 
     it { should be_kind_of Array }
-    its(:size) { should eq(3) }
+    its(:size) { should eq(SeedRepo::Repo::BRANCHES.size) }
 
     context :head do
       subject { heads.first }
@@ -198,6 +198,11 @@ describe Gitlab::Git::Repository do
 
       it 'should not have an entry for an invalid submodule' do
         expect(submodules).not_to have_key('invalid/path')
+      end
+
+      it 'should not have an entry for an uncommited submodule dir' do
+        submodules = repository.submodules('fix-existing-submodule-dir')
+        expect(submodules).not_to have_key('submodule-existing-dir')
       end
     end
 
