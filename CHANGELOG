@@ -1,8 +1,11 @@
+v 7.1.11
+  - Fix broken view when using a tag to display a tree that contains git submodules. (Stan Hu)
+
 v 7.1.10
-  - Ignore submodules that are defined in .gitmodules but are checked in as directories.
+  - Ignore submodules that are defined in .gitmodules but are checked in as directories. (Stan Hu)
 
 v 7.1.9
-  - Ignore invalid lines in .gitmodules.
+  - Ignore invalid lines in .gitmodules. (Stan Hu)
 
 v 7.1.8
   - Don't use git clone/fetch quiet flag since it's too new.
