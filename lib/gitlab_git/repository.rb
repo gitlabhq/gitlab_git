@@ -455,7 +455,8 @@ module Gitlab
       #   }
       #
       def submodules(ref)
-        commit = rugged.rev_parse(ref)
+        commit = rev_parse_target(ref)
+        return {} unless commit
 
         begin
           content = blob_content(commit, ".gitmodules")

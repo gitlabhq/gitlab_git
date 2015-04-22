@@ -204,6 +204,17 @@ describe Gitlab::Git::Repository do
         submodules = repository.submodules('fix-existing-submodule-dir')
         expect(submodules).not_to have_key('submodule-existing-dir')
       end
+
+      it 'should handle tags correctly' do
+        submodules = repository.submodules('v1.2.1')
+        submodule.should == [
+          "six", {
+            "id"=>"409f37c4f05865e4fb208c771485f211a22c4c2d",
+            "path"=>"six",
+            "url"=>"git://github.com/randx/six.git"
+          }
+        ]
+      end
     end
 
     context 'where repo doesn\'t have submodules' do
