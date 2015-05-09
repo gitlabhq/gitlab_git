@@ -1,3 +1,6 @@
+v 7.1.12
+  - Fix broken view when viewing history of a file that includes a path that used to be another file. (Stan Hu)
+
 v 7.1.11
   - Fix broken view when using a tag to display a tree that contains git submodules. (Stan Hu)
 

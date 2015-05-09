@@ -568,6 +568,16 @@ describe Gitlab::Git::Repository do
           expect(log_commits).not_to include(commit_with_new_name)
         end
       end
+
+      context "and 'path' includes a directory that used to be a file" do
+        let(:log_commits) do
+          repository.log(options.merge(ref: "refs/heads/fix-blob-path", path: "files/testdir/file.txt"))
+        end
+
+        it "should return a list of commits" do
+          expect(log_commits.size).to eq(1)
+        end
+      end
     end
 
     after(:all) do

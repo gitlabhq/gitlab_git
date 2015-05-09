@@ -895,7 +895,9 @@ module Gitlab
           if tmp_entry.nil?
             tmp_entry = commit.tree[dir]
           else
-            tmp_entry = rugged.lookup(tmp_entry[:oid])[dir]
+            tmp_entry = rugged.lookup(tmp_entry[:oid])
+            return nil unless tmp_entry.type == :tree
+            tmp_entry = tmp_entry[dir]
           end
         end
 
