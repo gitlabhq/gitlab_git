@@ -1,3 +1,6 @@
+v 7.1.13
+  - Update rugged to 0.22.2 to fix segfault.
+
 v 7.1.12
   - Fix broken view when viewing history of a file that includes a path that used to be another file. (Stan Hu)
 
