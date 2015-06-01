@@ -100,6 +100,34 @@ GitLab Git used grit as main library in past. Now it uses rugged
     raw_blob.size
     raw_blob.data
 
+#### Commiting blob
+
+    options = {
+       file: {
+         content: 'Lorem ipsum...',
+         path: 'documents/story.txt'
+       },
+       author: {
+         email: 'user@example.com',
+         name: 'Test User',
+         time: Time.now
+       },
+       committer: {
+         email: 'user@example.com',
+         name: 'Test User',
+         time: Time.now
+       },
+       commit: {
+         message: 'Wow such commit',
+         branch: 'master'
+       }
+    }
+
+    # Create or update file in repository. 
+    # Returns sha of commit that did a change
+    Gitlab::Git::Blob.commit(repository, commit_options)
+
+
 ### Commit
 
 #### Picking

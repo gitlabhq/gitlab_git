@@ -132,4 +132,35 @@ describe Gitlab::Git::Blob do
       it { blob.mode.should == "120000" }
     end
   end
+
+  describe :create do
+    context 'file in subdir' do
+      let(:commit_options) do
+        options = {
+           file: {
+             content: 'Lorem ipsum...',
+             path: 'documents/story.txt'
+           },
+           author: {
+             email: 'user@example.com',
+             name: 'Test User',
+             time: Time.now
+           },
+           committer: {
+             email: 'user@example.com',
+             name: 'Test User',
+             time: Time.now
+           },
+           commit: {
+             message: 'Wow such commit',
+             branch: 'master'
+           }
+        }
+      end
+
+      let!(:commit_sha) { Gitlab::Git::Blob.commit(repository, commit_options) }
+
+      it { repository.lookup(commit_sha).message.should == 'Wow such commit' }
+    end
+  end
 end

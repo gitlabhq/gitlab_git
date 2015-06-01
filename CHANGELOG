@@ -1,3 +1,6 @@
+v 7.2.0
+  - Added Blob.commit feature
+
 v 7.1.13
   - Update rugged to 0.22.2 to fix segfault.
 

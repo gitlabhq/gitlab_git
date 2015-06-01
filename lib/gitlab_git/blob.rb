@@ -83,6 +83,51 @@ module Gitlab
             commit_id: sha,
           )
         end
+
+        # Commit file in repository and return commit sha
+        #
+        # options should contain next structure:
+        #   file: {
+        #     content: 'Lorem ipsum...',
+        #     path: 'documents/story.txt'
+        #   },
+        #   author: {
+        #     email: 'user@example.com',
+        #     name: 'Test User',
+        #     time: Time.now
+        #   },
+        #   committer: {
+        #     email: 'user@example.com',
+        #     name: 'Test User',
+        #     time: Time.now
+        #   },
+        #   commit: {
+        #     message: 'Wow such commit',
+        #     branch: 'master'
+        #   }
+        #
+        def commit(repository, options)
+          file = options[:file]
+          author = options[:author]
+          committer = options[:committer]
+          commit = options[:commit]
+          repo = repository.rugged
+
+          oid = repo.write(file[:content], :blob)
+          index = repo.index
+          index.read_tree(repo.head.target.tree)
+          index.add(path: file[:path], oid: oid, mode: 0100644)
+
+          opts = {}
+          opts[:tree] = index.write_tree(repo)
+          opts[:author] = author
+          opts[:committer] = committer
+          opts[:message] = commit[:message]
+          opts[:parents] = repo.empty? ? [] : [ repo.head.target ].compact
+          opts[:update_ref] = 'refs/heads/' + commit[:branch]
+
+          Rugged::Commit.create(repo, opts)
+        end
       end
 
       def initialize(options)
