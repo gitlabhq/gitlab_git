@@ -115,7 +115,7 @@ module Gitlab
 
           oid = repo.write(file[:content], :blob)
           index = repo.index
-          index.read_tree(repo.head.target.tree)
+          index.read_tree(repo.head.target.tree) unless repo.empty?
           index.add(path: file[:path], oid: oid, mode: 0100644)
 
           opts = {}
