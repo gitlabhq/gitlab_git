@@ -2,7 +2,10 @@ module SeedHelper
   GITHUB_URL = "https://gitlab.com/gitlab-org/gitlab-git-test.git"
 
   def ensure_seeds
-    FileUtils.rm_r(SUPPORT_PATH)
+    if File.exists?(SUPPORT_PATH)
+      FileUtils.rm_r(SUPPORT_PATH)
+    end
+
     FileUtils.mkdir_p(SUPPORT_PATH)
 
     create_bare_seeds
