@@ -160,7 +160,58 @@ describe Gitlab::Git::Blob do
     end
 
     let!(:commit_sha) { Gitlab::Git::Blob.commit(repository, commit_options) }
+    let!(:commit) { repository.lookup(commit_sha) }
 
-    it { repository.lookup(commit_sha).message.should == 'Wow such commit' }
+    it 'should add file with commit' do
+      # Commit message valid
+      commit.message.should == 'Wow such commit'
+
+      tree = commit.tree.to_a.find { |tree| tree[:name] == 'documents' }
+
+      # Directory was created
+      tree[:type].should == :tree
+
+      # File was created
+      repository.lookup(tree[:oid]).first[:name].should == 'story.txt'
+    end
+  end
+
+  describe :remove do
+    let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
+
+    let(:commit_options) do
+      options = {
+         file: {
+           path: 'README.md'
+         },
+         author: {
+           email: 'user@example.com',
+           name: 'Test User',
+           time: Time.now
+         },
+         committer: {
+           email: 'user@example.com',
+           name: 'Test User',
+           time: Time.now
+         },
+         commit: {
+           message: 'Remove readme',
+           branch: 'master'
+         }
+      }
+    end
+
+    let!(:commit_sha) { Gitlab::Git::Blob.remove(repository, commit_options) }
+    let!(:commit) { repository.lookup(commit_sha) }
+
+    it 'should remove file with commit' do
+      # Commit message valid
+      commit.message.should == 'Remove readme'
+
+      # File was removed
+      commit.tree.to_a.any? do |tree|
+        tree[:name] == 'README.md'
+      end.should be_false
+    end
   end
 end

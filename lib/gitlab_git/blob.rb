@@ -128,6 +128,49 @@ module Gitlab
 
           Rugged::Commit.create(repo, opts)
         end
+
+        # Remove file from repository and return commit sha
+        #
+        # options should contain next structure:
+        #   file: {
+        #     path: 'documents/story.txt'
+        #   },
+        #   author: {
+        #     email: 'user@example.com',
+        #     name: 'Test User',
+        #     time: Time.now
+        #   },
+        #   committer: {
+        #     email: 'user@example.com',
+        #     name: 'Test User',
+        #     time: Time.now
+        #   },
+        #   commit: {
+        #     message: 'Remove FILENAME',
+        #     branch: 'master'
+        #   }
+        #
+        def remove(repository, options)
+          file = options[:file]
+          author = options[:author]
+          committer = options[:committer]
+          commit = options[:commit]
+          repo = repository.rugged
+
+          index = repo.index
+          index.read_tree(repo.head.target.tree) unless repo.empty?
+          index.remove(file[:path])
+
+          opts = {}
+          opts[:tree] = index.write_tree(repo)
+          opts[:author] = author
+          opts[:committer] = committer
+          opts[:message] = commit[:message]
+          opts[:parents] = repo.empty? ? [] : [ repo.head.target ].compact
+          opts[:update_ref] = 'refs/heads/' + commit[:branch]
+
+          Rugged::Commit.create(repo, opts)
+        end
       end
 
       def initialize(options)
