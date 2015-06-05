@@ -106,25 +106,37 @@ module Gitlab
         #     branch: 'master'
         #   }
         #
-        def commit(repository, options)
+        def commit(repository, options, action = :add)
           file = options[:file]
           author = options[:author]
           committer = options[:committer]
           commit = options[:commit]
           repo = repository.rugged
+          ref = 'refs/heads/' + commit[:branch]
+          parents = []
 
-          oid = repo.write(file[:content], :blob)
           index = repo.index
-          index.read_tree(repo.head.target.tree) unless repo.empty?
-          index.add(path: file[:path], oid: oid, mode: 0100644)
+
+          unless repo.empty?
+            last_commit = repo.references[ref].target
+            index.read_tree(last_commit.tree)
+            parents = [last_commit]
+          end
+
+          if action == :remove
+            index.remove(file[:path])
+          else
+            oid = repo.write(file[:content], :blob)
+            index.add(path: file[:path], oid: oid, mode: 0100644)
+          end
 
           opts = {}
           opts[:tree] = index.write_tree(repo)
           opts[:author] = author
           opts[:committer] = committer
           opts[:message] = commit[:message]
-          opts[:parents] = repo.empty? ? [] : [ repo.head.target ].compact
-          opts[:update_ref] = 'refs/heads/' + commit[:branch]
+          opts[:parents] = parents
+          opts[:update_ref] = ref
 
           Rugged::Commit.create(repo, opts)
         end
@@ -151,25 +163,7 @@ module Gitlab
         #   }
         #
         def remove(repository, options)
-          file = options[:file]
-          author = options[:author]
-          committer = options[:committer]
-          commit = options[:commit]
-          repo = repository.rugged
-
-          index = repo.index
-          index.read_tree(repo.head.target.tree) unless repo.empty?
-          index.remove(file[:path])
-
-          opts = {}
-          opts[:tree] = index.write_tree(repo)
-          opts[:author] = author
-          opts[:committer] = committer
-          opts[:message] = commit[:message]
-          opts[:parents] = repo.empty? ? [] : [ repo.head.target ].compact
-          opts[:update_ref] = 'refs/heads/' + commit[:branch]
-
-          Rugged::Commit.create(repo, opts)
+          commit(repository, options, :remove)
         end
       end
 

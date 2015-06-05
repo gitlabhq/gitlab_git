@@ -154,7 +154,7 @@ describe Gitlab::Git::Blob do
          },
          commit: {
            message: 'Wow such commit',
-           branch: 'master'
+           branch: 'feature'
          }
       }
     end
@@ -196,7 +196,7 @@ describe Gitlab::Git::Blob do
          },
          commit: {
            message: 'Remove readme',
-           branch: 'master'
+           branch: 'feature'
          }
       }
     end
