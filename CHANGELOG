@@ -1,3 +1,6 @@
+v 7.2.4
+  - Add Repository#enable_autocrlf method.
+
 v 7.2.3
   - Fix Blob.commit and Blob.remove for non-master branches
 
