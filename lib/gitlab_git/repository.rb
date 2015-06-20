@@ -756,9 +756,18 @@ module Gitlab
         commits
       end
 
-      # Set the "core.autocrlf" config option to true for this repo.
-      def enable_autocrlf
-        rugged.config['core.autocrlf'] = true
+      AUTOCRLF_VALUES = {
+        "true" => true,
+        "false" => false,
+        "input" => :input
+      }.freeze
+
+      def autocrlf
+        AUTOCRLF_VALUES[rugged.config['core.autocrlf']]
+      end
+
+      def autocrlf=(value)
+        rugged.config['core.autocrlf'] = AUTOCRLF_VALUES.invert[value]
       end
 
       private

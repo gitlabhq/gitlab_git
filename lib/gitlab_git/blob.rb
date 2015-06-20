@@ -126,7 +126,13 @@ module Gitlab
           if action == :remove
             index.remove(file[:path])
           else
-            oid = repo.write(file[:content], :blob)
+            content = file[:content]
+
+            # When writing to the repo directly as we are doing here, 
+            # the `core.autocrlf` config isn't taken into account.
+            content.gsub!("\r\n", "\n") if repository.autocrlf
+
+            oid = repo.write(content, :blob)
             index.add(path: file[:path], oid: oid, mode: 0100644)
           end
 
