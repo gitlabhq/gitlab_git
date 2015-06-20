@@ -594,4 +594,22 @@ describe Gitlab::Git::Repository do
     it { should_not include('feature') }
     it { should_not include('fix') }
   end
+
+  describe '#enable_autocrlf' do
+    before(:all) do
+      @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
+      @repo.rugged.config['core.autocrlf'] = false
+    end
+
+    it 'should set the autocrlf option to true' do
+      @repo.enable_autocrlf
+      File.open(File.join(TEST_MUTABLE_REPO_PATH, '.git', 'config')) do |config_file|
+        expect(config_file.read).to match('autocrlf = true')
+      end
+    end
+
+    after(:all) do
+      @repo.rugged.delete('core.autocrlf')
+    end
+  end
 end

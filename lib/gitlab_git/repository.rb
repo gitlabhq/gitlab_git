@@ -756,6 +756,11 @@ module Gitlab
         commits
       end
 
+      # Set the "core.autocrlf" config option to true for this repo.
+      def enable_autocrlf
+        rugged.config['core.autocrlf'] = true
+      end
+
       private
 
       # Get the content of a blob for a given commit.  If the blob is a commit
