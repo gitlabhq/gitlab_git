@@ -1,3 +1,6 @@
+v 7.2.5
+  - Take value of autocrlf into account when committing blobs.
+
 v 7.2.4
   - Add Repository#enable_autocrlf method.
 
