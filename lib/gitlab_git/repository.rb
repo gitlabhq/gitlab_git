@@ -47,13 +47,15 @@ module Gitlab
       # Returns an Array of branch names
       # sorted by name ASC
       def branch_names
-        branches.map(&:name)
+        branches.uniq.map(&:name)
       end
 
       # Returns an Array of Branches
       def branches
         rugged.branches.map do |rugged_ref|
           Branch.new(rugged_ref.name, rugged_ref.target)
+        end.uniq do |branch|
+          branch.name
         end.sort_by(&:name)
       end
 
