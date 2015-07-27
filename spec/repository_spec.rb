@@ -401,6 +401,15 @@ describe Gitlab::Git::Repository do
     end
   end
 
+  describe "#refs_hash" do
+    let(:refs) { repository.refs_hash }
+
+    it "should have as many entries as branches and tags" do
+      expected_refs = SeedRepo::Repo::BRANCHES + SeedRepo::Repo::TAGS
+      expect(refs).to have(expected_refs.size).items
+    end
+  end
+
   describe "#remote_delete" do
     before(:all) do
       @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
