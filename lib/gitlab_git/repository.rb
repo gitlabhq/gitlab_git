@@ -427,9 +427,12 @@ module Gitlab
           @refs_hash = Hash.new { |h, k| h[k] = [] }
 
           rugged.references.each do |r|
-            sha = rev_parse_target(r.target.oid).oid
-
-            @refs_hash[sha] << r
+            # Symbolic/remote references may not have an OID; skip over them
+            target_oid = r.target.try(:oid)
+            if target_oid
+              sha = rev_parse_target(target_oid).oid
+              @refs_hash[sha] << r
+            end
           end
         end
         @refs_hash
