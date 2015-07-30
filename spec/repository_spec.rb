@@ -64,7 +64,7 @@ describe Gitlab::Git::Repository do
   end
 
   shared_examples 'archive check' do |extenstion|
-    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-#{SeedRepo::LastCommit::ID}/) }
+    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-master-#{SeedRepo::LastCommit::ID}/) }
     it { archive.should end_with extenstion }
     it { File.exists?(archive).should be_true }
     it { File.size?(archive).should_not be_nil }
