@@ -231,7 +231,7 @@ describe Gitlab::Git::Repository do
   end
 
   describe :archive_repo do
-    it { repository.archive_repo('master', '/tmp').should == "/tmp/gitlab-git-test.git/gitlab-git-test-#{SeedRepo::LastCommit::ID}.tar.gz" }
+    it { repository.archive_repo('master', '/tmp').should == "/tmp/gitlab-git-test.git/gitlab-git-test-master-#{SeedRepo::LastCommit::ID}.tar.gz" }
   end
 
   describe "#reset" do
