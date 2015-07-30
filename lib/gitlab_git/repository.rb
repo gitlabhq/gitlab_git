@@ -289,12 +289,15 @@ module Gitlab
       #
       def commits_between(from, to)
         walker = Rugged::Walker.new(rugged)
+        walker.sorting(Rugged::SORT_DATE | Rugged::SORT_REVERSE)
+
         walker.push(to)
         walker.hide(from)
+
         commits = walker.to_a
         walker.reset
 
-        commits.reverse
+        commits
       end
 
       # Returns the SHA of the most recent common ancestor of +from+ and +to+
