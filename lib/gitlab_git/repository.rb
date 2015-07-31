@@ -135,7 +135,7 @@ module Gitlab
       # Archive Project to .tar.gz
       #
       # Already packed repo archives stored at
-      # app_root/tmp/repositories/project_name/project_name-commit-id.tag.gz
+      # app_root/tmp/repositories/<project_name>.git/<project_name>-<ref>-<commit id>.tar.gz
       #
       def archive_repo(ref, storage_path, format = "tar.gz")
         ref ||= root_ref
