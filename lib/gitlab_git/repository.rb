@@ -135,7 +135,7 @@ module Gitlab
       # Archive Project to .tar.gz
       #
       # Already packed repo archives stored at
-      # app_root/tmp/repositories/project_name/project_name-commit-id.tag.gz
+      # app_root/tmp/repositories/<project_name>.git/<project_name>-<ref>-<commit id>.tar.gz
       #
       def archive_repo(ref, storage_path, format = "tar.gz")
         ref ||= root_ref
@@ -147,16 +147,15 @@ module Gitlab
 
         case format
         when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
-          pipe_cmd = %W(bzip2)
+          compress_cmd = %W(bzip2)
         when "tar"
-          pipe_cmd = %W(cat)
+          compress_cmd = %W(cat)
         when "zip"
           git_archive_format = "zip"
-          pipe_cmd = %W(cat)
+          compress_cmd = %W(cat)
         else
           # everything else should fall back to tar.gz
-          git_archive_format = nil
-          pipe_cmd = %W(gzip -n)
+          compress_cmd = %W(gzip -n)
         end
 
         FileUtils.mkdir_p File.dirname(file_path)
@@ -174,7 +173,7 @@ module Gitlab
         temp_file_path = "#{file_path}.#{Process.pid}-#{Time.now.to_i}"
 
         begin
-          archive_to_file(ref, temp_file_path, git_archive_format, pipe_cmd)
+          archive_to_file(ref, temp_file_path, git_archive_format, compress_cmd)
         rescue
           FileUtils.rm(temp_file_path)
           raise
@@ -188,26 +187,34 @@ module Gitlab
         file_path
       end
 
-      def archive_file_path(ref, storage_path, format = "tar.gz")
+      def archive_name(ref)
         ref ||= root_ref
         commit = Gitlab::Git::Commit.find(self, ref)
         return nil unless commit
 
+        project_name = self.name.sub(/\.git\z/, "")
+        file_name = "#{project_name}-#{ref}-#{commit.id}"
+      end
+
+      def archive_file_path(ref, storage_path, format = "tar.gz")
+        # Build file path
+        name = archive_name(ref)
+        return nil unless name
+
         extension =
           case format
           when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
-            ".tar.bz2"
+            "tar.bz2"
           when "tar"
-            ".tar"
+            "tar"
           when "zip"
-            ".zip"
+            "zip"
           else
             # everything else should fall back to tar.gz
-            ".tar.gz"
+            "tar.gz"
           end
 
-        # Build file path
-        file_name = self.name.gsub("\.git", "") + "-" + commit.id.to_s + extension
+        file_name = "#{name}.#{extension}"
         File.join(storage_path, self.name, file_name)
       end
 
@@ -944,14 +951,16 @@ module Gitlab
         end
       end
 
-      def archive_to_file(treeish = 'master', filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip))
+      def archive_to_file(treeish = 'master', filename = 'archive.tar.gz', format = nil, compress_cmd = %W(gzip -n))
         git_archive_cmd = %W(git --git-dir=#{path} archive)
 
         # Put files into a directory before archiving
-        prefix = File.basename(self.name) + "/"
+        prefix = "#{archive_name(treeish)}/"
         git_archive_cmd << "--prefix=#{prefix}"
 
+        # Format defaults to tar
         git_archive_cmd << "--format=#{format}" if format
+
         git_archive_cmd += %W(-- #{treeish})
 
         open(filename, 'w') do |file|
