@@ -53,8 +53,12 @@ module Gitlab
       # Returns an Array of Branches
       def branches
         rugged.branches.map do |rugged_ref|
-          Branch.new(rugged_ref.name, rugged_ref.target)
-        end.sort_by(&:name)
+          begin
+            Branch.new(rugged_ref.name, rugged_ref.target)
+          rescue Rugged::ReferenceError
+            # Omit invalid branch
+          end
+        end.compact.sort_by(&:name)
       end
 
       # Returns an Array of tag names
