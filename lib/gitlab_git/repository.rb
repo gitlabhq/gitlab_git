@@ -278,10 +278,23 @@ module Gitlab
         options[:offset] ||= 0
         actual_ref = options[:ref] || root_ref
         sha = sha_from_ref(actual_ref)
-        build_log(sha, options)
-      rescue Rugged::OdbError, Rugged::InvalidError, Rugged::ReferenceError
-        # Return an empty array if the ref wasn't found
-        []
+        repo = options[:repo]
+
+        cmd = %W(git -C #{path} log)
+        cmd << %W(-n #{options[:limit].to_i})
+        cmd << %W(--skip=#{options[:offset].to_i})
+        cmd << %W(--follow) if options[:follow]
+        cmd << %W(--no-merges) if options[:skip_merges]
+        cmd << sha
+        cmd << %W(-- #{options[:path]}) if options[:path]
+
+        raw_output = IO.popen(cmd.flatten) {|io| io.read }
+
+        log = raw_output.scan(/commit\ ([0-9a-f]{40})/).flatten.map do |c|
+          Rugged::Commit.new(rugged, c)
+        end
+
+        log.is_a?(Array) ? log : []
       end
 
       def sha_from_ref(ref)
@@ -835,46 +848,6 @@ module Gitlab
         end
 
         results
-      end
-
-      # Return an array of log commits, given an SHA hash and a hash of
-      # options.
-      def build_log(sha, options)
-        # Instantiate a Walker and add the SHA hash
-        walker = Rugged::Walker.new(rugged)
-        walker.push(sha)
-
-        commits = []
-        skipped = 0
-        current_path = options[:path]
-        current_path = nil if current_path == ''
-
-        limit = options[:limit].to_i
-        offset = options[:offset].to_i
-        skip_merges = options[:skip_merges]
-
-        walker.sorting(Rugged::SORT_DATE)
-        walker.each do |c|
-          break if limit > 0 && commits.length >= limit
-
-          if skip_merges
-            # Skip merge commits
-            next if c.parents.length > 1
-          end
-
-          if !current_path ||
-            commit_touches_path?(c, current_path, options[:follow], walker)
-
-            # This is a commit we care about, unless we haven't skipped enough
-            # yet
-            skipped += 1
-            commits.push(c) if skipped > offset
-          end
-        end
-
-        walker.reset
-
-        commits
       end
 
       # Returns true if +commit+ introduced changes to +path+, using commit
