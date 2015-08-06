@@ -280,18 +280,19 @@ module Gitlab
         sha = sha_from_ref(actual_ref)
         repo = options[:repo]
 
-        cmd = %W(git -C #{path} log)
-        cmd << %W(-n #{options[:limit].to_i})
-        cmd << %W(--skip=#{options[:offset].to_i})
-        cmd << %W(--follow) if options[:follow]
-        cmd << %W(--no-merges) if options[:skip_merges]
-        cmd << sha
-        cmd << %W(-- #{options[:path]}) if options[:path]
+        cmd = %W(git --git-dir=#{path} log)
+        cmd += %W(-n #{options[:limit].to_i})
+        cmd += %W(--format=%H)
+        cmd += %W(--skip=#{options[:offset].to_i})
+        cmd += %W(--follow) if options[:follow]
+        cmd += %W(--no-merges) if options[:skip_merges]
+        cmd += [sha]
+        cmd += %W(-- #{options[:path]}) if options[:path]
 
-        raw_output = IO.popen(cmd.flatten) {|io| io.read }
+        raw_output = IO.popen(cmd) {|io| io.read }
 
-        log = raw_output.scan(/commit\ ([0-9a-f]{40})/).flatten.map do |c|
-          Rugged::Commit.new(rugged, c)
+        log = raw_output.lines.map do |c|
+          Rugged::Commit.new(rugged, c.strip)
         end
 
         log.is_a?(Array) ? log : []
