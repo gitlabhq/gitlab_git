@@ -1,4 +1,5 @@
 v 7.2.7
+  - Order result of `Repository#commits_between` by date.
   - Include branch/tag name in archive file and dirname
 
 v 7.2.6
