@@ -637,4 +637,17 @@ describe Gitlab::Git::Repository do
       @repo.rugged.config.delete('core.autocrlf')
     end
   end
+
+  describe '#branches with deleted branch' do
+    before(:each) do
+      ref = double()
+      ref.stub(:name) { 'bad-branch' }
+      ref.stub(:target) { raise Rugged::ReferenceError }
+      repository.rugged.stub(:branches) { [ref] }
+    end
+
+    it 'should return empty branches' do
+      expect(repository.branches).to eq([])
+    end
+  end
 end

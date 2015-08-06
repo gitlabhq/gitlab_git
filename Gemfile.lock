@@ -116,6 +116,10 @@ DEPENDENCIES
   pry
   rake
   rspec
+  rspec-mocks
   rubocop
   simplecov
   webmock
+
+BUNDLED WITH
+   1.10.5

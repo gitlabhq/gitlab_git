@@ -1,3 +1,6 @@
+v 7.2.8
+  - Ignore symbolic refs that point to deleted branches (Stan Hu)
+
 v 7.2.7
   - Order result of `Repository#commits_between` by date.
   - Include branch/tag name in archive file and dirname
