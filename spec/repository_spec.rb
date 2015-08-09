@@ -537,6 +537,14 @@ describe Gitlab::Git::Repository do
           expect(log_commits).not_to include(commit_with_new_name)
         end
       end
+
+      context "unknown ref" do
+        let(:log_commits) { repository.log(options.merge(ref: 'unknown')) }
+
+        it "should return empty" do
+          expect(log_commits).to eq([])
+        end
+      end
     end
 
     context "where 'follow' == false" do

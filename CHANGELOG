@@ -1,3 +1,6 @@
+v 7.2.11
+  - Fix regression in 7.2.9 causing log method to throw an exception given an unknown ref (Stan Hu)
+
 v 7.2.10
   - Disable auto-CRLF correction for binary files (Stan Hu)
 
