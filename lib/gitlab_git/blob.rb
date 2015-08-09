@@ -127,8 +127,9 @@ module Gitlab
             index.remove(file[:path])
           else
             content = file[:content]
+            detect = CharlockHolmes::EncodingDetector.new.detect(content) if content
 
-            unless file[:binary]
+            unless detect && detect[:type] == :binary
               # When writing to the repo directly as we are doing here,
               # the `core.autocrlf` config isn't taken into account.
               content.gsub!("\r\n", "\n") if repository.autocrlf
