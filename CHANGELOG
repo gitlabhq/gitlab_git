@@ -1,3 +1,6 @@
+v 7.2.10
+  - Disable auto-CRLF correction for binary files (Stan Hu)
+
 v 7.2.9
   - Optimization of file history method
 
