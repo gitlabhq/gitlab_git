@@ -128,9 +128,11 @@ module Gitlab
           else
             content = file[:content]
 
-            # When writing to the repo directly as we are doing here, 
-            # the `core.autocrlf` config isn't taken into account.
-            content.gsub!("\r\n", "\n") if repository.autocrlf
+            unless file[:binary]
+              # When writing to the repo directly as we are doing here,
+              # the `core.autocrlf` config isn't taken into account.
+              content.gsub!("\r\n", "\n") if repository.autocrlf
+            end
 
             oid = repo.write(content, :blob)
             index.add(path: file[:path], oid: oid, mode: 0100644)
