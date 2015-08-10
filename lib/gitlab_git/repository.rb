@@ -277,7 +277,13 @@ module Gitlab
         options[:limit] ||= 0
         options[:offset] ||= 0
         actual_ref = options[:ref] || root_ref
-        sha = sha_from_ref(actual_ref)
+        begin
+          sha = sha_from_ref(actual_ref)
+        rescue Rugged::OdbError, Rugged::InvalidError, Rugged::ReferenceError
+          # Return an empty array if the ref wasn't found
+          return []
+        end
+
         repo = options[:repo]
 
         cmd = %W(git --git-dir=#{path} log)
