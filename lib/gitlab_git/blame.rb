@@ -1,24 +1,70 @@
 module Gitlab
   module Git
     class Blame
-      attr_accessor :blob
+      attr_reader :lines
 
       def initialize(repository, sha, path)
-        @repo = repository.rugged
-        @blame = Rugged::Blame.new(@repo, path, { newest_commit: sha })
-        @blob = Blob.find(repository, sha, path)
-        @lines = @blob.data.split("\n")
+        @repo = repository
+        @sha = sha
+        @path = path
+        @lines = []
+        @load_blame = load_blame
       end
 
       def each
-        @blame.each do |blame|
-          from = blame[:final_start_line_number] - 1
-          commit = @repo.lookup(blame[:final_commit_id])
-
-          yield(Gitlab::Git::Commit.new(commit),
-              @lines[from, blame[:lines_in_hunk]] || [],
-              blame[:final_start_line_number])
+        @load_blame.each do |blame|
+          yield(
+            Gitlab::Git::Commit.new(blame.commit),
+            blame.line
+          )
         end
+      end
+
+      private
+
+      def load_blame
+        cmd = %W(git --git-dir=#{@repo.path} blame -p #{@sha} -- #{@path})
+        raw_output = IO.popen(cmd) {|io| io.read }
+        process_raw_blame raw_output
+      end
+
+      def process_raw_blame(output)
+        lines, final = [], []
+        info, commits = {}, {}
+
+        # process the output
+        output.split("\n").each do |line|
+          if line[0, 1] == "\t"
+            lines << line[1, line.size]
+          elsif m = /^(\w{40}) (\d+) (\d+)/.match(line)
+            commit_id, old_lineno, lineno = m[1], m[2].to_i, m[3].to_i
+            commits[commit_id] = nil if !commits.key?(commit_id)
+            info[lineno] = [commit_id, old_lineno]
+          end
+        end
+
+        # load all commits in single call
+        commits.keys.each do |key|
+          commits[key] = @repo.lookup(key)
+        end
+
+        # get it together
+        info.sort.each do |lineno, (commit_id, old_lineno)|
+          commit = commits[commit_id]
+          final << BlameLine.new(lineno, old_lineno, commit, lines[lineno - 1])
+        end
+
+        @lines = final
+      end
+    end
+
+    class BlameLine
+      attr_accessor :lineno, :oldlineno, :commit, :line
+      def initialize(lineno, oldlineno, commit, line)
+        @lineno = lineno
+        @oldlineno = oldlineno
+        @commit = commit
+        @line = line
       end
     end
   end
