@@ -8,10 +8,17 @@ describe Gitlab::Git::Blame do
 
   context "each count" do
     it do
-      blame.each do |commit, hunk_lines|
-        commit.should be_kind_of Gitlab::Git::Commit
-        hunk_lines.first.should == "# Contribute to GitLab"
+      data = []
+      blame.each do |commit, line|
+        data << {
+          commit: commit,
+          line: line
+        }
       end
+
+      data.size.should == 95
+      data.first[:commit].should be_kind_of Gitlab::Git::Commit
+      data.first[:line].should == "# Contribute to GitLab"
     end
   end
 end

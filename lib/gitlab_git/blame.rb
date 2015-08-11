@@ -1,18 +1,18 @@
 module Gitlab
   module Git
     class Blame
-      attr_reader :lines
+      attr_reader :lines, :blames
 
       def initialize(repository, sha, path)
         @repo = repository
         @sha = sha
         @path = path
         @lines = []
-        @load_blame = load_blame
+        @blames = load_blame
       end
 
       def each
-        @load_blame.each do |blame|
+        @blames.each do |blame|
           yield(
             Gitlab::Git::Commit.new(blame.commit),
             blame.line
