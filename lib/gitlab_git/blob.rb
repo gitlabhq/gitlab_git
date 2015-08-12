@@ -112,8 +112,12 @@ module Gitlab
           committer = options[:committer]
           commit = options[:commit]
           repo = repository.rugged
-          ref = 'refs/heads/' + commit[:branch]
+          ref = commit[:branch]
           parents = []
+
+          unless ref.start_with?('refs/')
+            ref = 'refs/heads/' + ref
+          end
 
           index = repo.index
 
