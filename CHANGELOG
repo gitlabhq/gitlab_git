@@ -1,3 +1,6 @@
+v 7.2.13
+  - Fix Blob#commit when pass full ref like refs/head/master
+
 v 7.2.12
   - Improved performance of git blame
 
