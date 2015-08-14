@@ -1,3 +1,6 @@
+v 7.2.14
+  - Ignore CRLFs in .gitmodules (Stan Hu)
+
 v 7.2.13
   - Fix Blob#commit when pass full ref like refs/head/master
 

@@ -842,11 +842,12 @@ module Gitlab
             next unless results[current]
             match_data = txt.match(/(\w+)\s*=\s*(.*)/)
             next unless match_data
-            results[current][match_data[1]] = match_data[2]
+            target = match_data[2].chomp
+            results[current][match_data[1]] = target
 
             if match_data[1] == "path"
               begin
-                results[current]["id"] = blob_content(commit, match_data[2])
+                results[current]["id"] = blob_content(commit, target)
               rescue InvalidBlobName
                 results.delete(current)
               end
