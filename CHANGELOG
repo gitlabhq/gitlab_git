@@ -1,3 +1,6 @@
+v 7.2.15
+  - Handle `git blame` for files encoded in different formats (e.g. ISO-8859) (Stan Hu)
+
 v 7.2.14
   - Ignore CRLFs in .gitmodules (Stan Hu)
 
