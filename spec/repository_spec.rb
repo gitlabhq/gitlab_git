@@ -1,6 +1,8 @@
 require "spec_helper"
 
 describe Gitlab::Git::Repository do
+  include EncodingHelper
+
   let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
 
   describe "Respond to" do
@@ -226,7 +228,7 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 18 }
+    it { repository.commit_count("master").should == 19 }
     it { repository.commit_count("feature").should == 9 }
   end
 
@@ -242,7 +244,7 @@ describe Gitlab::Git::Repository do
     change_text = "New changelog text"
     untracked_text = "This file is untracked"
 
-    reset_commit = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
+    reset_commit = SeedRepo::LastCommit::ID
 
     context "--hard" do
       before(:all) do
@@ -257,7 +259,7 @@ describe Gitlab::Git::Repository do
         end
 
         @normal_repo = Gitlab::Git::Repository.new(TEST_NORMAL_REPO_PATH)
-        @normal_repo.reset("HEAD~4", :hard)
+        @normal_repo.reset("HEAD", :hard)
       end
 
       it "should replace the working directory with the content of the index" do
@@ -465,6 +467,7 @@ describe Gitlab::Git::Repository do
 
     it "should contain the same diffs as #diff" do
       diff_text = repo.diff_text("master", "feature")
+      diff_text = encode_utf8(diff_text)
       repo.diff("master", "feature").each do |single_diff|
         expect(diff_text.include?(single_diff.diff)).to be_true
       end
