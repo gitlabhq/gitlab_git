@@ -30,6 +30,18 @@ describe Gitlab::Git::Blob do
       it { blob.mode.should == "100644" }
     end
 
+    context 'file in root with leading slash' do
+      let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, "/.gitignore") }
+
+      it { blob.id.should == "dfaa3f97ca337e20154a98ac9d0be76ddd1fcc82" }
+      it { blob.name.should == ".gitignore" }
+      it { blob.path.should == ".gitignore" }
+      it { blob.commit_id.should == SeedRepo::Commit::ID }
+      it { blob.data[0..10].should == "*.rbc\n*.sas" }
+      it { blob.size.should == 241 }
+      it { blob.mode.should == "100644" }
+    end
+
     context 'non-exist file' do
       let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, "missing.rb") }
 
