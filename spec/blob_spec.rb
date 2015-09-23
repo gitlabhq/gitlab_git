@@ -1,4 +1,4 @@
-# encoding: UTF-8
+# encoding: utf-8
 
 require "spec_helper"
 
@@ -166,13 +166,13 @@ describe Gitlab::Git::Blob do
          },
          commit: {
            message: 'Wow such commit',
-           branch: 'feature'
+           branch: 'fix-mode'
          }
       }
     end
 
-    let!(:commit_sha) { Gitlab::Git::Blob.commit(repository, commit_options) }
-    let!(:commit) { repository.lookup(commit_sha) }
+    let(:commit_sha) { Gitlab::Git::Blob.commit(repository, commit_options) }
+    let(:commit) { repository.lookup(commit_sha) }
 
     it 'should add file with commit' do
       # Commit message valid
@@ -185,6 +185,24 @@ describe Gitlab::Git::Blob do
 
       # File was created
       repository.lookup(tree[:oid]).first[:name].should == 'story.txt'
+    end
+
+    describe 'reject updates' do
+      it 'should reject updates' do
+        commit_options[:file][:update] = false
+        commit_options[:file][:path] = 'files/executables/ls'
+
+        expect{ commit_sha }.to raise_error('Filename already exists; update not allowed')
+      end
+    end
+
+    describe 'file modes' do
+      it 'should preserve file modes with commit' do
+        commit_options[:file][:path] = 'files/executables/ls'
+
+        entry = Gitlab::Git::Blob::find_entry_by_path(repository, commit.tree.oid, commit_options[:file][:path])
+        expect(entry[:filemode]).to eq(0100755)
+      end
     end
   end
 
