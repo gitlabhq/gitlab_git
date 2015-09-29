@@ -957,16 +957,14 @@ module Gitlab
 
           # Get the compression process ready to accept data from the read end
           # of the pipe
-          compress_pid = spawn(*compress_cmd, in: pipe_rd, out: file)
-          # Set the lowest priority for the compressing process
-          popen(nice_process(compress_pid), path)
+          compress_pid = spawn(*nice(compress_cmd), in: pipe_rd, out: file)
           # The read end belongs to the compression process now; we should
           # close our file descriptor for it.
           pipe_rd.close
 
           # Start 'git archive' and tell it to write into the write end of the
           # pipe.
-          git_archive_pid = spawn(*git_archive_cmd, out: pipe_wr)
+          git_archive_pid = spawn(*nice(git_archive_cmd), out: pipe_wr)
           # The write end belongs to 'git archive' now; close it.
           pipe_wr.close
 
@@ -979,14 +977,12 @@ module Gitlab
         end
       end
 
-      def nice_process(pid)
-        niced_process = %W(renice -n 20 -p #{pid})
-
+      def nice(cmd)
+        nice_cmd = %W(nice -n 20)
         unless unsupported_platform?
-          niced_process = %W(ionice -c 2 -n 7 -p #{pid}) + niced_process
+          nice_cmd += %W(ionice -c 2 -n 7)
         end
-
-        niced_process
+        nice_cmd + cmd
       end
 
       def unsupported_platform?
