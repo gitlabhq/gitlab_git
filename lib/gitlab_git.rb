@@ -3,6 +3,7 @@ require 'ostruct'
 require 'fileutils'
 require 'linguist'
 require 'active_support/core_ext/hash/keys'
+require 'active_support/core_ext/object/blank'
 require 'active_support/core_ext/object/try'
 require 'rugged'
 require "charlock_holmes"

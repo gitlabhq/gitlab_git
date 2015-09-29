@@ -11,6 +11,8 @@ require 'pry'
 
 require_relative 'support/seed_helper'
 require_relative 'support/commit'
+require_relative 'support/empty_commit'
+require_relative 'support/encoding_commit'
 require_relative 'support/first_commit'
 require_relative 'support/last_commit'
 require_relative 'support/big_commit'
