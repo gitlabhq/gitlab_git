@@ -1,4 +1,4 @@
-Dev
+v 7.2.17
   - Ensure empty commits are returned by Commit.where (Rémy Coutable)
 
 v 7.2.16
