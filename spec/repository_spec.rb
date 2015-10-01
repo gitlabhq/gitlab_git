@@ -228,7 +228,7 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 19 }
+    it { repository.commit_count("master").should == 21 }
     it { repository.commit_count("feature").should == 9 }
   end
 
@@ -431,7 +431,7 @@ describe Gitlab::Git::Repository do
   describe "#remote_add" do
     before(:all) do
       @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
-      @repo.remote_add("new_remote", SeedHelper::GITHUB_URL)
+      @repo.remote_add("new_remote", SeedHelper::GITLAB_URL)
     end
 
     it "should add the remote" do

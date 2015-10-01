@@ -1,5 +1,5 @@
 module SeedHelper
-  GITHUB_URL = "https://gitlab.com/gitlab-org/gitlab-git-test.git"
+  GITLAB_URL = "https://gitlab.com/gitlab-org/gitlab-git-test.git"
 
   def ensure_seeds
     if File.exists?(SUPPORT_PATH)
@@ -14,7 +14,7 @@ module SeedHelper
   end
 
   def create_bare_seeds
-    system(git_env, *%W(git clone --bare #{GITHUB_URL}), chdir: SUPPORT_PATH)
+    system(git_env, *%W(git clone --bare #{GITLAB_URL}), chdir: SUPPORT_PATH)
   end
 
   def create_normal_seeds
@@ -25,7 +25,7 @@ module SeedHelper
     system(git_env, *%W(git clone #{TEST_REPO_PATH} #{TEST_MUTABLE_REPO_PATH}))
     system(git_env, *%w(git branch -t feature origin/feature),
            chdir: TEST_MUTABLE_REPO_PATH)
-    system(git_env, *%W(git remote add expendable #{GITHUB_URL}),
+    system(git_env, *%W(git remote add expendable #{GITLAB_URL}),
            chdir: TEST_MUTABLE_REPO_PATH)
   end
 

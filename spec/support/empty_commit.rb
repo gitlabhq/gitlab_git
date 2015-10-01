@@ -22,12 +22,12 @@
 # 1a0b36b3cdad1d2ee32457c102a8c0b7056fa863 Initial commit
 #
 module SeedRepo
-  module FirstCommit
-    ID = "1a0b36b3cdad1d2ee32457c102a8c0b7056fa863"
-    PARENT_ID = nil
-    MESSAGE = "Initial commit"
-    AUTHOR_FULL_NAME = "Dmitriy Zaporozhets"
-    FILES = ["LICENSE", ".gitignore", "README.md"]
-    FILES_COUNT = 3
+  module EmptyCommit
+    ID = "b0e52af38d7ea43cf41d8a6f2471351ac036d6c9"
+    PARENT_ID = "40f4a7a617393735a95a0bb67b08385bc1e7c66d"
+    MESSAGE = "Empty commit"
+    AUTHOR_FULL_NAME = "Rémy Coutable"
+    FILES = []
+    FILES_COUNT = FILES.count
   end
 end

@@ -293,7 +293,7 @@ module Gitlab
         cmd += %W(--follow) if options[:follow]
         cmd += %W(--no-merges) if options[:skip_merges]
         cmd += [sha]
-        cmd += %W(-- #{options[:path]}) if options[:path]
+        cmd += %W(-- #{options[:path]}) if options[:path].present?
 
         raw_output = IO.popen(cmd) {|io| io.read }
 

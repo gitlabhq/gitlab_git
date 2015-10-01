@@ -25,7 +25,7 @@ describe Gitlab::Git::Blame do
 
   context "ISO-8859 encoding" do
     let(:blame) do
-      Gitlab::Git::Blame.new(repository, SeedRepo::LastCommit::ID, "encoding/iso8859.txt")
+      Gitlab::Git::Blame.new(repository, SeedRepo::EncodingCommit::ID, "encoding/iso8859.txt")
     end
 
     it 'converts to UTF-8' do
@@ -45,7 +45,7 @@ describe Gitlab::Git::Blame do
 
   context "unknown encoding" do
     let(:blame) do
-      Gitlab::Git::Blame.new(repository, SeedRepo::LastCommit::ID, "encoding/iso8859.txt")
+      Gitlab::Git::Blame.new(repository, SeedRepo::EncodingCommit::ID, "encoding/iso8859.txt")
     end
 
     it 'converts to UTF-8' do
