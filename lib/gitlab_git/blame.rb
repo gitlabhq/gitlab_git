@@ -1,6 +1,10 @@
+require_relative 'encoding_helper'
+
 module Gitlab
   module Git
     class Blame
+      include EncodingHelper
+
       attr_reader :lines, :blames
 
       def initialize(repository, sha, path)
@@ -24,8 +28,10 @@ module Gitlab
 
       def load_blame
         cmd = %W(git --git-dir=#{@repo.path} blame -p #{@sha} -- #{@path})
-        raw_output = IO.popen(cmd) {|io| io.read }
-        process_raw_blame raw_output
+        # Read in binary mode to ensure ASCII-8BIT
+        raw_output = IO.popen(cmd, 'rb') {|io| io.read }
+        output = encode_utf8(raw_output)
+        process_raw_blame output
       end
 
       def process_raw_blame(output)

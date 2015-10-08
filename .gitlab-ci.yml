@@ -1,0 +1,19 @@
+before_script:
+  - ./scripts/prepare_build.sh
+  - git submodule update --init
+  - ruby -v
+  - which ruby
+  - gem install bundler --no-ri --no-rdoc
+  - bundle install
+
+rspec:
+  script:
+  - bundle exec rspec spec
+  tags:
+    - ruby
+
+rubocop:
+  script:
+    - bundle exec rubocop
+  tags:
+    - ruby

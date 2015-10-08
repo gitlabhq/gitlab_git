@@ -1,4 +1,7 @@
 # Seed repo:
+# 732401c65e924df81435deb12891ef570167d2e2 Update year in license file
+# b0e52af38d7ea43cf41d8a6f2471351ac036d6c9 Empty commit
+# 40f4a7a617393735a95a0bb67b08385bc1e7c66d Add ISO-8859-encoded file
 # 66028349a123e695b589e09a36634d976edcc5e8 Merge branch 'add-comments-to-gitmodules' into 'master'
 # de5714f34c4e34f1d50b9a61a2e6c9132fe2b5fd Add comments to the end of .gitmodules to test parsing
 # fa1b1e6c004a68b7d8763b86455da9e6b23e36d6 Merge branch 'add-files' into 'master'
@@ -20,11 +23,11 @@
 #
 module SeedRepo
   module LastCommit
-    ID = "66028349a123e695b589e09a36634d976edcc5e8"
-    PARENT_ID = "de5714f34c4e34f1d50b9a61a2e6c9132fe2b5fd"
-    MESSAGE = "Merge branch 'add-comments-to-gitmodules' into 'master'"
-    AUTHOR_FULL_NAME = "Douwe Maan"
-    FILES = [".gitmodules"]
+    ID = "732401c65e924df81435deb12891ef570167d2e2"
+    PARENT_ID = "b0e52af38d7ea43cf41d8a6f2471351ac036d6c9"
+    MESSAGE = "Update year in license file"
+    AUTHOR_FULL_NAME = "Rémy Coutable"
+    FILES = ["LICENSE"]
     FILES_COUNT = FILES.count
   end
 end

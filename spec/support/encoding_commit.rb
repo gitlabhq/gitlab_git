@@ -22,12 +22,12 @@
 # 1a0b36b3cdad1d2ee32457c102a8c0b7056fa863 Initial commit
 #
 module SeedRepo
-  module FirstCommit
-    ID = "1a0b36b3cdad1d2ee32457c102a8c0b7056fa863"
-    PARENT_ID = nil
-    MESSAGE = "Initial commit"
-    AUTHOR_FULL_NAME = "Dmitriy Zaporozhets"
-    FILES = ["LICENSE", ".gitignore", "README.md"]
-    FILES_COUNT = 3
+  module EncodingCommit
+    ID = "40f4a7a617393735a95a0bb67b08385bc1e7c66d"
+    PARENT_ID = "66028349a123e695b589e09a36634d976edcc5e8"
+    MESSAGE = "Add ISO-8859-encoded file"
+    AUTHOR_FULL_NAME = "Stan Hu"
+    FILES = ["encoding/iso8859.txt"]
+    FILES_COUNT = FILES.count
   end
 end

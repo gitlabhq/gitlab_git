@@ -1,5 +1,6 @@
 # Gitlab::Git::Repository is a wrapper around native Rugged::Repository object
 require_relative 'encoding_helper'
+require_relative 'path_helper'
 require 'tempfile'
 require "rubygems/package"
 
@@ -12,6 +13,7 @@ module Gitlab
 
       class NoRepository < StandardError; end
       class InvalidBlobName < StandardError; end
+      class InvalidRef < StandardError; end
 
       # Default branch in the repository
       attr_accessor :root_ref
@@ -240,7 +242,7 @@ module Gitlab
         cmd += %W(--follow) if options[:follow]
         cmd += %W(--no-merges) if options[:skip_merges]
         cmd += [sha]
-        cmd += %W(-- #{options[:path]}) if options[:path]
+        cmd += %W(-- #{options[:path]}) if options[:path].present?
 
         raw_output = IO.popen(cmd) {|io| io.read }
 
@@ -754,6 +756,53 @@ module Gitlab
         rugged.config['core.autocrlf'] = AUTOCRLF_VALUES.invert[value]
       end
 
+      # Create a new directory with a .gitkeep file. Creates
+      # all required nested directories (i.e. mkdir -p behavior)
+      #
+      # options should contain next structure:
+      #   author: {
+      #     email: 'user@example.com',
+      #     name: 'Test User',
+      #     time: Time.now
+      #   },
+      #   committer: {
+      #     email: 'user@example.com',
+      #     name: 'Test User',
+      #     time: Time.now
+      #   },
+      #   commit: {
+      #     message: 'Wow such commit',
+      #     branch: 'master'
+      #   }
+      def mkdir(path, options = {})
+        # Check if this directory exists; if it does, then don't bother
+        # adding .gitkeep file.
+        ref = options[:commit][:branch]
+        path = PathHelper.normalize_path(path).to_s
+        rugged_ref = rugged.ref(ref)
+
+        raise InvalidRef.new("Invalid ref") if rugged_ref.nil?
+        target_commit = rugged_ref.target
+        raise InvalidRef.new("Invalid target commit") if target_commit.nil?
+
+        entry = tree_entry(target_commit, path)
+        if entry
+          if entry[:type] == :blob
+            raise InvalidBlobName.new("Directory already exists as a file")
+          else
+            raise InvalidBlobName.new("Directory already exists")
+          end
+        end
+
+        options[:file] = {
+          content: '',
+          path: "#{path}/.gitkeep",
+          update: true
+        }
+
+        Blob.commit(self, options)
+      end
+
       private
 
       # Get the content of a blob for a given commit.  If the blob is a commit
@@ -789,11 +838,12 @@ module Gitlab
             next unless results[current]
             match_data = txt.match(/(\w+)\s*=\s*(.*)/)
             next unless match_data
-            results[current][match_data[1]] = match_data[2]
+            target = match_data[2].chomp
+            results[current][match_data[1]] = target
 
             if match_data[1] == "path"
               begin
-                results[current]["id"] = blob_content(commit, match_data[2])
+                results[current]["id"] = blob_content(commit, target)
               rescue InvalidBlobName
                 results.delete(current)
               end
@@ -847,11 +897,15 @@ module Gitlab
       # Find the entry for +path+ in the tree for +commit+
       def tree_entry(commit, path)
         pathname = Pathname.new(path)
+        first = true
         tmp_entry = nil
 
         pathname.each_filename do |dir|
-          if tmp_entry.nil?
+          if first
             tmp_entry = commit.tree[dir]
+            first = false
+          elsif tmp_entry.nil?
+            return nil
           else
             tmp_entry = rugged.lookup(tmp_entry[:oid])
             return nil unless tmp_entry.type == :tree
@@ -903,16 +957,14 @@ module Gitlab
 
           # Get the compression process ready to accept data from the read end
           # of the pipe
-          compress_pid = spawn(*compress_cmd, in: pipe_rd, out: file)
-          # Set the lowest priority for the compressing process
-          popen(nice_process(compress_pid), path)
+          compress_pid = spawn(*nice(compress_cmd), in: pipe_rd, out: file)
           # The read end belongs to the compression process now; we should
           # close our file descriptor for it.
           pipe_rd.close
 
           # Start 'git archive' and tell it to write into the write end of the
           # pipe.
-          git_archive_pid = spawn(*git_archive_cmd, out: pipe_wr)
+          git_archive_pid = spawn(*nice(git_archive_cmd), out: pipe_wr)
           # The write end belongs to 'git archive' now; close it.
           pipe_wr.close
 
@@ -925,14 +977,12 @@ module Gitlab
         end
       end
 
-      def nice_process(pid)
-        niced_process = %W(renice -n 20 -p #{pid})
-
+      def nice(cmd)
+        nice_cmd = %W(nice -n 20)
         unless unsupported_platform?
-          niced_process = %W(ionice -c 2 -n 7 -p #{pid}) + niced_process
+          nice_cmd += %W(ionice -c 2 -n 7)
         end
-
-        niced_process
+        nice_cmd + cmd
       end
 
       def unsupported_platform?

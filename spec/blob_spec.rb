@@ -1,4 +1,4 @@
-# encoding: UTF-8
+# encoding: utf-8
 
 require "spec_helper"
 
@@ -20,6 +20,18 @@ describe Gitlab::Git::Blob do
 
     context 'file in root' do
       let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, ".gitignore") }
+
+      it { blob.id.should == "dfaa3f97ca337e20154a98ac9d0be76ddd1fcc82" }
+      it { blob.name.should == ".gitignore" }
+      it { blob.path.should == ".gitignore" }
+      it { blob.commit_id.should == SeedRepo::Commit::ID }
+      it { blob.data[0..10].should == "*.rbc\n*.sas" }
+      it { blob.size.should == 241 }
+      it { blob.mode.should == "100644" }
+    end
+
+    context 'file in root with leading slash' do
+      let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, "/.gitignore") }
 
       it { blob.id.should == "dfaa3f97ca337e20154a98ac9d0be76ddd1fcc82" }
       it { blob.name.should == ".gitignore" }
@@ -154,13 +166,13 @@ describe Gitlab::Git::Blob do
          },
          commit: {
            message: 'Wow such commit',
-           branch: 'feature'
+           branch: 'fix-mode'
          }
       }
     end
 
-    let!(:commit_sha) { Gitlab::Git::Blob.commit(repository, commit_options) }
-    let!(:commit) { repository.lookup(commit_sha) }
+    let(:commit_sha) { Gitlab::Git::Blob.commit(repository, commit_options) }
+    let(:commit) { repository.lookup(commit_sha) }
 
     it 'should add file with commit' do
       # Commit message valid
@@ -173,6 +185,24 @@ describe Gitlab::Git::Blob do
 
       # File was created
       repository.lookup(tree[:oid]).first[:name].should == 'story.txt'
+    end
+
+    describe 'reject updates' do
+      it 'should reject updates' do
+        commit_options[:file][:update] = false
+        commit_options[:file][:path] = 'files/executables/ls'
+
+        expect{ commit_sha }.to raise_error('Filename already exists; update not allowed')
+      end
+    end
+
+    describe 'file modes' do
+      it 'should preserve file modes with commit' do
+        commit_options[:file][:path] = 'files/executables/ls'
+
+        entry = Gitlab::Git::Blob::find_entry_by_path(repository, commit.tree.oid, commit_options[:file][:path])
+        expect(entry[:filemode]).to eq(0100755)
+      end
     end
   end
 

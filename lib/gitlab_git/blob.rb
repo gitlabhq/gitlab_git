@@ -1,3 +1,6 @@
+require_relative 'encoding_helper'
+require_relative 'path_helper'
+
 module Gitlab
   module Git
     class Blob
@@ -57,6 +60,8 @@ module Gitlab
         #
         def find_entry_by_path(repository, root_id, path)
           root_tree = repository.lookup(root_id)
+          # Strip leading slashes
+          path[/^\/*/] = ''
           path_arr = path.split('/')
 
           entry = root_tree.find do |entry|
@@ -89,7 +94,8 @@ module Gitlab
         # options should contain next structure:
         #   file: {
         #     content: 'Lorem ipsum...',
-        #     path: 'documents/story.txt'
+        #     path: 'documents/story.txt',
+        #     update: true
         #   },
         #   author: {
         #     email: 'user@example.com',
@@ -108,6 +114,7 @@ module Gitlab
         #
         def commit(repository, options, action = :add)
           file = options[:file]
+          update = file[:update].nil? ? true : file[:update]
           author = options[:author]
           committer = options[:committer]
           commit = options[:commit]
@@ -119,17 +126,33 @@ module Gitlab
             ref = 'refs/heads/' + ref
           end
 
+          path_name = PathHelper.normalize_path(file[:path])
+          # Abort if any invalid characters remain (e.g. ../foo)
+          raise Repository::InvalidBlobName.new("Invalid path") if path_name.each_filename.to_a.include?('..')
+
+          filename = path_name.to_s
           index = repo.index
 
           unless repo.empty?
-            last_commit = repo.references[ref].target
+            rugged_ref = repo.references[ref]
+            raise Repository::InvalidRef.new("Invalid branch name") unless rugged_ref
+            last_commit = rugged_ref.target
             index.read_tree(last_commit.tree)
             parents = [last_commit]
           end
 
           if action == :remove
-            index.remove(file[:path])
+            index.remove(filename)
           else
+            mode = 0100644
+            file_entry = index.get(filename)
+
+            if file_entry
+              raise Repository::InvalidBlobName.new("Filename already exists; update not allowed") unless update
+              # Preserve the current file mode if one is available
+              mode = file_entry[:mode] if file_entry[:mode]
+            end
+
             content = file[:content]
             detect = CharlockHolmes::EncodingDetector.new.detect(content) if content
 
@@ -140,7 +163,7 @@ module Gitlab
             end
 
             oid = repo.write(content, :blob)
-            index.add(path: file[:path], oid: oid, mode: 0100644)
+            index.add(path: filename, oid: oid, mode: mode)
           end
 
           opts = {}

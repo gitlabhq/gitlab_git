@@ -24,6 +24,15 @@ module EncodingHelper
     "--broken encoding: #{encoding}"
   end
 
+  def encode_utf8(message)
+    detect = CharlockHolmes::EncodingDetector.detect(message)
+    if detect
+      CharlockHolmes::Converter.convert(message, detect[:encoding], 'UTF-8')
+    else
+      clean(message)
+    end
+  end
+
   private
 
   def clean(message)

@@ -1,6 +1,8 @@
 require "spec_helper"
 
 describe Gitlab::Git::Repository do
+  include EncodingHelper
+
   let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
 
   describe "Respond to" do
@@ -220,7 +222,7 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 18 }
+    it { repository.commit_count("master").should == 21 }
     it { repository.commit_count("feature").should == 9 }
   end
 
@@ -232,7 +234,7 @@ describe Gitlab::Git::Repository do
     change_text = "New changelog text"
     untracked_text = "This file is untracked"
 
-    reset_commit = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
+    reset_commit = SeedRepo::LastCommit::ID
 
     context "--hard" do
       before(:all) do
@@ -247,7 +249,7 @@ describe Gitlab::Git::Repository do
         end
 
         @normal_repo = Gitlab::Git::Repository.new(TEST_NORMAL_REPO_PATH)
-        @normal_repo.reset("HEAD~4", :hard)
+        @normal_repo.reset("HEAD", :hard)
       end
 
       it "should replace the working directory with the content of the index" do
@@ -419,7 +421,7 @@ describe Gitlab::Git::Repository do
   describe "#remote_add" do
     before(:all) do
       @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
-      @repo.remote_add("new_remote", SeedHelper::GITHUB_URL)
+      @repo.remote_add("new_remote", SeedHelper::GITLAB_URL)
     end
 
     it "should add the remote" do
@@ -455,6 +457,7 @@ describe Gitlab::Git::Repository do
 
     it "should contain the same diffs as #diff" do
       diff_text = repo.diff_text("master", "feature")
+      diff_text = encode_utf8(diff_text)
       repo.diff("master", "feature").each do |single_diff|
         expect(diff_text.include?(single_diff.diff)).to be_true
       end
@@ -646,6 +649,85 @@ describe Gitlab::Git::Repository do
 
     it 'should return empty branches' do
       expect(repository.branches).to eq([])
+    end
+  end
+
+  describe '#mkdir' do
+    let(:commit_options) do
+      {
+        author: {
+          email: 'user@example.com',
+          name: 'Test User',
+          time: Time.now
+        },
+        committer: {
+          email: 'user@example.com',
+          name: 'Test User',
+          time: Time.now
+        },
+        commit: {
+          message: 'Test message',
+          branch: 'refs/heads/fix',
+        }
+      }
+    end
+
+    def generate_diff_for_path(path)
+      "diff --git a/#{path}/.gitkeep b/#{path}/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/#{path}/.gitkeep\n"
+    end
+
+    shared_examples 'mkdir diff check' do |path, expected_path|
+      it 'creates a directory' do
+        result = repository.mkdir(path, commit_options)
+        expect(result).not_to eq(nil)
+
+        diff_text = repository.diff_text("#{result}~1", result)
+        expected = generate_diff_for_path(expected_path)
+        expect(diff_text).to eq(expected)
+
+        # Verify another mkdir doesn't create a directory that already exists
+        expect{ repository.mkdir(path, commit_options) }.to raise_error('Directory already exists')
+      end
+    end
+
+    describe 'creates a directory in root directory' do
+      it_should_behave_like 'mkdir diff check', 'new_dir', 'new_dir'
+    end
+
+    describe 'creates a directory in subdirectory' do
+      it_should_behave_like 'mkdir diff check', 'files/ruby/test', 'files/ruby/test'
+    end
+
+    describe 'creates a directory in subdirectory with a slash' do
+      it_should_behave_like 'mkdir diff check', '/files/ruby/test2', 'files/ruby/test2'
+    end
+
+    describe 'creates a directory in subdirectory with multiple slashes' do
+      it_should_behave_like 'mkdir diff check', '//files/ruby/test3', 'files/ruby/test3'
+    end
+
+    describe 'handles relative paths' do
+      it_should_behave_like 'mkdir diff check', 'files/ruby/../test_relative', 'files/test_relative'
+    end
+
+    describe 'creates nested directories' do
+      it_should_behave_like 'mkdir diff check', 'files/missing/test', 'files/missing/test'
+    end
+
+    it 'does not attempt to create a directory with invalid relative path' do
+      expect{ repository.mkdir('../files/missing/test', commit_options) }.to raise_error('Invalid path')
+    end
+
+    it 'does not attempt to overwrite a file' do
+      expect{ repository.mkdir('README.md', commit_options) }.to raise_error('Directory already exists as a file')
+    end
+
+    it 'does not attempt to overwrite a directory' do
+      expect{ repository.mkdir('files', commit_options) }.to raise_error('Directory already exists')
     end
   end
 end
