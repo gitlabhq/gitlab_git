@@ -64,36 +64,30 @@ describe Gitlab::Git::Repository do
   end
 
   shared_examples 'archive check' do |extenstion|
-    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-master-#{SeedRepo::LastCommit::ID}/) }
-    it { archive.should end_with extenstion }
-    it { File.exists?(archive).should be_true }
-    it { File.size?(archive).should_not be_nil }
+    it { metadata['ArchivePath'].should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-master-#{SeedRepo::LastCommit::ID}/) }
+    it { metadata['ArchivePath'].should end_with extenstion }
   end
 
   describe :archive do
-    let(:archive) { repository.archive_repo('master', '/tmp') }
-    after { FileUtils.rm_r(archive) }
+    let(:metadata) { repository.archive_metadata('master', '/tmp') }
 
     it_should_behave_like 'archive check', '.tar.gz'
   end
 
   describe :archive_zip do
-    let(:archive) { repository.archive_repo('master', '/tmp', 'zip') }
-    after { FileUtils.rm_r(archive) }
+    let(:metadata) { repository.archive_metadata('master', '/tmp', 'zip') }
 
     it_should_behave_like 'archive check', '.zip'
   end
 
   describe :archive_bz2 do
-    let(:archive) { repository.archive_repo('master', '/tmp', 'tbz2') }
-    after { FileUtils.rm_r(archive) }
+    let(:metadata) { repository.archive_metadata('master', '/tmp', 'tbz2') }
 
     it_should_behave_like 'archive check', '.tar.bz2'
   end
 
   describe :archive_fallback do
-    let(:archive) { repository.archive_repo('master', '/tmp', 'madeup') }
-    after { FileUtils.rm_r(archive) }
+    let(:metadata) { repository.archive_metadata('master', '/tmp', 'madeup') }
 
     it_should_behave_like 'archive check', '.tar.gz'
   end
@@ -228,10 +222,6 @@ describe Gitlab::Git::Repository do
   describe :commit_count do
     it { repository.commit_count("master").should == 18 }
     it { repository.commit_count("feature").should == 9 }
-  end
-
-  describe :archive_repo do
-    it { repository.archive_repo('master', '/tmp').should == "/tmp/gitlab-git-test.git/gitlab-git-test-master-#{SeedRepo::LastCommit::ID}.tar.gz" }
   end
 
   describe "#reset" do
