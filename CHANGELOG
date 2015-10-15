@@ -1,3 +1,6 @@
+v 7.2.19
+  - Return archive metadata, do not create archives
+
 v 7.2.18
   - Support capability to reject updating of existing files (Stan Hu)
   - Preserve file mode when updating existing file (Stan Hu)
