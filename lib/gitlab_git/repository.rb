@@ -138,73 +138,24 @@ module Gitlab
         nil
       end
 
-      # Archive Project to .tar.gz
-      #
-      # Already packed repo archives stored at
-      # app_root/tmp/repositories/<project_name>.git/<project_name>-<ref>-<commit id>.tar.gz
-      #
-      def archive_repo(ref, storage_path, format = "tar.gz")
-        ref ||= root_ref
-
-        file_path = archive_file_path(ref, storage_path, format)
-        return nil unless file_path
-
-        return file_path if File.exist?(file_path)
-
-        case format
-        when "tar.bz2", "tbz", "tbz2", "tb2", "bz2"
-          compress_cmd = %W(bzip2)
-        when "tar"
-          compress_cmd = %W(cat)
-        when "zip"
-          git_archive_format = "zip"
-          compress_cmd = %W(cat)
-        else
-          # everything else should fall back to tar.gz
-          compress_cmd = %W(gzip -n)
-        end
-
-        FileUtils.mkdir_p File.dirname(file_path)
-
-        pid_file_path = archive_pid_file_path(ref, storage_path, format)
-        return file_path if File.exist?(pid_file_path)
-
-        File.open(pid_file_path, "w") do |file|
-          file.puts Process.pid
-        end
-
-        # Create the archive in temp file, to avoid leaving a corrupt archive
-        # to be downloaded by the next user if we get interrupted while
-        # creating the archive.
-        temp_file_path = "#{file_path}.#{Process.pid}-#{Time.now.to_i}"
-
-        begin
-          archive_to_file(ref, temp_file_path, git_archive_format, compress_cmd)
-        rescue
-          FileUtils.rm(temp_file_path)
-          raise
-        ensure
-          FileUtils.rm(pid_file_path)
-        end
-
-        # move temp file to persisted location
-        FileUtils.move(temp_file_path, file_path)
-
-        file_path
-      end
-
-      def archive_name(ref)
+      def archive_metadata(ref, storage_path, format = "tar.gz")
         ref ||= root_ref
         commit = Gitlab::Git::Commit.find(self, ref)
-        return nil unless commit
+        return {} if commit.nil?
 
-        project_name = self.name.sub(/\.git\z/, "")
-        file_name = "#{project_name}-#{ref}-#{commit.id}"
+        project_name = self.name.chomp('.git')
+        prefix = "#{project_name}-#{ref}-#{commit.id}"
+
+        {
+          'RepoPath' => path,
+          'ArchivePrefix' => prefix,
+          'ArchivePath' => archive_file_path(prefix, storage_path, format),
+          'CommitId' => commit.id,
+        }
       end
 
-      def archive_file_path(ref, storage_path, format = "tar.gz")
+      def archive_file_path(name, storage_path, format = "tar.gz")
         # Build file path
-        name = archive_name(ref)
         return nil unless name
 
         extension =
@@ -222,10 +173,6 @@ module Gitlab
 
         file_name = "#{name}.#{extension}"
         File.join(storage_path, self.name, file_name)
-      end
-
-      def archive_pid_file_path(*args)
-        "#{archive_file_path(*args)}.pid"
       end
 
       # Return repo size in megabytes
