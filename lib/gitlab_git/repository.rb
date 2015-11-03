@@ -457,7 +457,8 @@ module Gitlab
       def commit_count(ref)
         walker = Rugged::Walker.new(rugged)
         walker.sorting(Rugged::SORT_TOPO | Rugged::SORT_REVERSE)
-        walker.push(ref)
+        oid = rugged.rev_parse_oid(ref)
+        walker.push(oid)
         walker.count
       end
 
@@ -645,7 +646,7 @@ module Gitlab
           rugged.branches.create(ref, start_point)
           options.delete(:b)
         end
-        default_options = { strategy: :safe_create }
+        default_options = { strategy: [:recreate_missing, :safe] }
         rugged.checkout(ref, default_options.merge(options))
       end
 
@@ -675,9 +676,7 @@ module Gitlab
       # repo.update_remote("origin", url: "path/to/repo")
       def remote_update(remote_name, options = {})
         # TODO: Implement other remote options
-        remote = rugged.remotes[remote_name]
-        remote.url = options[:url] if options[:url]
-        remote.save
+        rugged.remotes.set_url(remote_name, options[:url]) if options[:url]
       end
 
       # Fetch the specified remote
