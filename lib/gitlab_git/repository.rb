@@ -654,6 +654,16 @@ module Gitlab
         rugged.branches.delete(branch_name)
       end
 
+      # Create a new branch named **ref+ based on **stat_point+, HEAD by default
+      #
+      # Examples:
+      #   create_branch("feature")
+      #   create_branch("other-feature", "master")
+      def create_branch(ref, start_point = "HEAD")
+        rugged_ref = rugged.branches.create(ref, start_point)
+        Branch.new(rugged_ref.name, rugged_ref.target)
+      end
+
       # Return an array of this repository's remote names
       def remote_names
         rugged.remotes.each_name.to_a
