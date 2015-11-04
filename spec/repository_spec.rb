@@ -392,13 +392,16 @@ describe Gitlab::Git::Repository do
     it "should create a new branch" do
       expect(@repo.create_branch('new_branch', 'master')).not_to be_nil
     end
+
     it "should create a new branch with the right name" do
       expect(@repo.create_branch('another_branch', 'master').name).to eq('another_branch')
     end
+
     it "should fail if we create an exists branch" do
       @repo.create_branch('duplicated_branch', 'master')
       expect{@repo.create_branch('duplicated_branch', 'master')}.to raise_error
     end
+
     it "should fail if we create a branch from a non existing ref" do
       expect{@repo.create_branch('branch_based_in_wrong_ref', 'master_2_the_revenge')}.to raise_error
     end
