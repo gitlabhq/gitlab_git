@@ -397,13 +397,13 @@ describe Gitlab::Git::Repository do
       expect(@repo.create_branch('another_branch', 'master').name).to eq('another_branch')
     end
 
-    it "should fail if we create an exists branch" do
+    it "should fail if we create an existing branch" do
       @repo.create_branch('duplicated_branch', 'master')
-      expect{@repo.create_branch('duplicated_branch', 'master')}.to raise_error
+      expect{@repo.create_branch('duplicated_branch', 'master')}.to raise_error("Branch duplicated_branch already exists")
     end
 
     it "should fail if we create a branch from a non existing ref" do
-      expect{@repo.create_branch('branch_based_in_wrong_ref', 'master_2_the_revenge')}.to raise_error
+      expect{@repo.create_branch('branch_based_in_wrong_ref', 'master_2_the_revenge')}.to raise_error("Invalid reference master_2_the_revenge")
     end
 
     after(:all) do
