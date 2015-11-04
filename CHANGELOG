@@ -1,3 +1,6 @@
+v 7.2.20
+  - Switch back to GitHub Linguist and bump rugged and other gem versions
+
 v 7.2.19
   - Return archive metadata, do not create archives
 
