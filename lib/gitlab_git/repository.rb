@@ -654,6 +654,16 @@ module Gitlab
         rugged.branches.delete(branch_name)
       end
 
+      # Add a tag to the repository in corresponding +ref_target+ with the +message+
+      def add_tag(tag_name, ref_target, message = nil)
+        raise InvalidRef.new("Tag #{tag_name} already exists") if rugged.references.exists? "refs/tags/#{tag_name}"
+        message ||= ""
+        rugged.tags.create(tag_name, ref_target, { message: message})
+        Tag.new(tag_name, ref_target, message)
+      rescue Rugged::ReferenceError
+        raise InvalidRef.new("Target #{ref_target} is invalid")
+      end
+
       # Return an array of this repository's remote names
       def remote_names
         rugged.remotes.each_name.to_a

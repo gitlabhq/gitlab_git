@@ -384,6 +384,39 @@ describe Gitlab::Git::Repository do
     end
   end
 
+  describe "#add_tag" do
+    before(:all) do
+      @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
+    end
+
+    it "adds a tag to the repo" do
+      tag = @repo.add_tag("my_pretty_tag", "master", "this is a new tag")
+      expect(tag).not_to be_nil
+      expect(tag.name).to eq("my_pretty_tag")
+      expect(tag.target).to eq("master")
+      expect(tag.message).to eq("this is a new tag")
+    end
+
+    it "adds a tag without a message" do
+      tag = @repo.add_tag("my_messageless_tag", "master")
+      expect(tag.message).to be_empty
+    end
+
+    it "fails to add the same tag twice" do
+      @repo.add_tag("my_duplicated_tag", "master", "with a message")
+      expect{@repo.add_tag("my_duplicated_tag", "master")}.to raise_error("Tag my_duplicated_tag already exists")
+    end
+
+    it "fails to add a tag with an invalid target reference" do
+      expect{@repo.add_tag("invalid_tag", "invalid_target")}.to raise_error("Target invalid_target is invalid")
+    end
+
+    after(:all) do
+      FileUtils.rm_rf(TEST_MUTABLE_REPO_PATH)
+      ensure_seeds
+    end
+  end
+
   describe "#remote_names" do
     let(:remotes) { repository.remote_names }
 
