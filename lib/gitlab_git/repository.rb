@@ -654,12 +654,26 @@ module Gitlab
         rugged.branches.delete(branch_name)
       end
 
-      # Add a tag to the repository in corresponding +ref_target+ with the +message+
-      def add_tag(tag_name, ref_target, message = nil)
-        raise InvalidRef.new("Tag #{tag_name} already exists") if rugged.references.exists? "refs/tags/#{tag_name}"
-        message ||= ""
-        rugged.tags.create(tag_name, ref_target, { message: message})
-        Tag.new(tag_name, ref_target, message)
+      # Add a tag with +tag_name++ name to the repository in corresponding +ref_target++
+      # supports passing a hash of options to create an annotated tag
+      #
+      # Valid annotation options are:
+      #   :tagger ::
+      #     same structure as a committer, the user that is creating the tag
+      #
+      #   :message ::
+      #     the message to include in the tag annotation
+      #
+      # Returns a Gitlab::Tag
+      def add_tag(tag_name, ref_target, options = nil)
+        tag = rugged.tags.create(tag_name, ref_target, options)
+        if tag.annotated?
+          Tag.new(tag_name, ref_target, tag.annotation.message)
+        else
+          Tag.new(tag_name, ref_target)
+        end
+      rescue Rugged::TagError
+        raise InvalidRef.new("Tag #{tag_name} already exists")
       rescue Rugged::ReferenceError
         raise InvalidRef.new("Target #{ref_target} is invalid")
       end

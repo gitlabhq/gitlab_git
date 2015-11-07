@@ -389,26 +389,48 @@ describe Gitlab::Git::Repository do
       @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
     end
 
+    let(:add_tag_options) do
+      {
+        tagger: {
+          email: 'user@example.com',
+          name: 'Test User',
+          time: Time.now
+        },
+        message: "", # Rugged does not support passing only a tagger without a message
+      }
+    end
+
     it "adds a tag to the repo" do
-      tag = @repo.add_tag("my_pretty_tag", "master", "this is a new tag")
+      tag = @repo.add_tag("my_pretty_tag", "master", add_tag_options.merge({
+        message: "this is a new tag" }))
       expect(tag).not_to be_nil
       expect(tag.name).to eq("my_pretty_tag")
       expect(tag.target).to eq("master")
       expect(tag.message).to eq("this is a new tag")
     end
 
+    it "adds a lightweight tag to the repo" do
+      tag = @repo.add_tag("my_lightweight_tag", "master")
+      expect(tag).not_to be_nil
+      expect(tag.name).to eq("my_lightweight_tag")
+      expect(tag.target).to eq("master")
+      expect(tag.message).to be_nil
+    end
+
     it "adds a tag without a message" do
-      tag = @repo.add_tag("my_messageless_tag", "master")
+      tag = @repo.add_tag("my_messageless_tag", "master", add_tag_options)
       expect(tag.message).to be_empty
     end
 
     it "fails to add the same tag twice" do
-      @repo.add_tag("my_duplicated_tag", "master", "with a message")
-      expect{@repo.add_tag("my_duplicated_tag", "master")}.to raise_error("Tag my_duplicated_tag already exists")
+      @repo.add_tag("my_duplicated_tag", "master", add_tag_options)
+      expect{ @repo.add_tag("my_duplicated_tag", "master", add_tag_options) }.
+        to raise_error("Tag my_duplicated_tag already exists")
     end
 
     it "fails to add a tag with an invalid target reference" do
-      expect{@repo.add_tag("invalid_tag", "invalid_target")}.to raise_error("Target invalid_target is invalid")
+      expect{ @repo.add_tag("invalid_tag", "invalid_target", add_tag_options) }.
+        to raise_error("Target invalid_target is invalid")
     end
 
     after(:all) do
