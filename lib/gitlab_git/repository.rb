@@ -664,7 +664,7 @@ module Gitlab
       #   :message ::
       #     the message to include in the tag annotation
       #
-      # Returns a Gitlab::Tag
+      # Returns a Gitlab::Git::Tag
       def add_tag(tag_name, ref_target, options = nil)
         tag = rugged.tags.create(tag_name, ref_target, options)
         if tag.annotated?
