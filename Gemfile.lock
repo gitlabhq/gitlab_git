@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gitlab_git (7.2.19)
+    gitlab_git (7.2.20)
       activesupport (~> 4.0)
       charlock_holmes (~> 0.7.3)
       github-linguist (~> 4.7.0)
@@ -121,6 +121,3 @@ DEPENDENCIES
   rubocop
   simplecov
   webmock
-
-BUNDLED WITH
-   1.10.6
