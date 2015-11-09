@@ -668,6 +668,30 @@ module Gitlab
         raise InvalidRef.new("Invalid reference #{start_point}")
       end
 
+      # Add a tag with +tag_name++ name to the repository in corresponding +ref_target++
+      # supports passing a hash of options to create an annotated tag
+      #
+      # Valid annotation options are:
+      #   :tagger ::
+      #     same structure as a committer, the user that is creating the tag
+      #
+      #   :message ::
+      #     the message to include in the tag annotation
+      #
+      # Returns a Gitlab::Git::Tag
+      def add_tag(tag_name, ref_target, options = nil)
+        tag = rugged.tags.create(tag_name, ref_target, options)
+        if tag.annotated?
+          Tag.new(tag_name, ref_target, tag.annotation.message)
+        else
+          Tag.new(tag_name, ref_target)
+        end
+      rescue Rugged::TagError
+        raise InvalidRef.new("Tag #{tag_name} already exists")
+      rescue Rugged::ReferenceError
+        raise InvalidRef.new("Target #{ref_target} is invalid")
+      end
+
       # Return an array of this repository's remote names
       def remote_names
         rugged.remotes.each_name.to_a
