@@ -244,4 +244,84 @@ describe Gitlab::Git::Blob do
       end.should be_false
     end
   end
+
+  describe :lfs_pointers do
+    context 'file a valid lfs pointer' do
+      let(:blob) do
+        Gitlab::Git::Blob.find(
+          repository,
+          '33bcff41c232a11727ac6d660bd4b0c2ba86d63d',
+          'files/lfs/image.jpg'
+        )
+      end
+
+      it { blob.lfs_pointer?.should == true }
+      it { blob.lfs_oid.should == "4206f951d2691c78aac4c0ce9f2b23580b2c92cdcc4336e1028742c0274938e0" }
+      it { blob.lfs_size.should == "19548" }
+      it { blob.id.should == "f4d76af13003d1106be7ac8c5a2a3d37ddf32c2a" }
+      it { blob.name.should == "image.jpg" }
+      it { blob.path.should == "files/lfs/image.jpg" }
+      it { blob.size.should == 130 }
+      it { blob.mode.should == "100644" }
+    end
+
+    describe 'file an invalid lfs pointer' do
+      context 'with correct version header but incorrect size and oid' do
+        let(:blob) do
+          Gitlab::Git::Blob.find(
+            repository,
+            '33bcff41c232a11727ac6d660bd4b0c2ba86d63d',
+            'files/lfs/archive-invalid.tar'
+          )
+        end
+
+        it { blob.lfs_pointer?.should == false }
+        it { blob.lfs_oid.should == nil }
+        it { blob.lfs_size.should == nil }
+        it { blob.id.should == "f8a898db217a5a85ed8b3d25b34c1df1d1094c46" }
+        it { blob.name.should == "archive-invalid.tar" }
+        it { blob.path.should == "files/lfs/archive-invalid.tar" }
+        it { blob.size.should == 43 }
+        it { blob.mode.should == "100644" }
+      end
+
+      context 'with correct version header and size but incorrect size and oid' do
+        let(:blob) do
+          Gitlab::Git::Blob.find(
+            repository,
+            '33bcff41c232a11727ac6d660bd4b0c2ba86d63d',
+            'files/lfs/picture-invalid.png'
+          )
+        end
+
+        it { blob.lfs_pointer?.should == false }
+        it { blob.lfs_oid.should == nil }
+        it { blob.lfs_size.should == "1575078" }
+        it { blob.id.should == "5ae35296e1f95c1ef9feda1241477ed29a448572" }
+        it { blob.name.should == "picture-invalid.png" }
+        it { blob.path.should == "files/lfs/picture-invalid.png" }
+        it { blob.size.should == 57 }
+        it { blob.mode.should == "100644" }
+      end
+
+      context 'with correct version header and size but invalid size and oid' do
+        let(:blob) do
+          Gitlab::Git::Blob.find(
+            repository,
+            '33bcff41c232a11727ac6d660bd4b0c2ba86d63d',
+            'files/lfs/file-invalid.zip'
+          )
+        end
+
+        it { blob.lfs_pointer?.should == false }
+        it { blob.lfs_oid.should == nil }
+        it { blob.lfs_size.should == nil }
+        it { blob.id.should == "d831981bd876732b85a1bcc6cc01210c9f36248f" }
+        it { blob.name.should == "file-invalid.zip" }
+        it { blob.path.should == "files/lfs/file-invalid.zip" }
+        it { blob.size.should == 60 }
+        it { blob.mode.should == "100644" }
+      end
+    end
+  end
 end
