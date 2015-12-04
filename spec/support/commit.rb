@@ -1,4 +1,6 @@
 # Seed repo:
+# 0e50ec4d3c7ce42ab74dda1d422cb2cbffe1e326 Merge branch 'lfs_pointers' into 'master'
+# 33bcff41c232a11727ac6d660bd4b0c2ba86d63d Add valid and invalid lfs pointers
 # 732401c65e924df81435deb12891ef570167d2e2 Update year in license file
 # b0e52af38d7ea43cf41d8a6f2471351ac036d6c9 Empty commit
 # 40f4a7a617393735a95a0bb67b08385bc1e7c66d Add ISO-8859-encoded file
