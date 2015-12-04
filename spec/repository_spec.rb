@@ -222,7 +222,7 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 21 }
+    it { repository.commit_count("master").should == 23 }
     it { repository.commit_count("feature").should == 9 }
   end
 
