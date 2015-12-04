@@ -220,6 +220,32 @@ module Gitlab
       def name
         encode! @name
       end
+
+      def lfs_pointer?
+        if !empty? && text? && data.starts_with?("version https://git-lfs.github.com/spec")
+          true
+        else
+          false
+        end
+      end
+
+      def lfs_oid
+        if lfs_pointer?
+          oid = data.match(/(?<=sha256:)([0-9a-f]{64})/)
+          return oid[1] if oid
+        end
+
+        nil
+      end
+
+      def lfs_size
+        if lfs_pointer?
+          size = data.match(/(?<=size )([0-9]+)/)
+          return size[1] if size
+        end
+
+        nil
+      end
     end
   end
 end
