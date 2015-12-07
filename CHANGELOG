@@ -1,3 +1,6 @@
+v 7.2.21
+  - Add checks if blob is a lfs pointer, values for size and oid.
+
 v 7.2.20
   - Switch back to GitHub Linguist and bump rugged and other gem versions
   - Add method on repository to create branch
