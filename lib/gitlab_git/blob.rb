@@ -220,6 +220,39 @@ module Gitlab
       def name
         encode! @name
       end
+
+      # Valid LFS object pointer is a text file consisting of
+      # version
+      # oid
+      # size
+      # see https://github.com/github/git-lfs/blob/v1.1.0/docs/spec.md#the-pointer
+      def lfs_pointer?
+        has_lfs_version_key? && lfs_oid.present? && lfs_size.present?
+      end
+
+      def lfs_oid
+        if has_lfs_version_key?
+          oid = data.match(/(?<=sha256:)([0-9a-f]{64})/)
+          return oid[1] if oid
+        end
+
+        nil
+      end
+
+      def lfs_size
+        if has_lfs_version_key?
+          size = data.match(/(?<=size )([0-9]+)/)
+          return size[1] if size
+        end
+
+        nil
+      end
+
+      private
+
+      def has_lfs_version_key?
+        !empty? && text? && data.start_with?("version https://git-lfs.github.com/spec")
+      end
     end
   end
 end
