@@ -227,11 +227,7 @@ module Gitlab
       # size
       # see https://github.com/github/git-lfs/blob/v1.1.0/docs/spec.md#the-pointer
       def lfs_pointer?
-        if has_lfs_version_key? && lfs_oid && lfs_size
-          true
-        else
-          false
-        end
+        has_lfs_version_key? && lfs_oid.present? && lfs_size.present?
       end
 
       def lfs_oid
