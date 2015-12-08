@@ -858,10 +858,15 @@ module Gitlab
         cmd += %w(-r)
         cmd += %w(--full-tree)
         cmd += %w(--full-name)
-        cmd += %w(--name-only)
         cmd += %W(-- #{actual_ref})
 
-        raw_output = IO.popen(cmd, &:read).split("\n")
+        raw_output = IO.popen(cmd, &:read).split("\n").map do |f|
+          stuff, path = f.split("\t")
+          mode, type, sha = stuff.split(" ")
+          path if type == "blob"
+        end
+
+        raw_output.compact
       end
 
       private
