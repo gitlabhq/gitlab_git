@@ -824,19 +824,19 @@ index 0000000..e69de29
     end
 
     it "reads full file paths of master branch" do
-        expect(master_file_paths).to include("files/html/500.html")
+      expect(master_file_paths).to include("files/html/500.html")
     end
 
     it "dose not read submodule directory and empty directory of master branch" do
-        expect(master_file_paths).not_to include("six")
+      expect(master_file_paths).not_to include("six")
     end
 
     it "does not include 'nil'" do
-        expect(master_file_paths).not_to include(nil)
+      expect(master_file_paths).not_to include(nil)
     end
 
     it "returns empty array when not existed branch" do
-        expect(not_existed_branch.length).to equal(0)
+      expect(not_existed_branch.length).to equal(0)
     end
   end
 end

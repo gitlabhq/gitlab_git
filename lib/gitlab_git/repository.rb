@@ -839,7 +839,7 @@ module Gitlab
         Blob.commit(self, options)
       end
 
-      # Return result like "git ls-files" , recursive and full file path only
+      # Returns result like "git ls-files" , recursive and full file path
       #
       # Ex.
       #   repo.ls_files('master')
@@ -864,6 +864,7 @@ module Gitlab
           stuff, path = f.split("\t")
           mode, type, sha = stuff.split(" ")
           path if type == "blob"
+          # Contain only blob type
         end
 
         raw_output.compact
