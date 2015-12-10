@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gitlab_git (7.2.21)
+    gitlab_git (7.2.22)
       activesupport (~> 4.0)
       charlock_holmes (~> 0.7.3)
       github-linguist (~> 4.7.0)
