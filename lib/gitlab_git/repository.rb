@@ -839,6 +839,37 @@ module Gitlab
         Blob.commit(self, options)
       end
 
+      # Returns result like "git ls-files" , recursive and full file path
+      #
+      # Ex.
+      #   repo.ls_files('master')
+      #
+      def ls_files(ref)
+        actual_ref = ref || root_ref
+
+        begin
+          sha_from_ref(actual_ref)
+        rescue Rugged::OdbError, Rugged::InvalidError, Rugged::ReferenceError
+          # Return an empty array if the ref wasn't found
+          return []
+        end
+
+        cmd = %W(git --git-dir=#{path} ls-tree)
+        cmd += %w(-r)
+        cmd += %w(--full-tree)
+        cmd += %w(--full-name)
+        cmd += %W(-- #{actual_ref})
+
+        raw_output = IO.popen(cmd, &:read).split("\n").map do |f|
+          stuff, path = f.split("\t")
+          mode, type, sha = stuff.split(" ")
+          path if type == "blob"
+          # Contain only blob type
+        end
+
+        raw_output.compact
+      end
+
       private
 
       # Get the content of a blob for a given commit.  If the blob is a commit

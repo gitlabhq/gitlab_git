@@ -1,3 +1,6 @@
+v 7.2.22
+  - Add Repository#ls_files method
+
 v 7.2.21
   - Add checks if blob is a lfs pointer, values for size and oid.
 
