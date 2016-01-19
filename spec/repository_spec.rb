@@ -681,6 +681,16 @@ describe Gitlab::Git::Repository do
     end
   end
 
+  describe "#commits_between" do
+    let(:repo) { Gitlab::Git::Repository.new(TEST_REPO_PATH).rugged }
+    let(:first_commit) { new_commit_edit_new_file(repo) }
+    let(:second_commit) { new_commit_edit_new_file(repo) }
+
+    it 'returns the list of commits between to SHAs' do
+      expect(repository.commits_between(first_commit.oid, second_commit.oid)).to match_array([first_commit, second_commit])
+    end
+  end
+
   describe "branch_names_contains" do
     subject { repository.branch_names_contains(SeedRepo::LastCommit::ID) }
 
