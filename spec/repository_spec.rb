@@ -682,12 +682,35 @@ describe Gitlab::Git::Repository do
   end
 
   describe "#commits_between" do
-    let(:repo) { Gitlab::Git::Repository.new(TEST_REPO_PATH).rugged }
-    let(:first_commit) { new_commit_edit_new_file(repo) }
-    let(:second_commit) { new_commit_edit_new_file(repo) }
+    context 'two SHAs' do
+      let(:first_sha) { 'b0e52af38d7ea43cf41d8a6f2471351ac036d6c9' }
+      let(:second_sha) { '0e50ec4d3c7ce42ab74dda1d422cb2cbffe1e326' }
 
-    it 'returns the list of commits between to SHAs' do
-      expect(repository.commits_between(first_commit.oid, second_commit.oid)).to match_array([first_commit, second_commit])
+      it 'returns the number of commits between' do
+        expect(repository.commits_between(first_sha, second_sha).count).to eq(3)
+      end
+    end
+
+    context 'SHA and master branch' do
+      let(:sha) { 'b0e52af38d7ea43cf41d8a6f2471351ac036d6c9' }
+      let(:branch) { 'master' }
+
+      it 'returns the number of commits between a sha and a branch' do
+        expect(repository.commits_between(sha, branch).count).to eq(3)
+      end
+
+      it 'returns the number of commits between a branch and a sha' do
+        expect(repository.commits_between(branch, sha).count).to eq(3)
+      end
+    end
+
+    context 'two branches' do
+      let(:first_branch) { 'feature' }
+      let(:second_branch) { 'master' }
+
+      it 'returns the number of commits between' do
+        expect(repository.commits_between(first_branch, second_branch).count).to eq(3)
+      end
     end
   end
 
