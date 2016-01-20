@@ -1,3 +1,6 @@
+v 7.2.23
+  - Allow Commit.between to take branch names as well as shas.
+
 v 7.2.22
   - Add Repository#ls_files method
 

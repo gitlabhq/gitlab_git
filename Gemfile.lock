@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gitlab_git (7.2.22)
+    gitlab_git (7.2.23)
       activesupport (~> 4.0)
       charlock_holmes (~> 0.7.3)
       github-linguist (~> 4.7.0)
@@ -35,7 +35,7 @@ GEM
     escape_utils (1.1.0)
     ffi (1.8.1)
     formatador (0.2.4)
-    github-linguist (4.7.2)
+    github-linguist (4.7.3)
       charlock_holmes (~> 0.7.3)
       escape_utils (~> 1.1.0)
       mime-types (>= 1.19)
@@ -123,4 +123,4 @@ DEPENDENCIES
   webmock
 
 BUNDLED WITH
-   1.10.6
+   1.11.2
