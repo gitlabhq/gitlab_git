@@ -87,10 +87,11 @@ module Gitlab
           ).first
         end
 
-        # Get commits between two refs
+        # Get commits between two revspecs
+        # See also #repository.commits_between
         #
         # Ex.
-        #   Commit.between('29eda46b', 'master')
+        #   Commit.between(repo, '29eda46b', 'master')
         #
         def between(repo, base, head)
           repo.commits_between(base, head).map do |commit|

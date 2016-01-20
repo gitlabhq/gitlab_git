@@ -700,7 +700,7 @@ describe Gitlab::Git::Repository do
       end
 
       it 'returns the number of commits between a branch and a sha' do
-        expect(repository.commits_between(branch, sha).count).to eq(3)
+        expect(repository.commits_between(branch, sha).count).to eq(0) # sha is before branch
       end
     end
 
@@ -709,7 +709,7 @@ describe Gitlab::Git::Repository do
       let(:second_branch) { 'master' }
 
       it 'returns the number of commits between' do
-        expect(repository.commits_between(first_branch, second_branch).count).to eq(3)
+        expect(repository.commits_between(first_branch, second_branch).count).to eq(15)
       end
     end
   end
