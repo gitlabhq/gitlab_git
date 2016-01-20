@@ -681,6 +681,39 @@ describe Gitlab::Git::Repository do
     end
   end
 
+  describe "#commits_between" do
+    context 'two SHAs' do
+      let(:first_sha) { 'b0e52af38d7ea43cf41d8a6f2471351ac036d6c9' }
+      let(:second_sha) { '0e50ec4d3c7ce42ab74dda1d422cb2cbffe1e326' }
+
+      it 'returns the number of commits between' do
+        expect(repository.commits_between(first_sha, second_sha).count).to eq(3)
+      end
+    end
+
+    context 'SHA and master branch' do
+      let(:sha) { 'b0e52af38d7ea43cf41d8a6f2471351ac036d6c9' }
+      let(:branch) { 'master' }
+
+      it 'returns the number of commits between a sha and a branch' do
+        expect(repository.commits_between(sha, branch).count).to eq(3)
+      end
+
+      it 'returns the number of commits between a branch and a sha' do
+        expect(repository.commits_between(branch, sha).count).to eq(0) # sha is before branch
+      end
+    end
+
+    context 'two branches' do
+      let(:first_branch) { 'feature' }
+      let(:second_branch) { 'master' }
+
+      it 'returns the number of commits between' do
+        expect(repository.commits_between(first_branch, second_branch).count).to eq(15)
+      end
+    end
+  end
+
   describe "branch_names_contains" do
     subject { repository.branch_names_contains(SeedRepo::LastCommit::ID) }
 

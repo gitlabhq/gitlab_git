@@ -265,14 +265,18 @@ module Gitlab
         obj
       end
 
-      # Return a collection of Rugged::Commits between the two SHA arguments.
-      #
+      # Return a collection of Rugged::Commits between the two revspec arguments.
+      # See http://git-scm.com/docs/git-rev-parse.html#_specifying_revisions for
+      # a detailed list of valid arguments.
       def commits_between(from, to)
         walker = Rugged::Walker.new(rugged)
         walker.sorting(Rugged::SORT_DATE | Rugged::SORT_REVERSE)
 
-        walker.push(to)
-        walker.hide(from)
+        sha_from = sha_from_ref(from)
+        sha_to = sha_from_ref(to)
+
+        walker.push(sha_to)
+        walker.hide(sha_from)
 
         commits = walker.to_a
         walker.reset
