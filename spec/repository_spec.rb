@@ -769,6 +769,24 @@ describe Gitlab::Git::Repository do
     end
   end
 
+  describe '#branch_count' do
+    before(:each) do
+      valid_ref   = double(:ref)
+      invalid_ref = double(:ref)
+
+      valid_ref.stub(name: 'master', target: double(:target))
+
+      invalid_ref.stub(name: 'bad-branch')
+      invalid_ref.stub(:target) { raise Rugged::ReferenceError }
+
+      repository.rugged.stub(branches: [valid_ref, invalid_ref])
+    end
+
+    it 'returns the number of branches' do
+      expect(repository.branch_count).to eq(1)
+    end
+  end
+
   describe '#mkdir' do
     let(:commit_options) do
       {

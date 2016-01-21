@@ -15,9 +15,6 @@ module Gitlab
       class InvalidBlobName < StandardError; end
       class InvalidRef < StandardError; end
 
-      # Default branch in the repository
-      attr_accessor :root_ref
-
       # Full path to repo
       attr_reader :path
 
@@ -32,7 +29,11 @@ module Gitlab
       def initialize(path)
         @path = path
         @name = path.split("/").last
-        @root_ref = discover_default_branch
+      end
+
+      # Default branch in the repository
+      def root_ref
+        @root_ref ||= discover_default_branch
       end
 
       # Alias to old method for compatibility
@@ -61,6 +62,19 @@ module Gitlab
             # Omit invalid branch
           end
         end.compact.sort_by(&:name)
+      end
+
+      # Returns the number of valid branches
+      def branch_count
+        rugged.branches.count do |ref|
+          begin
+            ref.name && ref.target # ensures the branch is valid
+
+            true
+          rescue Rugged::ReferenceError
+            false
+          end
+        end
       end
 
       # Returns an Array of tag names
@@ -119,16 +133,22 @@ module Gitlab
       # - If one branch is present, returns its name
       # - If two or more branches are present, returns current HEAD or master or first branch
       def discover_default_branch
-        if branch_names.length == 0
-          nil
-        elsif branch_names.length == 1
-          branch_names.first
-        elsif rugged_head && branch_names.include?(Ref.extract_branch_name(rugged_head.name))
-          Ref.extract_branch_name(rugged_head.name)
-        elsif branch_names.include?("master")
-          "master"
+        names = branch_names
+
+        return if names.empty?
+
+        return names[0] if names.length == 1
+
+        if rugged_head
+          extracted_name = Ref.extract_branch_name(rugged_head.name)
+
+          return extracted_name if names.include?(extracted_name)
+        end
+
+        if names.include?('master')
+          'master'
         else
-          branch_names.first
+          names[0]
         end
       end
 
