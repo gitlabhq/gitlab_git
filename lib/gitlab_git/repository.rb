@@ -15,9 +15,6 @@ module Gitlab
       class InvalidBlobName < StandardError; end
       class InvalidRef < StandardError; end
 
-      # Default branch in the repository
-      attr_accessor :root_ref
-
       # Full path to repo
       attr_reader :path
 
@@ -32,7 +29,11 @@ module Gitlab
       def initialize(path)
         @path = path
         @name = path.split("/").last
-        @root_ref = discover_default_branch
+      end
+
+      # Default branch in the repository
+      def root_ref
+        @root_ref ||= discover_default_branch
       end
 
       # Alias to old method for compatibility
