@@ -64,6 +64,19 @@ module Gitlab
         end.compact.sort_by(&:name)
       end
 
+      # Returns the number of valid branches
+      def branch_count
+        rugged.branches.count do |ref|
+          begin
+            ref.name && ref.target # ensures the branch is valid
+
+            true
+          rescue Rugged::ReferenceError
+            false
+          end
+        end
+      end
+
       # Returns an Array of tag names
       def tag_names
         rugged.tags.map { |t| t.name }
