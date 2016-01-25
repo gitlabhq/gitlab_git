@@ -1,3 +1,6 @@
+v 7.2.25(unreleased)
+  - Fix repository size calculation
+
 v 7.2.24
   - Improve performance of discover_default_branch
   - Added Repository#branch_count
