@@ -7,6 +7,11 @@ module Gitlab
       include Linguist::BlobHelper
       include EncodingHelper
 
+      # This number needs to be large enough to allow reliable content /
+      # encoding detection (Linguist) and LFS pointer parsing. All other cases
+      # where we need full blob data should use load_all_data!.
+      DATA_SNIPPET_SIZE = 8192
+
       attr_accessor :name, :path, :size, :data, :mode, :id, :commit_id
 
       class << self
@@ -28,7 +33,7 @@ module Gitlab
                 id: blob.oid,
                 name: blob_entry[:name],
                 size: blob.size,
-                data: blob.content,
+                data: blob.content(DATA_SNIPPET_SIZE),
                 mode: blob_entry[:filemode].to_s(8),
                 path: path,
                 commit_id: sha,
@@ -43,7 +48,7 @@ module Gitlab
           Blob.new(
             id: blob.oid,
             size: blob.size,
-            data: blob.content,
+            data: blob.content(DATA_SNIPPET_SIZE),
           )
         end
 
@@ -215,6 +220,12 @@ module Gitlab
 
       def data
         encode! @data
+      end
+
+      # Load all blob data (not just the first DATA_SNIPPET_SIZE bytes) into
+      # memory as a Ruby string.
+      def load_all_data!(repository)
+        @data = repository.lookup(id).content
       end
 
       def name
