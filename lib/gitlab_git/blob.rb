@@ -10,7 +10,7 @@ module Gitlab
       # This number needs to be large enough to allow reliable content /
       # encoding detection (Linguist) and LFS pointer parsing. All other cases
       # where we need full blob data should use load_all_data!.
-      DATA_SNIPPET_SIZE = 8192
+      DATA_SNIPPET_SIZE = 1024
 
       attr_accessor :name, :path, :size, :data, :mode, :id, :commit_id
 
