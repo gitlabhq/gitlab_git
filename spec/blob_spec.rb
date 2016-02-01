@@ -54,6 +54,23 @@ describe Gitlab::Git::Blob do
       it { blob.id.should == '409f37c4f05865e4fb208c771485f211a22c4c2d' }
       it { blob.data.should == '' }
     end
+
+    context 'large file' do
+      let(:blob) { Gitlab::Git::Blob.find(repository, SeedRepo::Commit::ID, 'files/images/6049019_460s.jpg') }
+      let(:blob_size) { 111803 }
+
+      it { blob.size.should == blob_size }
+      it { blob.data.length.should == Gitlab::Git::Blob::DATA_SNIPPET_SIZE }
+
+      it 'check that this test is sane' do
+        blob.size.should > Gitlab::Git::Blob::DATA_SNIPPET_SIZE
+      end
+
+      it 'can load all data' do
+        blob.load_all_data!(repository)
+        blob.data.length.should == blob_size
+      end
+    end
   end
 
   describe :raw do
@@ -61,6 +78,18 @@ describe Gitlab::Git::Blob do
     it { raw_blob.id.should == SeedRepo::RubyBlob::ID }
     it { raw_blob.data[0..10].should == "require \'fi" }
     it { raw_blob.size.should == 669 }
+
+    context 'large file' do
+      let(:blob) { Gitlab::Git::Blob.raw(repository, '08cf843fd8fe1c50757df0a13fcc44661996b4df') }
+      let(:blob_size) { 111803 }
+
+      it { blob.size.should == blob_size }
+      it { blob.data.length.should == Gitlab::Git::Blob::DATA_SNIPPET_SIZE }
+      
+      it 'check that this test is sane' do
+        blob.size.should > Gitlab::Git::Blob::DATA_SNIPPET_SIZE
+      end
+    end
   end
 
   describe 'encoding' do
