@@ -53,6 +53,11 @@ describe Gitlab::Git::Blob do
 
       it { blob.id.should == '409f37c4f05865e4fb208c771485f211a22c4c2d' }
       it { blob.data.should == '' }
+
+      it 'does not get messed up by load_all_data!' do
+        blob.load_all_data!(repository)
+        blob.data.should == ''
+      end
     end
 
     context 'large file' do

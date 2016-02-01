@@ -225,6 +225,8 @@ module Gitlab
       # Load all blob data (not just the first DATA_SNIPPET_SIZE bytes) into
       # memory as a Ruby string.
       def load_all_data!(repository)
+        return if @data == '' # don't mess with submodule blobs
+
         @data = repository.lookup(id).content
       end
 
