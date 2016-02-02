@@ -1,5 +1,6 @@
-v 7.2.25(unreleased)
+v 8.0.0
   - Fix repository size calculation
+  - BREAKING: Only load blob data on demand (no longer eagerly)
 
 v 7.2.24
   - Improve performance of discover_default_branch
