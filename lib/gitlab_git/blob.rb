@@ -10,7 +10,7 @@ module Gitlab
       # This number needs to be large enough to allow reliable content /
       # encoding detection (Linguist) and LFS pointer parsing. All other cases
       # where we need full blob data should use load_all_data!.
-      DATA_SNIPPET_SIZE = 1024
+      DATA_FRAGMENT_SIZE = 1024
 
       attr_accessor :name, :path, :size, :data, :mode, :id, :commit_id
 
@@ -33,7 +33,7 @@ module Gitlab
                 id: blob.oid,
                 name: blob_entry[:name],
                 size: blob.size,
-                data: blob.content(DATA_SNIPPET_SIZE),
+                data: blob.content(DATA_FRAGMENT_SIZE),
                 mode: blob_entry[:filemode].to_s(8),
                 path: path,
                 commit_id: sha,
@@ -48,7 +48,7 @@ module Gitlab
           Blob.new(
             id: blob.oid,
             size: blob.size,
-            data: blob.content(DATA_SNIPPET_SIZE),
+            data: blob.content(DATA_FRAGMENT_SIZE),
           )
         end
 
@@ -222,7 +222,7 @@ module Gitlab
         encode! @data
       end
 
-      # Load all blob data (not just the first DATA_SNIPPET_SIZE bytes) into
+      # Load all blob data (not just the first DATA_FRAGMENT_SIZE bytes) into
       # memory as a Ruby string.
       def load_all_data!(repository)
         return if @data == '' # don't mess with submodule blobs

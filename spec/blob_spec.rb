@@ -65,10 +65,10 @@ describe Gitlab::Git::Blob do
       let(:blob_size) { 111803 }
 
       it { blob.size.should == blob_size }
-      it { blob.data.length.should == Gitlab::Git::Blob::DATA_SNIPPET_SIZE }
+      it { blob.data.length.should == Gitlab::Git::Blob::DATA_FRAGMENT_SIZE }
 
       it 'check that this test is sane' do
-        blob.size.should > Gitlab::Git::Blob::DATA_SNIPPET_SIZE
+        blob.size.should > Gitlab::Git::Blob::DATA_FRAGMENT_SIZE
       end
 
       it 'can load all data' do
@@ -89,10 +89,10 @@ describe Gitlab::Git::Blob do
       let(:blob_size) { 111803 }
 
       it { blob.size.should == blob_size }
-      it { blob.data.length.should == Gitlab::Git::Blob::DATA_SNIPPET_SIZE }
+      it { blob.data.length.should == Gitlab::Git::Blob::DATA_FRAGMENT_SIZE }
       
       it 'check that this test is sane' do
-        blob.size.should > Gitlab::Git::Blob::DATA_SNIPPET_SIZE
+        blob.size.should > Gitlab::Git::Blob::DATA_FRAGMENT_SIZE
       end
     end
   end
