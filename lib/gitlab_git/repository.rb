@@ -211,12 +211,13 @@ module Gitlab
           # Discard submodules
           next if submodule?(entry)
 
-          content = Blob.raw(self, entry[:oid]).data
+          blob = Blob.raw(self, entry[:oid])
 
           # Skip binary files
-          next if content.encoding == Encoding::ASCII_8BIT
+          next if blob.data.encoding == Encoding::ASCII_8BIT
 
-          greps += build_greps(content, query, ref, entry[:path])
+          blob.load_all_data!(self)
+          greps += build_greps(blob.data, query, ref, entry[:path])
         end
 
         greps
