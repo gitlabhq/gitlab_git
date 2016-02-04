@@ -1,3 +1,6 @@
+v 8.1.0
+  - Added Gitlab::Git::Repository#count_commits_between
+
 v 8.0.0
   - Fix repository size calculation
   - BREAKING: Only load blob data on demand (no longer eagerly)
