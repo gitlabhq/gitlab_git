@@ -305,6 +305,11 @@ module Gitlab
         commits
       end
 
+      # Counts the amount of commits between `from` and `to`.
+      def count_commits_between(from, to)
+        commits_between(from, to).size
+      end
+
       # Returns the SHA of the most recent common ancestor of +from+ and +to+
       def merge_base_commit(from, to)
         rugged.merge_base(from, to)

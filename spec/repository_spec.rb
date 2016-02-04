@@ -714,6 +714,12 @@ describe Gitlab::Git::Repository do
     end
   end
 
+  describe '#count_commits_between' do
+    subject { repository.count_commits_between('feature', 'master') }
+
+    it { should eq(15) }
+  end
+
   describe "branch_names_contains" do
     subject { repository.branch_names_contains(SeedRepo::LastCommit::ID) }
 
