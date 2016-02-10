@@ -951,46 +951,6 @@ module Gitlab
         results
       end
 
-      # Returns true if +commit+ introduced changes to +path+, using commit
-      # trees to make that determination.  Uses the history simplification
-      # rules that `git log` uses by default, where a commit is omitted if it
-      # is TREESAME to any parent.
-      #
-      # If the +follow+ option is true and the file specified by +path+ was
-      # renamed, then the path value is set to the old path.
-      def commit_touches_path?(commit, path, follow, walker)
-        entry = tree_entry(commit, path)
-
-        if commit.parents.empty?
-          # This is the root commit, return true if it has +path+ in its tree
-          return !entry.nil?
-        end
-
-        num_treesame = 0
-        commit.parents.each do |parent|
-          parent_entry = tree_entry(parent, path)
-
-          # Only follow the first TREESAME parent for merge commits
-          if num_treesame > 0
-            walker.hide(parent)
-            next
-          end
-
-          if entry.nil? && parent_entry.nil?
-            num_treesame += 1
-          elsif entry && parent_entry && entry[:oid] == parent_entry[:oid]
-            num_treesame += 1
-          end
-        end
-
-        case num_treesame
-        when 0
-          detect_rename(commit, commit.parents.first, path) if follow
-          true
-        else false
-        end
-      end
-
       # Find the entry for +path+ in the tree for +commit+
       def tree_entry(commit, path)
         pathname = Pathname.new(path)
