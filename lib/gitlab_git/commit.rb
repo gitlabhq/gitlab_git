@@ -38,6 +38,10 @@ module Gitlab
         #   )
         #
         def where(options)
+          if options.has_key?(:path) and options[:path].present?
+            options[:follow] = true
+          end
+
           repo = options.delete(:repo)
           raise 'Gitlab::Git::Repository is required' unless repo.respond_to?(:log)
 
