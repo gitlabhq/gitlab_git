@@ -87,10 +87,13 @@ GitLab Git used grit as main library in past. Now it uses rugged
     blob.id
     blob.name
     blob.size
-    blob.data
+    blob.data # contains only a fragment of the blob's data to save memory
     blob.mode
     blob.path
     blob.commit_id
+
+    # Load all blob data into memory
+    blob.load_all_data!(repo)
 
     # Blob object with sha 8a3f8ddcf3536628c9670d41e67a785383eded1d
     raw_blob = Gitlab::Git::Blob.raw(repo, '8a3f8ddcf3536628c9670d41e67a785383eded1d')

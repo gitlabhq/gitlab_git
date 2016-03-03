@@ -1,6 +1,4 @@
 # Seed repo:
-# 0e50ec4d3c7ce42ab74dda1d422cb2cbffe1e326 Merge branch 'lfs_pointers' into 'master'
-# 33bcff41c232a11727ac6d660bd4b0c2ba86d63d Add valid and invalid lfs pointers
 # 732401c65e924df81435deb12891ef570167d2e2 Update year in license file
 # b0e52af38d7ea43cf41d8a6f2471351ac036d6c9 Empty commit
 # 40f4a7a617393735a95a0bb67b08385bc1e7c66d Add ISO-8859-encoded file
@@ -24,19 +22,12 @@
 # 1a0b36b3cdad1d2ee32457c102a8c0b7056fa863 Initial commit
 #
 module SeedRepo
-  module Commit
-    ID = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
-    PARENT_ID = "6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9"
-    MESSAGE = "Change some files"
-    AUTHOR_FULL_NAME = "Dmitriy Zaporozhets"
-
-    FILES = ["files/ruby/popen.rb", "files/ruby/regex.rb"]
-    FILES_COUNT = 2
-
-    C_FILE_PATH = "files/ruby"
-    C_FILES = ["popen.rb", "regex.rb", "version_info.rb"]
-
-    BLOB_FILE = %{%h3= @key.title\n%hr\n%pre= @key.key\n.actions\n  = link_to 'Remove', @key, :confirm => 'Are you sure?', :method => :delete, :class => \"btn danger delete-key\"\n\n\n}
-    BLOB_FILE_PATH = "app/views/keys/show.html.haml"
+  module EmptyCommit
+    ID = "b0e52af38d7ea43cf41d8a6f2471351ac036d6c9"
+    PARENT_ID = "40f4a7a617393735a95a0bb67b08385bc1e7c66d"
+    MESSAGE = "Empty commit"
+    AUTHOR_FULL_NAME = "Rémy Coutable"
+    FILES = []
+    FILES_COUNT = FILES.count
   end
 end

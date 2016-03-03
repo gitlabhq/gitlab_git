@@ -11,8 +11,8 @@ Gem::Specification.new do |s|
   s.homepage    =
     'http://rubygems.org/gems/gitlab_git'
 
-  s.add_dependency("gitlab-linguist", "~> 3.0")
+  s.add_dependency("github-linguist", "~> 4.7.0")
   s.add_dependency("activesupport", "~> 4.0")
-  s.add_dependency("rugged", "~> 0.22.2")
-  s.add_dependency("charlock_holmes", "~> 0.6")
+  s.add_dependency("rugged", "~> 0.23.3")
+  s.add_dependency("charlock_holmes", "~> 0.7.3")
 end

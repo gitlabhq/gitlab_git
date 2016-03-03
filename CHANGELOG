@@ -1,3 +1,75 @@
+v 8.1.0
+  - Added Gitlab::Git::Repository#count_commits_between
+
+v 8.0.0
+  - Fix repository size calculation
+  - BREAKING: Only load blob data on demand (no longer eagerly)
+
+v 7.2.24
+  - Improve performance of discover_default_branch
+  - Added Repository#branch_count
+  - Lazy-load Repository#root_ref
+
+v 7.2.23
+  - Allow Commit.between to take branch names as well as shas.
+
+v 7.2.22
+  - Add Repository#ls_files method
+
+v 7.2.21
+  - Add checks if blob is a lfs pointer, values for size and oid.
+
+v 7.2.20
+  - Switch back to GitHub Linguist and bump rugged and other gem versions
+  - Add method on repository to create branch
+  - Allow annotated tags to be created
+
+v 7.2.19
+  - Return archive metadata, do not create archives
+
+v 7.2.18
+  - Support capability to reject updating of existing files (Stan Hu)
+  - Preserve file mode when updating existing file (Stan Hu)
+  - Add mkdir support with an empty .gitkeep file (Stan Hu)
+
+v 7.2.17
+  - Ensure empty commits are returned by Commit.where (Rémy Coutable)
+
+v 7.2.16
+  - Strip leading slashes in blob path to resolve filenames properly (Stan Hu)
+  - Also nice+ionice 'git archive' itself
+
+v 7.2.15
+  - Handle `git blame` for files encoded in different formats (e.g. ISO-8859) (Stan Hu)
+
+v 7.2.14
+  - Ignore CRLFs in .gitmodules (Stan Hu)
+
+v 7.2.13
+  - Fix Blob#commit when pass full ref like refs/head/master
+
+v 7.2.12
+  - Improved performance of git blame
+
+v 7.2.11
+  - Fix regression in 7.2.9 causing log method to throw an exception given an unknown ref (Stan Hu)
+
+v 7.2.10
+  - Disable auto-CRLF correction for binary files (Stan Hu)
+
+v 7.2.9
+  - Optimization of file history method
+
+v 7.2.8
+  - Ignore symbolic refs that point to deleted branches (Stan Hu)
+
+v 7.2.7
+  - Order result of `Repository#commits_between` by date.
+  - Include branch/tag name in archive file and dirname
+
+v 7.2.6
+  - Ignore remote/symbolic refs when creating repository's refs_hash (Stan Hu)
+
 v 7.2.5
   - Take value of autocrlf into account when committing blobs.
 
@@ -68,18 +140,18 @@ v 6.3.0
   - Blame using rugged (Evgeniy Sokovikov)
 
 v 6.2.1
-  - Fix Branch.new method for branch "origin/HEAD" because it points on ref instead of commit. 
+  - Fix Branch.new method for branch "origin/HEAD" because it points on ref instead of commit.
 
 v 6.2.0
   - When archive repository - use storage path for temp files too
   - Updated rugged to 0.21
 
 v 6.1.0
-  - Remove limit parameter from Compare.new method 
+  - Remove limit parameter from Compare.new method
   - Prevent 'undefined method' exception when pass wrong ref to Compare
 
 v 6.0.1
-  - Use tmp file for archive repository unless file is ready 
+  - Use tmp file for archive repository unless file is ready
 
 v 6.0.0
   - Add Repository#commit_count method
@@ -110,7 +182,7 @@ v 5.4.0
   - Get rid of BROKEN_DIFF constant
   - Diff.between raises exception in case of timeout now
   - Add tests to Compare
-  - Cache diff result for Compare 
+  - Cache diff result for Compare
 
 v 5.3.0
   - Add Repository#submodules method
@@ -149,7 +221,7 @@ v 2.3.0
   - Fixed empty repo bug
 
 v 2.2.0
- - Fixed Compare showing wrong diff 
+ - Fixed Compare showing wrong diff
 
 v 1.4.0
   - Update gitlab_grit dependency to 2.6.0

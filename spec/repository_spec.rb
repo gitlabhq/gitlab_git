@@ -1,6 +1,8 @@
 require "spec_helper"
 
 describe Gitlab::Git::Repository do
+  include EncodingHelper
+
   let(:repository) { Gitlab::Git::Repository.new(TEST_REPO_PATH) }
 
   describe "Respond to" do
@@ -64,36 +66,30 @@ describe Gitlab::Git::Repository do
   end
 
   shared_examples 'archive check' do |extenstion|
-    it { archive.should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-#{SeedRepo::LastCommit::ID}/) }
-    it { archive.should end_with extenstion }
-    it { File.exists?(archive).should be_true }
-    it { File.size?(archive).should_not be_nil }
+    it { metadata['ArchivePath'].should match(/tmp\/gitlab-git-test.git\/gitlab-git-test-master-#{SeedRepo::LastCommit::ID}/) }
+    it { metadata['ArchivePath'].should end_with extenstion }
   end
 
   describe :archive do
-    let(:archive) { repository.archive_repo('master', '/tmp') }
-    after { FileUtils.rm_r(archive) }
+    let(:metadata) { repository.archive_metadata('master', '/tmp') }
 
     it_should_behave_like 'archive check', '.tar.gz'
   end
 
   describe :archive_zip do
-    let(:archive) { repository.archive_repo('master', '/tmp', 'zip') }
-    after { FileUtils.rm_r(archive) }
+    let(:metadata) { repository.archive_metadata('master', '/tmp', 'zip') }
 
     it_should_behave_like 'archive check', '.zip'
   end
 
   describe :archive_bz2 do
-    let(:archive) { repository.archive_repo('master', '/tmp', 'tbz2') }
-    after { FileUtils.rm_r(archive) }
+    let(:metadata) { repository.archive_metadata('master', '/tmp', 'tbz2') }
 
     it_should_behave_like 'archive check', '.tar.bz2'
   end
 
   describe :archive_fallback do
-    let(:archive) { repository.archive_repo('master', '/tmp', 'madeup') }
-    after { FileUtils.rm_r(archive) }
+    let(:metadata) { repository.archive_metadata('master', '/tmp', 'madeup') }
 
     it_should_behave_like 'archive check', '.tar.gz'
   end
@@ -226,12 +222,8 @@ describe Gitlab::Git::Repository do
   end
 
   describe :commit_count do
-    it { repository.commit_count("master").should == 18 }
+    it { repository.commit_count("master").should == 23 }
     it { repository.commit_count("feature").should == 9 }
-  end
-
-  describe :archive_repo do
-    it { repository.archive_repo('master', '/tmp').should == "/tmp/gitlab-git-test.git/gitlab-git-test-#{SeedRepo::LastCommit::ID}.tar.gz" }
   end
 
   describe "#reset" do
@@ -242,7 +234,7 @@ describe Gitlab::Git::Repository do
     change_text = "New changelog text"
     untracked_text = "This file is untracked"
 
-    reset_commit = "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
+    reset_commit = SeedRepo::LastCommit::ID
 
     context "--hard" do
       before(:all) do
@@ -257,7 +249,7 @@ describe Gitlab::Git::Repository do
         end
 
         @normal_repo = Gitlab::Git::Repository.new(TEST_NORMAL_REPO_PATH)
-        @normal_repo.reset("HEAD~4", :hard)
+        @normal_repo.reset("HEAD", :hard)
       end
 
       it "should replace the working directory with the content of the index" do
@@ -392,12 +384,105 @@ describe Gitlab::Git::Repository do
     end
   end
 
+
+  describe "#create_branch" do
+    before(:all) do
+      @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
+    end
+
+    it "should create a new branch" do
+      expect(@repo.create_branch('new_branch', 'master')).not_to be_nil
+    end
+
+    it "should create a new branch with the right name" do
+      expect(@repo.create_branch('another_branch', 'master').name).to eq('another_branch')
+    end
+
+    it "should fail if we create an existing branch" do
+      @repo.create_branch('duplicated_branch', 'master')
+      expect{@repo.create_branch('duplicated_branch', 'master')}.to raise_error("Branch duplicated_branch already exists")
+    end
+
+    it "should fail if we create a branch from a non existing ref" do
+      expect{@repo.create_branch('branch_based_in_wrong_ref', 'master_2_the_revenge')}.to raise_error("Invalid reference master_2_the_revenge")
+    end
+
+    after(:all) do
+      FileUtils.rm_rf(TEST_MUTABLE_REPO_PATH)
+      ensure_seeds
+    end
+  end
+
+  describe "#add_tag" do
+    before(:all) do
+      @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
+    end
+
+    let(:add_tag_options) do
+      {
+        tagger: {
+          email: 'user@example.com',
+          name: 'Test User',
+          time: Time.now
+        },
+        message: "", # Rugged does not support passing only a tagger without a message
+      }
+    end
+
+    it "adds a tag to the repo" do
+      tag = @repo.add_tag("my_pretty_tag", "master", add_tag_options.merge({
+        message: "this is a new tag" }))
+      expect(tag).not_to be_nil
+      expect(tag.name).to eq("my_pretty_tag")
+      expect(tag.target).to eq("master")
+      expect(tag.message).to eq("this is a new tag")
+    end
+
+    it "adds a lightweight tag to the repo" do
+      tag = @repo.add_tag("my_lightweight_tag", "master")
+      expect(tag).not_to be_nil
+      expect(tag.name).to eq("my_lightweight_tag")
+      expect(tag.target).to eq("master")
+      expect(tag.message).to be_nil
+    end
+
+    it "adds a tag without a message" do
+      tag = @repo.add_tag("my_messageless_tag", "master", add_tag_options)
+      expect(tag.message).to be_empty
+    end
+
+    it "fails to add the same tag twice" do
+      @repo.add_tag("my_duplicated_tag", "master", add_tag_options)
+      expect{ @repo.add_tag("my_duplicated_tag", "master", add_tag_options) }.
+        to raise_error("Tag my_duplicated_tag already exists")
+    end
+
+    it "fails to add a tag with an invalid target reference" do
+      expect{ @repo.add_tag("invalid_tag", "invalid_target", add_tag_options) }.
+        to raise_error("Target invalid_target is invalid")
+    end
+
+    after(:all) do
+      FileUtils.rm_rf(TEST_MUTABLE_REPO_PATH)
+      ensure_seeds
+    end
+  end
+
   describe "#remote_names" do
     let(:remotes) { repository.remote_names }
 
     it "should have one entry: 'origin'" do
       expect(remotes).to have(1).items
       expect(remotes.first).to eq("origin")
+    end
+  end
+
+  describe "#refs_hash" do
+    let(:refs) { repository.refs_hash }
+
+    it "should have as many entries as branches and tags" do
+      expected_refs = SeedRepo::Repo::BRANCHES + SeedRepo::Repo::TAGS
+      expect(refs).to have(expected_refs.size).items
     end
   end
 
@@ -420,7 +505,7 @@ describe Gitlab::Git::Repository do
   describe "#remote_add" do
     before(:all) do
       @repo = Gitlab::Git::Repository.new(TEST_MUTABLE_REPO_PATH)
-      @repo.remote_add("new_remote", SeedHelper::GITHUB_URL)
+      @repo.remote_add("new_remote", SeedHelper::GITLAB_URL)
     end
 
     it "should add the remote" do
@@ -456,6 +541,7 @@ describe Gitlab::Git::Repository do
 
     it "should contain the same diffs as #diff" do
       diff_text = repo.diff_text("master", "feature")
+      diff_text = encode_utf8(diff_text)
       repo.diff("master", "feature").each do |single_diff|
         expect(diff_text.include?(single_diff.diff)).to be_true
       end
@@ -528,6 +614,14 @@ describe Gitlab::Git::Repository do
           expect(log_commits).not_to include(commit_with_new_name)
         end
       end
+
+      context "unknown ref" do
+        let(:log_commits) { repository.log(options.merge(ref: 'unknown')) }
+
+        it "should return empty" do
+          expect(log_commits).to eq([])
+        end
+      end
     end
 
     context "where 'follow' == false" do
@@ -587,6 +681,45 @@ describe Gitlab::Git::Repository do
     end
   end
 
+  describe "#commits_between" do
+    context 'two SHAs' do
+      let(:first_sha) { 'b0e52af38d7ea43cf41d8a6f2471351ac036d6c9' }
+      let(:second_sha) { '0e50ec4d3c7ce42ab74dda1d422cb2cbffe1e326' }
+
+      it 'returns the number of commits between' do
+        expect(repository.commits_between(first_sha, second_sha).count).to eq(3)
+      end
+    end
+
+    context 'SHA and master branch' do
+      let(:sha) { 'b0e52af38d7ea43cf41d8a6f2471351ac036d6c9' }
+      let(:branch) { 'master' }
+
+      it 'returns the number of commits between a sha and a branch' do
+        expect(repository.commits_between(sha, branch).count).to eq(3)
+      end
+
+      it 'returns the number of commits between a branch and a sha' do
+        expect(repository.commits_between(branch, sha).count).to eq(0) # sha is before branch
+      end
+    end
+
+    context 'two branches' do
+      let(:first_branch) { 'feature' }
+      let(:second_branch) { 'master' }
+
+      it 'returns the number of commits between' do
+        expect(repository.commits_between(first_branch, second_branch).count).to eq(15)
+      end
+    end
+  end
+
+  describe '#count_commits_between' do
+    subject { repository.count_commits_between('feature', 'master') }
+
+    it { should eq(15) }
+  end
+
   describe "branch_names_contains" do
     subject { repository.branch_names_contains(SeedRepo::LastCommit::ID) }
 
@@ -626,6 +759,141 @@ describe Gitlab::Git::Repository do
 
     after(:all) do
       @repo.rugged.config.delete('core.autocrlf')
+    end
+  end
+
+  describe '#branches with deleted branch' do
+    before(:each) do
+      ref = double()
+      ref.stub(:name) { 'bad-branch' }
+      ref.stub(:target) { raise Rugged::ReferenceError }
+      repository.rugged.stub(:branches) { [ref] }
+    end
+
+    it 'should return empty branches' do
+      expect(repository.branches).to eq([])
+    end
+  end
+
+  describe '#branch_count' do
+    before(:each) do
+      valid_ref   = double(:ref)
+      invalid_ref = double(:ref)
+
+      valid_ref.stub(name: 'master', target: double(:target))
+
+      invalid_ref.stub(name: 'bad-branch')
+      invalid_ref.stub(:target) { raise Rugged::ReferenceError }
+
+      repository.rugged.stub(branches: [valid_ref, invalid_ref])
+    end
+
+    it 'returns the number of branches' do
+      expect(repository.branch_count).to eq(1)
+    end
+  end
+
+  describe '#mkdir' do
+    let(:commit_options) do
+      {
+        author: {
+          email: 'user@example.com',
+          name: 'Test User',
+          time: Time.now
+        },
+        committer: {
+          email: 'user@example.com',
+          name: 'Test User',
+          time: Time.now
+        },
+        commit: {
+          message: 'Test message',
+          branch: 'refs/heads/fix',
+        }
+      }
+    end
+
+    def generate_diff_for_path(path)
+      "diff --git a/#{path}/.gitkeep b/#{path}/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/#{path}/.gitkeep\n"
+    end
+
+    shared_examples 'mkdir diff check' do |path, expected_path|
+      it 'creates a directory' do
+        result = repository.mkdir(path, commit_options)
+        expect(result).not_to eq(nil)
+
+        diff_text = repository.diff_text("#{result}~1", result)
+        expected = generate_diff_for_path(expected_path)
+        expect(diff_text).to eq(expected)
+
+        # Verify another mkdir doesn't create a directory that already exists
+        expect{ repository.mkdir(path, commit_options) }.to raise_error('Directory already exists')
+      end
+    end
+
+    describe 'creates a directory in root directory' do
+      it_should_behave_like 'mkdir diff check', 'new_dir', 'new_dir'
+    end
+
+    describe 'creates a directory in subdirectory' do
+      it_should_behave_like 'mkdir diff check', 'files/ruby/test', 'files/ruby/test'
+    end
+
+    describe 'creates a directory in subdirectory with a slash' do
+      it_should_behave_like 'mkdir diff check', '/files/ruby/test2', 'files/ruby/test2'
+    end
+
+    describe 'creates a directory in subdirectory with multiple slashes' do
+      it_should_behave_like 'mkdir diff check', '//files/ruby/test3', 'files/ruby/test3'
+    end
+
+    describe 'handles relative paths' do
+      it_should_behave_like 'mkdir diff check', 'files/ruby/../test_relative', 'files/test_relative'
+    end
+
+    describe 'creates nested directories' do
+      it_should_behave_like 'mkdir diff check', 'files/missing/test', 'files/missing/test'
+    end
+
+    it 'does not attempt to create a directory with invalid relative path' do
+      expect{ repository.mkdir('../files/missing/test', commit_options) }.to raise_error('Invalid path')
+    end
+
+    it 'does not attempt to overwrite a file' do
+      expect{ repository.mkdir('README.md', commit_options) }.to raise_error('Directory already exists as a file')
+    end
+
+    it 'does not attempt to overwrite a directory' do
+      expect{ repository.mkdir('files', commit_options) }.to raise_error('Directory already exists')
+    end
+  end
+
+  describe "#ls_files" do
+    let(:master_file_paths) { repository.ls_files("master") }
+    let(:not_existed_branch) { repository.ls_files("not_existed_branch") }
+
+    it "read every file paths of master branch" do
+      expect(master_file_paths.length).to equal(39)
+    end
+
+    it "reads full file paths of master branch" do
+      expect(master_file_paths).to include("files/html/500.html")
+    end
+
+    it "dose not read submodule directory and empty directory of master branch" do
+      expect(master_file_paths).not_to include("six")
+    end
+
+    it "does not include 'nil'" do
+      expect(master_file_paths).not_to include(nil)
+    end
+
+    it "returns empty array when not existed branch" do
+      expect(not_existed_branch.length).to equal(0)
     end
   end
 end
